@@ -1,19 +1,23 @@
 package es.cristichi.cardphotocopier.main;
 
 import java.awt.Dimension;
+import java.awt.Graphics;
 import java.awt.GridLayout;
+import java.awt.image.BufferedImage;
 import java.io.BufferedReader;
+import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.FilenameFilter;
 import java.io.IOException;
+import java.io.InputStream;
 import java.nio.file.Files;
-import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
 import java.util.HashMap;
 
+import javax.imageio.ImageIO;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.border.EmptyBorder;
@@ -30,8 +34,6 @@ import es.cristichi.cardphotocopier.obj.CardInfo;
  */
 public class CardPhotocopier {
 	private static String CONFIG = "config.txt";
-	private static String FATE = "Fate cards";
-	private static String VILLAIN = "Villain cards";
 	
 	private static ArrayList<String> problems;
 	
@@ -74,6 +76,7 @@ public class CardPhotocopier {
 			}
 		}
 	}
+
 	public static void generate() throws Exception{
 		boolean autoclose = false;
 		
@@ -135,8 +138,8 @@ public class CardPhotocopier {
 				throw new FileNotFoundException("The folder where the already existing images for the cards are supposed to be ("+imagesFolder.getAbsolutePath()+") was not found. We need that one.");
 			}
 			if (resultsFolder.exists()){
-				deleteDir(resultsFolder);
-				resultsFolder.mkdirs();
+				//deleteDir(resultsFolder);
+				//resultsFolder.mkdirs();
 			}
 			if (!documentFile.exists()){
 				window.setMinimumSize(new Dimension(800, 200));
@@ -148,8 +151,6 @@ public class CardPhotocopier {
 
 			label.setText("Reading card data from "+documentFile.getName()+".");
 			
-			File villainTempFolder = new File(resultsFolder, VILLAIN);
-			File fateTempFolder = new File(resultsFolder, FATE);
 			SpreadSheet sheetDoc = SpreadSheet.createFromFile(documentFile);
 			Sheet sheet = sheetDoc.getFirstSheet();
 
@@ -157,7 +158,7 @@ public class CardPhotocopier {
 			
 			boolean forceFate = false;
 			int done = 0;
-			for (int i = 5; done <=30; i++) {
+			for (int i = 4; done <=30; i++) {
 				Cell<SpreadSheet> A = sheet.getCellAt("A"+i);
 				try {
 					Cell<SpreadSheet> B = sheet.getCellAt("B"+i);
@@ -210,27 +211,44 @@ public class CardPhotocopier {
 			//System.out.println(cardsFromSheet.toString());
 			label.setText("Photocopying the cards.");
 			
+			BufferedImage resultImageF = new BufferedImage(3100, 2640, BufferedImage.TYPE_INT_RGB);
+			Graphics gF = resultImageF.getGraphics();
+			BufferedImage resultImageV = new BufferedImage(3720, 4400, BufferedImage.TYPE_INT_RGB);
+			Graphics gV = resultImageV.getGraphics();
+			//Each ard is 620x880 (WxH)
+			//int cardWidthF = 5;
+			//int cardWidthV = 6;
+			
 			int copiesToV = 0, copiesToF= 0;
-			for (File card : imagesFolder.listFiles(new FilenameFilter() {
+			int xF = 0, yF = 0;
+			int xV = 0, yV = 0;
+			for (File cardFile : imagesFolder.listFiles(new FilenameFilter() {
 				@Override
 				public boolean accept(File dir, String name) {
 					return name.endsWith(".png");
 				}
 			})){
-				String name = card.getName().substring(0, card.getName().length()-4);
+				String name = cardFile.getName().substring(0, cardFile.getName().length()-4);
 				if (cardData.containsKey(name)){
 					CardInfo info = cardData.get(name);
+					label.setText("Loading "+name+"'s image data from it's file.");
+					BufferedImage imageData = load(cardFile);
 					for (int i = 0; i < info.copies; i++) {
-						File newCopy = new File((info.deck==0 ? villainTempFolder : fateTempFolder), name+" ("+(i+1)+").png");
-						if (!newCopy.getParentFile().exists()) {
-							newCopy.mkdirs();
-						}
-						Files.copy(card.toPath(), newCopy.toPath(), StandardCopyOption.REPLACE_EXISTING);
-						System.out.println("Created "+newCopy.getName());
-
 						if (info.deck==0) {
+							gV.drawImage(imageData, xV, yV, null);
+							xV+=620;
+							if (xV >= resultImageV.getWidth()) {
+								xV = 0;
+								yV+=880;
+							}
 							copiesToV++;
 						} else {
+							gF.drawImage(imageData, xF, yF, null);
+							xF+=620;
+							if (xF >= resultImageF.getWidth()) {
+								xF = 0;
+								yF+=880;
+							}
 							copiesToF++;
 						}
 					}
@@ -252,27 +270,22 @@ public class CardPhotocopier {
 			
 
 			label.setText("Creating the image for TTS decks.");
-			System.out.println("Done generating cards.");
 
 			File villainDeck = new File(resultsFolder, "Villain Deck.jpg");
 			File fateDeck = new File(resultsFolder, "Fate Deck.jpg");
 
-			System.out.println("Executing magick.exe montage \"" + villainTempFolder.getAbsolutePath()
-					+ "\\*.png\" -geometry +0+0 \"" + villainDeck.getAbsolutePath() + "\"");
-			Process pV = Runtime.getRuntime().exec("magick.exe montage \"" + villainTempFolder.getAbsolutePath()
-					+ "\\*.png\" -geometry +0+0 \"" + villainDeck.getAbsolutePath() + "\"");
-			System.out.println("Executing magick.exe montage \"" + fateTempFolder.getAbsolutePath()
-					+ "\\*.png\" -geometry +0+0 \"" + fateDeck.getAbsolutePath() + "\"");
-			Process pF = Runtime.getRuntime().exec("magick.exe montage \"" + fateTempFolder.getAbsolutePath()
-					+ "\\*.png\" -geometry +0+0 \"" + fateDeck.getAbsolutePath() + "\"");
-
-			pV.waitFor();
-			pF.waitFor();
-
-			label.setText("Removing Herobrine.");
+			if (villainDeck.exists()) {
+				villainDeck.delete();
+			}
+			if (fateDeck.exists()) {
+				fateDeck.delete();
+			}
 			
-			deleteDir(fateTempFolder);
-			deleteDir(villainTempFolder);
+			
+			ImageIO.write(resultImageV, "jpg", villainDeck);
+			ImageIO.write(resultImageF, "jpg", fateDeck);
+			
+			label.setText("Removing Herobrine.");
 			
 			if (autoclose && problems.isEmpty()) {
 				System.out.println("Autoclose goes brr");
@@ -283,15 +296,11 @@ public class CardPhotocopier {
 		}
 	}
 	
-	private static void deleteDir(File file) {
-	    File[] contents = file.listFiles();
-	    if (contents != null) {
-	        for (File f : contents) {
-	            if (!Files.isSymbolicLink(f.toPath())) {
-	                deleteDir(f);
-	            }
-	        }
+	private static BufferedImage load(File f) throws IOException{
+	    byte[] bytes = Files.readAllBytes(f.toPath());
+	    try (InputStream is = new ByteArrayInputStream(bytes))
+	    {
+	        return ImageIO.read(is);
 	    }
-	    file.delete();
 	}
 }
