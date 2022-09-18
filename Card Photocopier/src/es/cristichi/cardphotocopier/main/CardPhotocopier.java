@@ -109,14 +109,13 @@ public class CardPhotocopier {
 		try(BufferedReader br = new BufferedReader(new FileReader(CONFIG))) {
 			StringBuilder sb = new StringBuilder();
 			String line = br.readLine();
-
 			while (line != null) {
 				sb.append(line);
 				sb.append(System.lineSeparator());
 				line = br.readLine();
 			}
-			String[] everything = sb.toString().split(System.lineSeparator());
 			
+			String[] everything = sb.toString().split(System.lineSeparator());
 			if (everything.length < 4) {
 				throw new IndexOutOfBoundsException("The config file is lacking some information. There should be at least 4 lines of text.");
 			}
@@ -137,10 +136,6 @@ public class CardPhotocopier {
 				label.setText("The folder where the already existing images for the cards are supposed to be ("+imagesFolder.getAbsolutePath()+") was not found. We need that one.");
 				throw new FileNotFoundException("The folder where the already existing images for the cards are supposed to be ("+imagesFolder.getAbsolutePath()+") was not found. We need that one.");
 			}
-			if (resultsFolder.exists()){
-				//deleteDir(resultsFolder);
-				//resultsFolder.mkdirs();
-			}
 			if (!documentFile.exists()){
 				window.setMinimumSize(new Dimension(800, 200));
 				window.pack();
@@ -158,7 +153,7 @@ public class CardPhotocopier {
 			
 			boolean forceFate = false;
 			int done = 0;
-			for (int i = 4; done <=30; i++) {
+			for (int i = 4; done <=20; i++) {
 				Cell<SpreadSheet> A = sheet.getCellAt("A"+i);
 				try {
 					Cell<SpreadSheet> B = sheet.getCellAt("B"+i);
