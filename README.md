@@ -15,11 +15,11 @@ If you have ANY doubt regarding how to install it or how to configure it or how 
 3. Click here to download the compiled .jar file: https://drive.google.com/file/d/1uQjgE2b3LRI9iX0lKdxJWyK149GwilNP/view?usp=sharing
 4. Place it in the folder where you are managing one of your villains. I recommend to copy this .jar file into a new folder dedicated to my tool for each of your villains. Organize it the way you desire, tho.
 5. Open it so it generates the config.txt file. Please don't move that file or rename it or it will be generated again if my tool can't find it.
-<br>  5.1 You will see that the first line of the config file is ignored.
-<br>  5.2 On the second line, you will have to put the route to your -Exports file where you generate the images of your villain. THIS FOLDER MUST CONTAIN ONLY THE IMAGES OF THE VILLAIN YOU ARE GOING TO USE MY TOOL FOR. This is very important, because my tool is going to use these files as base for the cards that need to be used.
-<br>  5.3 On the third line is going to be the name of the folder. Leave "Results" normally, or personalize it to reflect your evil impulses like "My minions".
-<br>  5.4 On the fouth line, very important, there needs to be the path to a .ods file (very important that it's an .ods file, otherwise it won't know how to read it) that follows the same columns as the default "Villainous Template.ods". It MUST include at least the cards for your villain, but it doesn't really matter if it contains other villains. You can make the process slightly faster if you remove all other villains but it's hardly worth it.
-<br>  5.5 On the fifth line, you may write "Autoclose" (uppercase/downcase are ignored, you may write "aUtOclOsE" if you want) so it closes automatically if everything was OK. I recommend doing it in 100% of situations, unless you don't trust me. Please somebody trust me.
+<br><br>  5.1 You will see that the first line of the config file is ignored.
+<br><br>  5.2 On the second line, you will have to put the route to your -Exports file where you generate the images of your villain. THIS FOLDER MUST CONTAIN ONLY THE IMAGES OF THE VILLAIN YOU ARE GOING TO USE MY TOOL FOR. This is very important, because my tool is going to use these files as base for the cards that need to be used.
+<br><br>  5.3 On the third line is going to be the name of the folder. Leave "Results" normally, or personalize it to reflect your evil impulses like "My minions".
+<br><br>  5.4 On the fouth line, very important, there needs to be the path to a .ods file (very important that it's an .ods file, otherwise it won't know how to read it) that follows the same columns as the default "Villainous Template.ods". It MUST include at least the cards for your villain, but it doesn't really matter if it contains other villains. You can make the process slightly faster if you remove all other villains but it's hardly worth it.
+<br><br>  5.5 On the fifth line, you may write "Autoclose" (uppercase/downcase are ignored, you may write "aUtOclOsE" if you want) so it closes automatically if everything was OK. I recommend doing it in 100% of situations, unless you don't trust me. Please somebody trust me.
 6. You are done! Test it with one of your Villains that are already finished and doing their evil schemes.
 
 ## Usage
