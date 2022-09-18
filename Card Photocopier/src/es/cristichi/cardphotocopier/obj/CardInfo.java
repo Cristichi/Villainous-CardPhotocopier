@@ -7,6 +7,4 @@ public class CardInfo {
 		this.copies = copies;
 		this.deck = deck;
 	}
-	
-	
 }
