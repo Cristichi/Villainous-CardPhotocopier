@@ -43,7 +43,7 @@ public class CardPhotocopier {
 	public static void main(String[] args){
 		problems = new ArrayList<>(10);
 		try {
-			window = new JFrame("Card generator. Yes window fashion is my passion.");
+			window = new JFrame("Villainous Card Photocopier. Yes window fashion is my passion.");
 			window.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 			label = new JLabel("Starting");
 			label.setHorizontalAlignment(JLabel.CENTER);
