@@ -43,7 +43,7 @@ public class CardPhotocopier {
 	public static void main(String[] args){
 		problems = new ArrayList<>(10);
 		try {
-			window = new JFrame("Villainous Card Photocopier.");
+			window = new JFrame("Villainous Card Photocopier");
 			window.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 			label = new JLabel("Starting");
 			label.setHorizontalAlignment(JLabel.CENTER);
