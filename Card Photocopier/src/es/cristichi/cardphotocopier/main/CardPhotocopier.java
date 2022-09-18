@@ -43,7 +43,7 @@ public class CardPhotocopier {
 	public static void main(String[] args){
 		problems = new ArrayList<>(10);
 		try {
-			window = new JFrame("Villainous Card Photocopier. Yes window fashion is my passion.");
+			window = new JFrame("Villainous Card Photocopier.");
 			window.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 			label = new JLabel("Starting");
 			label.setHorizontalAlignment(JLabel.CENTER);
@@ -205,17 +205,17 @@ public class CardPhotocopier {
 			
 			//System.out.println(cardsFromSheet.toString());
 			label.setText("Photocopying the cards.");
-			
-			BufferedImage resultImageF = new BufferedImage(3100, 2640, BufferedImage.TYPE_INT_RGB);
-			Graphics gF = resultImageF.getGraphics();
+
 			BufferedImage resultImageV = new BufferedImage(3720, 4400, BufferedImage.TYPE_INT_RGB);
 			Graphics gV = resultImageV.getGraphics();
+			BufferedImage resultImageF = new BufferedImage(3100, 2640, BufferedImage.TYPE_INT_RGB);
+			Graphics gF = resultImageF.getGraphics();
 			//Each ard is 620x880 (WxH)
 			//Those numbers are calculated for 30 Villain cards and 15 Fate cards and won't allow MORE (but will allow less)
 			
 			int copiesToV = 0, copiesToF= 0;
-			int xF = 0, yF = 0;
 			int xV = 0, yV = 0;
+			int xF = 0, yF = 0;
 			for (File cardFile : imagesFolder.listFiles(new FilenameFilter() {
 				@Override
 				public boolean accept(File dir, String name) {
@@ -247,7 +247,7 @@ public class CardPhotocopier {
 						}
 					}
 				} else {
-					System.err.println("!!!!!!! Data does not contain \"" + name + "\" !!!!!!!");
+					System.err.println("!!!!!!! Data does not contain image \"" + name + "\" !!!!!!!");
 				}
 			}
 
@@ -270,7 +270,6 @@ public class CardPhotocopier {
 			if (fateDeck.exists()) {
 				fateDeck.delete();
 			}
-			
 			
 			ImageIO.write(resultImageV, "jpg", villainDeck);
 			ImageIO.write(resultImageF, "jpg", fateDeck);
