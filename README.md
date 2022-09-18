@@ -48,8 +48,6 @@ I won't do an automatic updater, but you can always check this page again for an
 
 ## The future
 
-I'm planning on manually implementing the Image Magick step in Java, so that you don't need to install that program. It will make it more wanky probably, and it will be hard to implement I think, but I'll try no matter how much time it takes.
-
-I also want to add new configuration values for the name of the Villain and Fate decks that are generated. And I might also make it so that it deleted all the temporary images after it's done.
+I might want to add new configuration values for the name of the Villain and Fate decks that are generated.
 
 Also, please contact me if you have any request.
