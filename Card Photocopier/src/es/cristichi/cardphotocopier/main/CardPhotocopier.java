@@ -216,8 +216,7 @@ public class CardPhotocopier {
 			BufferedImage resultImageV = new BufferedImage(3720, 4400, BufferedImage.TYPE_INT_RGB);
 			Graphics gV = resultImageV.getGraphics();
 			//Each ard is 620x880 (WxH)
-			//int cardWidthF = 5;
-			//int cardWidthV = 6;
+			//Those numbers are calculated for 30 Villain cards and 15 Fate cards and won't allow MORE (but will allow less)
 			
 			int copiesToV = 0, copiesToF= 0;
 			int xF = 0, yF = 0;
@@ -259,13 +258,9 @@ public class CardPhotocopier {
 
 			if (copiesToV != 30) {
 				problems.add("Detected error number of copies to Vilain deck. Expected was 30 but it was \""+copiesToV+"\".");
-			} else {
-				System.out.println("Correct number of copies for Villain deck.");
 			}
 			if (copiesToF != 15) {
 				problems.add("Detected error number of copies to Fate deck. Expected was 15 but it was \""+copiesToF+"\".");
-			} else {
-				System.out.println("Correct number of copies for Fate deck.");
 			}
 			
 
@@ -298,8 +293,7 @@ public class CardPhotocopier {
 	
 	private static BufferedImage load(File f) throws IOException{
 	    byte[] bytes = Files.readAllBytes(f.toPath());
-	    try (InputStream is = new ByteArrayInputStream(bytes))
-	    {
+	    try (InputStream is = new ByteArrayInputStream(bytes)){
 	        return ImageIO.read(is);
 	    }
 	}
