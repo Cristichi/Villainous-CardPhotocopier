@@ -38,6 +38,14 @@ If you followed the instruction, **just make sure your .ods file is saved** and 
 
 There is also a special usage for it. If you are using a special Fate deck that requires you to generate your Fate cards as Villain cards with an alternate layout (for example, when you need to add a cost to your Fate cards), you can still mark them as Fate cards for my plugin. You will need to add a new row after all Villain cards and before all Fate cards, combine that row's cells from A to M into 1 cell *(actually, only the A and B column are needed to be combined, but combining the whole row seems more elegant)*, and write "**- Fate -**" (without the quotation marks) and my program will interpret every single card behind it as a Fate card until it finds another combined cell *(again, one that has at least A and B columns combined. This time it doesn't require something to be written)*.
 
+## How to update
+
+I won't do an automatic updater, but you can always check this page again for an update. To update is quite easy:
+
+1. **Download the lastest release* on this same GitHub project.
+2. **Substitute the outdated .jar** file with the new one you just downloaded.
+3. Done!
+
 ## The future
 
 I'm planning on manually implementing the Image Magick step in Java, so that you don't need to install that program. It will make it more wanky probably, and it will be hard to implement I think, but I'll try no matter how much time it takes.
