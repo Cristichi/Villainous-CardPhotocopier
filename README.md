@@ -12,23 +12,19 @@ If you have **ANY** doubt regarding how to install it or how to configure it or 
 
 ## Instalation
 
-1. You need to be using the **Villainous Card Generator** (https://drive.google.com/drive/u/0/folders/1wNyGRrege46Kob-1tvYbb8eixMeOFf81). If you are not, **I highly recommend using it** along with my tool or the TTS Deck Builder *(I recommend using my tool instead for convenience, but TTS Deck Builder is the currently recommended way to create Disney/Marvel/Star Wars Villainous custom villains. Please check and ask in their discord if you are new and everyone will be happy to guide you https://discord.com/channels/701443793718870036/701449291465752596)*
-2. I'm sorry but you need **Java 11 or superior** installed. If you are not sure if you have it installed, there are guides on the Internet or you can contact me for help with that as well.
-<br>If you have **Java 1.8 installed instead, I believe it should work** as well but **I have not tested it**. If it doesn't work it will lead to error, so if you see no error using Java 1.8 let me know! And thank you.
-3. You need to install **Image Magick**: https://imagemagick.org/script/download.php *(choose and install the one for your operating system)*
-<br>You don't need to install the optional *ffmpeg*.
-<br>That program is used to generate the final images, both Fate and Villain decks, which it's like using TTS Deck builder but fully automatic, so it must be installed for my tool to do something useful. You might need to restart your computer after you installed it.
-4. Click here to **download the executable .jar file**: https://github.com/Cristichi/Villainous-CardPhotocopier/releases/tag/main-release
+1. You need to be using the **Villainous Card Generator** (https://drive.google.com/drive/u/0/folders/1wNyGRrege46Kob-1tvYbb8eixMeOFf81). If you are not, **I highly recommend using it** along with my tool.
+2. You need **Java 1.8 or superior** installed. If you are not sure if you have it installed, just keep following the instructions and at the end if you can't open the .jar with a double click, you need to install Java. After you install Java it should work.
+3. Click here to **download the executable .jar file**: https://github.com/Cristichi/Villainous-CardPhotocopier/releases/tag/main-release
 <br>You may download the source code if you are a Java nerd so you can modify it in any way. Feel free to modify it or ask me if you have any specific needs.
-5. Place it in the folder where you are managing one of your villains. I recommend to copy this .jar file into a new folder dedicated to my tool for each of your villains. Organize it the way you desire, tho.
-6. **Double click it so it generates the config.txt file**. Please don't move that file or rename it or it will be generated again if my tool can't find it.
-<br>6.1. You will see that the first line of the config file is ignored.
-<br>6.2. On the second line, you will have to put **the path to your -Exports file or where you have the images of your villain**. ***THIS FOLDER MUST CONTAIN ONLY THE IMAGES OF THE VILLAIN YOU ARE GOING TO USE MY TOOL FOR***. This is very important, because my tool is going to use these files as base for the cards that need to be used.
-<br>6.3. On the third line is going to be **the name or path of the folder** where the images are going to be saved. Just leave "Results" as it is or personalize it to reflect your evil impulses with something like like "My minions".
-<br>6.4. On the fouth line, very important, there needs to be *the path to a .ods file* (very important that it's an .ods file, otherwise it won't know how to read it) **that follows the same columns as the default *"Villainous Template.ods"***. It MUST include at least the cards for your villain, but it doesn't really matter if it contains other villains. You can make the process slightly faster if you remove all other villains but it's hardly worth it.
-<br>6.5. On the fifth line, **you may leave "Autoclose"** (uppercase/lowercase are ignored, you may write "aUtOclOsE" if you want) so it closes automatically if everything was OK. I recommend doing it in 100% of situations, unless you don't trust me. Please somebody trust me.
+4. Place it in the folder where you are managing one of your villains. I recommend to copy this .jar file into a new folder dedicated to my tool for each of your villains. Organize it the way you desire, tho.
+5. **Double click it so it generates the config.txt file**. Please don't move that file or rename it or it will be generated again if my tool can't find it.
+<br>5.1. You will see that the first line of the config file is ignored.
+<br>5.2. On the second line, you will have to put **the path to your -Exports file or where you have the images of your villain**. ***THIS FOLDER MUST CONTAIN ONLY THE IMAGES OF THE VILLAIN YOU ARE GOING TO USE MY TOOL FOR***. This is very important, because my tool is going to use these files as base for the cards that need to be used.
+<br>5.3. On the third line is going to be **the name or path of the folder** where the images are going to be saved. Just leave "Results" as it is or personalize it to reflect your evil impulses with something like like "My minions".
+<br>5.4. On the fouth line, very important, there needs to be *the path to a .ods file* (very important that it's an .ods file, otherwise it won't know how to read it) **that follows the same columns as the default *"Villainous Template.ods"***. It MUST include at least the cards for your villain, but it doesn't really matter if it contains other villains. You can make the process slightly faster if you remove all other villains but it's hardly worth it.
+<br>5.5. On the fifth line, **you may leave "Autoclose"** (uppercase/lowercase are ignored, you may write "aUtOclOsE" if you want) so it closes automatically if everything was OK. I recommend doing it in 100% of situations, unless you don't trust me. Please somebody trust me.
 <br>If you want to close the final OK screen manually, you are free to *remove or erase that line*.
-7. **You are done!** Test it with one of your Villains that are already finished and doing their evil schemes.
+6. **You are done!** Test it with one of your Villains that are already finished and doing their evil schemes.
 
 ## Usage
 
