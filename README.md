@@ -10,17 +10,17 @@ If you have ANY doubt regarding how to install it or how to configure it or how 
 
 1. You need to be using the Villainous Card Generator (https://drive.google.com/drive/u/0/folders/1wNyGRrege46Kob-1tvYbb8eixMeOFf81). If you are not, I highly recommend using it along with my tool or the TTS Deck Builder (this last option is the currently recommended way to create Disney/MArvel/Star Wars Villainous custom villains. Please check and ask in their discord if you are new and everyone will be happy to guide you https://discord.com/channels/701443793718870036/701449291465752596)
 2. You need to install this program: https://imagemagick.org/script/download.php (choose the one for your operating system)
-  That program is used to generate the final images, both Fate and Villain decks, which it's like using TTS Deck builder but fully automatic, so I highly recommend having it installed.
-  I honestly have not tested my tool in the case this program is not installed, and never will. But everything else it does is kind of useless if you don't perform the Image Magick step so if for whatever reason you don't want to install that program, which I recommend you do and I 100% trust that program with my life, then just avoid using my tool and do it the regular slow way. I'm not your boss nor a cop, you are free to not use my tool.
-2. Click here to download the compiled .jar file: https://drive.google.com/file/d/1uQjgE2b3LRI9iX0lKdxJWyK149GwilNP/view?usp=sharing
-3. Place it in the folder where you are managing one of your villains. I recommend to copy this .jar file into a new folder dedicated to my tool for each of your villains. Organize it the way you desire, tho.
-4. Open it so it generates the config.txt file. Please don't move that file or rename it or it will be generated again if my tool can't find it.
-    4.1. You will see that the first line of the config file is ignored.
-    4.2. On the second line, you will have to put the route to your -Exports file where you generate the images of your villain. THIS FOLDER MUST CONTAIN ONLY THE IMAGES OF THE VILLAIN YOU ARE GOING TO USE MY TOOL FOR. This is very important, because my tool is going to use these files as base for the cards that need to be used.
-    4.3. On the third line is going to be the name of the folder. Leave "Results" normally, or personalize it to reflect your evil impulses like "My minions".
-    4.4. On the fouth line, very important, there needs to be the path to a .ods file (very important that it's an .ods file, otherwise it won't know how to read it) that follows the same columns as the default "Villainous Template.ods". It MUST include at least the cards for your villain, but it doesn't really matter if it contains other villains. You can make the process slightly faster if you remove all other villains but it's hardly worth it.
-    4.5 On the fifth line, you may write "Autoclose" (uppercase/downcase are ignored, you may write "aUtOclOsE" if you want) so it closes automatically if everything was OK. I recommend doing it in 100% of situations, unless you don't trust me. Please somebody trust me.
-5. You are done! Test it with one of your Villains that are already finished and doing their evil schemes.
+<br>  That program is used to generate the final images, both Fate and Villain decks, which it's like using TTS Deck builder but fully automatic, so I highly recommend having it installed.
+<br>  I honestly have not tested my tool in the case this program is not installed, and never will. But everything else it does is kind of useless if you don't perform the Image Magick step so if for whatever reason you don't want to install that program, which I recommend you do and I 100% trust that program with my life, then just avoid using my tool and do it the regular slow way. I'm not your boss nor a cop, you are free to not use my tool.
+3. Click here to download the compiled .jar file: https://drive.google.com/file/d/1uQjgE2b3LRI9iX0lKdxJWyK149GwilNP/view?usp=sharing
+4. Place it in the folder where you are managing one of your villains. I recommend to copy this .jar file into a new folder dedicated to my tool for each of your villains. Organize it the way you desire, tho.
+5. Open it so it generates the config.txt file. Please don't move that file or rename it or it will be generated again if my tool can't find it.
+<br>  5.1 You will see that the first line of the config file is ignored.
+<br>  5.2 On the second line, you will have to put the route to your -Exports file where you generate the images of your villain. THIS FOLDER MUST CONTAIN ONLY THE IMAGES OF THE VILLAIN YOU ARE GOING TO USE MY TOOL FOR. This is very important, because my tool is going to use these files as base for the cards that need to be used.
+<br>  5.3 On the third line is going to be the name of the folder. Leave "Results" normally, or personalize it to reflect your evil impulses like "My minions".
+<br>  5.4 On the fouth line, very important, there needs to be the path to a .ods file (very important that it's an .ods file, otherwise it won't know how to read it) that follows the same columns as the default "Villainous Template.ods". It MUST include at least the cards for your villain, but it doesn't really matter if it contains other villains. You can make the process slightly faster if you remove all other villains but it's hardly worth it.
+<br>  5.5 On the fifth line, you may write "Autoclose" (uppercase/downcase are ignored, you may write "aUtOclOsE" if you want) so it closes automatically if everything was OK. I recommend doing it in 100% of situations, unless you don't trust me. Please somebody trust me.
+6. You are done! Test it with one of your Villains that are already finished and doing their evil schemes.
 
 ## Usage
 
