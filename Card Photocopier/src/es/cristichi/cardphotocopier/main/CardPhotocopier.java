@@ -219,10 +219,10 @@ public class CardPhotocopier {
 			for (File cardFile : imagesFolder.listFiles(new FilenameFilter() {
 				@Override
 				public boolean accept(File dir, String name) {
-					return name.endsWith(".png");
+					return name.endsWith(".png") || name.endsWith(".jpg") || name.endsWith(".jpeg");
 				}
 			})){
-				String name = cardFile.getName().substring(0, cardFile.getName().length()-4);
+				String name = cardFile.getName().substring(0, cardFile.getName().length() - (cardFile.getName().endsWith(".jpeg") ? 5 : 4));
 				if (cardData.containsKey(name)){
 					CardInfo info = cardData.get(name);
 					label.setText("Loading "+name+"'s image data from it's file.");
