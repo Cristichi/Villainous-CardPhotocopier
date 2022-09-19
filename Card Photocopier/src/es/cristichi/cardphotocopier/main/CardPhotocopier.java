@@ -158,13 +158,20 @@ public class CardPhotocopier {
 			for (File cardFile : imagesFolder.listFiles(new FilenameFilter() {
 				@Override
 				public boolean accept(File dir, String name) {
-					return name.endsWith(".png") || name.endsWith(".jpg") || name.endsWith(".jpeg");
+					return name.endsWith(".png")
+							|| name.endsWith(".jpg")
+							|| name.endsWith(".jpeg");
 				}
 			})){
 				String name = cardFile.getName().substring(0, cardFile.getName().length() - (cardFile.getName().endsWith(".jpeg") ? 5 : 4));
 				label.setText("Loading "+name+"'s image data from it's file.");
 				CardInfo info = new CardInfo(load(cardFile));
-				cardsInfo.put(name, info);
+				if (info.imageData == null) {
+					System.err.println("Image "+cardFile+" could not be loaded.");
+					problems.add("Image \""+cardFile.getName()+"\" could not be loaded.");
+				} else {
+					cardsInfo.put(name, info);	
+				}
 			}
 			
 			//This is the data of the two images. We now create it empty (black) and we'll draw each card over it.
