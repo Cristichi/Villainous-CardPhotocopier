@@ -8,7 +8,7 @@ My small tool is going to take **ALL** the images in a folder (The -Exports fold
 
 ## Contact
 
-If you have **ANY** doubt regarding how to install it or how to configure it or how to use it or any error you are seeing or any problem you are having, **no matter how dumb you think your question is**, please ask me. You can't compete dumb against me, you are no match to my superior dumbness. I'll be more than happy to resolve you any doubt or issue regarding the instalation or use of my tool or anything related. I might not see your message if you open an issue here on GitHub, so I recommend contacting me through discord (Cristichi#5193) or by email (cristichi@hotmail.es) (PLEASE STATE FIRST THAT YOU NEED HELP WITH MY CARD PHOTOCOPIER TOOL, otherwise I might missinterpret it by spam but I want to help you).
+If you have **ANY** doubt regarding how to install it or how to configure it or how to use it or any error you are seeing or any problem you are having, **no matter how dumb you think your question is**, please ask me. You can't compete dumb against me, you are no match to my superior dumbness. I'll be more than happy to resolve you any doubt or issue regarding the instalation or use of my tool or anything related. I might not see your message if you open an issue here on GitHub, so I recommend contacting me through discord (Cristichi#5193) or by email (cristichi@hotmail.es) (PLEASE STATE FIRST THAT YOU NEED HELP WITH MY CARD PHOTOCOPIER TOOL, otherwise I might missinterpret it as spam but I want to help you).
 
 ## Instalation
 
