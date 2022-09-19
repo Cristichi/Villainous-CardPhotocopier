@@ -43,7 +43,7 @@ public class CardPhotocopier {
 	public static void main(String[] args){
 		problems = new ArrayList<>(10);
 		try {
-			window = new JFrame("Card generator. Yes window fashion is my passion.");
+			window = new JFrame("Villainous Card Photocopier");
 			window.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 			label = new JLabel("Starting");
 			label.setHorizontalAlignment(JLabel.CENTER);
@@ -109,14 +109,13 @@ public class CardPhotocopier {
 		try(BufferedReader br = new BufferedReader(new FileReader(CONFIG))) {
 			StringBuilder sb = new StringBuilder();
 			String line = br.readLine();
-
 			while (line != null) {
 				sb.append(line);
 				sb.append(System.lineSeparator());
 				line = br.readLine();
 			}
-			String[] everything = sb.toString().split(System.lineSeparator());
 			
+			String[] everything = sb.toString().split(System.lineSeparator());
 			if (everything.length < 4) {
 				throw new IndexOutOfBoundsException("The config file is lacking some information. There should be at least 4 lines of text.");
 			}
@@ -137,10 +136,6 @@ public class CardPhotocopier {
 				label.setText("The folder where the already existing images for the cards are supposed to be ("+imagesFolder.getAbsolutePath()+") was not found. We need that one.");
 				throw new FileNotFoundException("The folder where the already existing images for the cards are supposed to be ("+imagesFolder.getAbsolutePath()+") was not found. We need that one.");
 			}
-			if (resultsFolder.exists()){
-				//deleteDir(resultsFolder);
-				//resultsFolder.mkdirs();
-			}
 			if (!documentFile.exists()){
 				window.setMinimumSize(new Dimension(800, 200));
 				window.pack();
@@ -158,7 +153,7 @@ public class CardPhotocopier {
 			
 			boolean forceFate = false;
 			int done = 0;
-			for (int i = 4; done <=30; i++) {
+			for (int i = 4; done <=20; i++) {
 				Cell<SpreadSheet> A = sheet.getCellAt("A"+i);
 				try {
 					Cell<SpreadSheet> B = sheet.getCellAt("B"+i);
@@ -210,25 +205,24 @@ public class CardPhotocopier {
 			
 			//System.out.println(cardsFromSheet.toString());
 			label.setText("Photocopying the cards.");
-			
-			BufferedImage resultImageF = new BufferedImage(3100, 2640, BufferedImage.TYPE_INT_RGB);
-			Graphics gF = resultImageF.getGraphics();
+
 			BufferedImage resultImageV = new BufferedImage(3720, 4400, BufferedImage.TYPE_INT_RGB);
 			Graphics gV = resultImageV.getGraphics();
+			BufferedImage resultImageF = new BufferedImage(3100, 2640, BufferedImage.TYPE_INT_RGB);
+			Graphics gF = resultImageF.getGraphics();
 			//Each ard is 620x880 (WxH)
-			//int cardWidthF = 5;
-			//int cardWidthV = 6;
+			//Those numbers are calculated for 30 Villain cards and 15 Fate cards and won't allow MORE (but will allow less)
 			
 			int copiesToV = 0, copiesToF= 0;
-			int xF = 0, yF = 0;
 			int xV = 0, yV = 0;
+			int xF = 0, yF = 0;
 			for (File cardFile : imagesFolder.listFiles(new FilenameFilter() {
 				@Override
 				public boolean accept(File dir, String name) {
-					return name.endsWith(".png");
+					return name.endsWith(".png") || name.endsWith(".jpg") || name.endsWith(".jpeg");
 				}
 			})){
-				String name = cardFile.getName().substring(0, cardFile.getName().length()-4);
+				String name = cardFile.getName().substring(0, cardFile.getName().length() - (cardFile.getName().endsWith(".jpeg") ? 5 : 4));
 				if (cardData.containsKey(name)){
 					CardInfo info = cardData.get(name);
 					label.setText("Loading "+name+"'s image data from it's file.");
@@ -253,19 +247,15 @@ public class CardPhotocopier {
 						}
 					}
 				} else {
-					System.err.println("!!!!!!! Data does not contain \"" + name + "\" !!!!!!!");
+					System.err.println("!!!!!!! Data does not contain image \"" + name + "\" !!!!!!!");
 				}
 			}
 
 			if (copiesToV != 30) {
 				problems.add("Detected error number of copies to Vilain deck. Expected was 30 but it was \""+copiesToV+"\".");
-			} else {
-				System.out.println("Correct number of copies for Villain deck.");
 			}
 			if (copiesToF != 15) {
 				problems.add("Detected error number of copies to Fate deck. Expected was 15 but it was \""+copiesToF+"\".");
-			} else {
-				System.out.println("Correct number of copies for Fate deck.");
 			}
 			
 
@@ -280,7 +270,6 @@ public class CardPhotocopier {
 			if (fateDeck.exists()) {
 				fateDeck.delete();
 			}
-			
 			
 			ImageIO.write(resultImageV, "jpg", villainDeck);
 			ImageIO.write(resultImageF, "jpg", fateDeck);
@@ -298,8 +287,7 @@ public class CardPhotocopier {
 	
 	private static BufferedImage load(File f) throws IOException{
 	    byte[] bytes = Files.readAllBytes(f.toPath());
-	    try (InputStream is = new ByteArrayInputStream(bytes))
-	    {
+	    try (InputStream is = new ByteArrayInputStream(bytes)){
 	        return ImageIO.read(is);
 	    }
 	}
