@@ -34,6 +34,8 @@ import es.cristichi.cardphotocopier.obj.CardInfo;
  */
 public class CardPhotocopier {
 	private static String CONFIG = "config.txt";
+	private static int VILLAIN_DECK_SIZE = 30;
+	private static int FATE_DECK_SIZE = 15;
 	
 	private static ArrayList<String> problems;
 	
@@ -150,6 +152,7 @@ public class CardPhotocopier {
 			Sheet sheet = sheetDoc.getFirstSheet();
 
 			// First we read every .png, .jpg and .jpeg file.
+			
 			HashMap<String, CardInfo> cardsInfo = new HashMap<>(50);
 			
 			for (File cardFile : imagesFolder.listFiles(new FilenameFilter() {
@@ -163,13 +166,19 @@ public class CardPhotocopier {
 				CardInfo info = new CardInfo(load(cardFile));
 				cardsInfo.put(name, info);
 			}
+			
+			//This is the data of the two images. We now create it empty (black) and we'll draw each card over it.
 
+//			BufferedImage resultImageV = new BufferedImage(3720, 4400, BufferedImage.TYPE_INT_RGB);
 			BufferedImage resultImageV = new BufferedImage(3720, 4400, BufferedImage.TYPE_INT_RGB);
 			Graphics gV = resultImageV.getGraphics();
 			BufferedImage resultImageF = new BufferedImage(3100, 2640, BufferedImage.TYPE_INT_RGB);
 			Graphics gF = resultImageF.getGraphics();
 			//Each ard is 620x880 (WxH)
 			//Those numbers are calculated for 30 Villain cards and 15 Fate cards and won't allow MORE (but will allow less)
+			//It will resize, growing always higher and never wider, if there are more than 30 Villain/15 Fate.
+			//It's not quite optimal, ngl but it gets the work done and it's exactly the same if the number is expected or lower.
+			//Solution: because it is expected that each villain has its own config, maybe it could be configured in the config file the number of cards.
 			
 			int copiesToV = 0, copiesToF= 0;
 			int xV = 0, yV = 0;
@@ -177,6 +186,7 @@ public class CardPhotocopier {
 			
 			boolean forceFate = false;
 			int done = 0;
+			//We are going to look into each row in the .ods and check if it's a card that exists withing the images folder and draw it into it's corresponding deck.
 			for (int row = 4; done <=20; row++) {
 				Cell<SpreadSheet> A = sheet.getCellAt("A"+row);
 				try {
@@ -223,6 +233,13 @@ public class CardPhotocopier {
 								
 								for (int i = 0; i < ci.copies; i++) {
 									if (ci.deck==0) {
+										if (yV >= resultImageV.getHeight()) {
+											int newHeight = resultImageV.getHeight() + 880;
+											BufferedImage newImage = new BufferedImage(resultImageV.getWidth(), newHeight, BufferedImage.TYPE_INT_RGB);
+											newImage.getGraphics().drawImage(resultImageV, 0, 0, null);
+											resultImageV = newImage;
+											gV = resultImageV.getGraphics();
+										}
 										gV.drawImage(ci.imageData, xV, yV, null);
 										xV+=620;
 										if (xV >= resultImageV.getWidth()) {
@@ -231,6 +248,13 @@ public class CardPhotocopier {
 										}
 										copiesToV++;
 									} else {
+										if (yF >= resultImageF.getHeight()) {
+											int newHeight = resultImageF.getHeight() + 880;
+											BufferedImage newImage = new BufferedImage(resultImageF.getWidth(), newHeight, BufferedImage.TYPE_INT_RGB);
+											newImage.getGraphics().drawImage(resultImageF, 0, 0, null);
+											resultImageF = newImage;
+											gF = resultImageF.getGraphics();
+										}
 										gF.drawImage(ci.imageData, xF, yF, null);
 										xF+=620;
 										if (xF >= resultImageF.getWidth()) {
@@ -244,9 +268,12 @@ public class CardPhotocopier {
 						}
 					}
 				} catch (IllegalArgumentException e) {
+					//This probably means that some columns are combined, so we know it's not a card.
 					System.err.println(e.getLocalizedMessage());
 					System.err.println("Line: "+A.getTextValue());
 					done++;
+					//If the column A contains "- Fate -", it's Fate forcing time. This allows villains that need to generate Fate cards as Villain cards with
+					//a different layout to still tell my tool which cards are Fate. Read the Usage guide to know how.
 					if (A.getTextValue().contains("- Fate -")) {
 						forceFate = true;
 						System.out.println("Detected \"- Fate -\". Forcing fate from now on");
@@ -256,16 +283,18 @@ public class CardPhotocopier {
 					}
 				}
 			}
+			
+			label.setText("Removing Herobrine.");
 
-			if (copiesToV != 30) {
-				problems.add("Detected error number of copies to Vilain deck. Expected was 30 but it was \""+copiesToV+"\".");
+			//If the number of copies is not the expected, we notify the user in case they forgot to save their .ods after some changes.
+			if (copiesToV != VILLAIN_DECK_SIZE) {
+				problems.add("Unexpected number of copies to Vilain deck. Expected was "+VILLAIN_DECK_SIZE+" but it was \""+copiesToV+"\".");
 			}
-			if (copiesToF != 15) {
-				problems.add("Detected error number of copies to Fate deck. Expected was 15 but it was \""+copiesToF+"\".");
+			if (copiesToF != FATE_DECK_SIZE) {
+				problems.add("Unexpected error number of copies to Fate deck. Expected was "+FATE_DECK_SIZE+" but it was \""+copiesToF+"\".");
 			}
 			
-
-			label.setText("Creating the image for TTS decks.");
+			label.setText("Writing the images for TTS decks.");
 
 			if (!resultsFolder.exists()) {
 				resultsFolder.mkdir();
@@ -283,8 +312,6 @@ public class CardPhotocopier {
 			
 			ImageIO.write(resultImageV, "jpg", villainDeck);
 			ImageIO.write(resultImageF, "jpg", fateDeck);
-			
-			label.setText("Removing Herobrine.");
 			
 			if (autoclose && problems.isEmpty()) {
 				System.out.println("Autoclose goes brr");
