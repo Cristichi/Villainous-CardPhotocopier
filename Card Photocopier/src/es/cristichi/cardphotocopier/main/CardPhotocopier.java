@@ -149,6 +149,7 @@ public class CardPhotocopier {
 			SpreadSheet sheetDoc = SpreadSheet.createFromFile(documentFile);
 			Sheet sheet = sheetDoc.getFirstSheet();
 
+			// First we read every .png, .jpg and .jpeg file.
 			HashMap<String, CardInfo> cardsInfo = new HashMap<>(50);
 			
 			for (File cardFile : imagesFolder.listFiles(new FilenameFilter() {
@@ -266,6 +267,10 @@ public class CardPhotocopier {
 
 			label.setText("Creating the image for TTS decks.");
 
+			if (!resultsFolder.exists()) {
+				resultsFolder.mkdir();
+			}
+			
 			File villainDeck = new File(resultsFolder, "Villain Deck.jpg");
 			File fateDeck = new File(resultsFolder, "Fate Deck.jpg");
 
