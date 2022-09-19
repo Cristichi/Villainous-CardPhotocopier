@@ -81,8 +81,8 @@ public class CardPhotocopier {
 		boolean autoclose = false;
 		
 		label.setText("Reading config file.");
-		File directory = new File("./");
-		System.out.println("\n\nAll relative paths are relative to: "+directory.getAbsolutePath());
+		//File directory = new File("./");
+		//System.out.println("\n\nAll relative paths are relative to: "+directory.getAbsolutePath());
 
 		File configFile = new File(CONFIG);
 		if (!configFile.exists()){
@@ -149,62 +149,19 @@ public class CardPhotocopier {
 			SpreadSheet sheetDoc = SpreadSheet.createFromFile(documentFile);
 			Sheet sheet = sheetDoc.getFirstSheet();
 
-			HashMap<String, CardInfo> cardData = new HashMap<>(50);
+			HashMap<String, CardInfo> cardsInfo = new HashMap<>(50);
 			
-			boolean forceFate = false;
-			int done = 0;
-			for (int i = 4; done <=20; i++) {
-				Cell<SpreadSheet> A = sheet.getCellAt("A"+i);
-				try {
-					Cell<SpreadSheet> B = sheet.getCellAt("B"+i);
-	//				Cell<SpreadSheet> C = sheet.getCellAt("C"+i);
-	//				Cell<SpreadSheet> D = sheet.getCellAt("D"+i);
-	//				Cell<SpreadSheet> E = sheet.getCellAt("E"+i);
-	//				Cell<SpreadSheet> F = sheet.getCellAt("F"+i);
-	//				Cell<SpreadSheet> G = sheet.getCellAt("G"+i);
-	//				Cell<SpreadSheet> H = sheet.getCellAt("H"+i);
-	//				Cell<SpreadSheet> I = sheet.getCellAt("I"+i);
-	//				Cell<SpreadSheet> J = sheet.getCellAt("J"+i);
-					Cell<SpreadSheet> K = sheet.getCellAt("K"+i);
-	//				Cell<SpreadSheet> L = sheet.getCellAt("L"+i);
-	//				Cell<SpreadSheet> M = sheet.getCellAt("M"+i);
-					if (A.isEmpty() || B.isEmpty() || K.isEmpty()) {
-						//Line skip
-						if (A.isEmpty() && B.isEmpty() && K.isEmpty()) {
-							//System.out.println("Line skipped: "+i+ " (empty)");
-						} else {
-							//TODO: add to problems, then at the end show problems. Also check for irregular number of cards at the end.
-							if (!B.getTextValue().isBlank()) {
-								problems.add("Detected error in card "+B.getTextValue()+". Number of copies or deck (Villain/Fate) was not filled.");
-							}
-							System.out.println("Line skipped: "+i + " \""+A.getTextValue()+"|"+B.getTextValue()+"|"+K.getTextValue()+"\"");	
-						}
-						done++;
-					} else {
-						done = 0;
-						int deck = 0;
-						if (K.getTextValue().equals("Fate") || K.getTextValue().equals("1") || forceFate) {
-							deck = 1;
-						}
-						cardData.put(B.getTextValue(), new CardInfo(Integer.parseInt(A.getTextValue()), deck));
-						System.out.println("Added card "+B.getTextValue()+": "+Integer.parseInt(A.getTextValue())+" copies in deck "+deck);
-					}
-				} catch (IllegalArgumentException e) {
-					System.err.println(e.getLocalizedMessage());
-					System.err.println("Line: "+A.getTextValue());
-					done++;
-					if (A.getTextValue().contains("- Fate -")) {
-						forceFate = true;
-						System.out.println("Forcing fate from now on");
-					} else {
-						forceFate = false;
-						System.out.println("No longer forcing fate");
-					}
+			for (File cardFile : imagesFolder.listFiles(new FilenameFilter() {
+				@Override
+				public boolean accept(File dir, String name) {
+					return name.endsWith(".png") || name.endsWith(".jpg") || name.endsWith(".jpeg");
 				}
+			})){
+				String name = cardFile.getName().substring(0, cardFile.getName().length() - (cardFile.getName().endsWith(".jpeg") ? 5 : 4));
+				label.setText("Loading "+name+"'s image data from it's file.");
+				CardInfo info = new CardInfo(load(cardFile));
+				cardsInfo.put(name, info);
 			}
-			
-			//System.out.println(cardsFromSheet.toString());
-			label.setText("Photocopying the cards.");
 
 			BufferedImage resultImageV = new BufferedImage(3720, 4400, BufferedImage.TYPE_INT_RGB);
 			Graphics gV = resultImageV.getGraphics();
@@ -216,38 +173,86 @@ public class CardPhotocopier {
 			int copiesToV = 0, copiesToF= 0;
 			int xV = 0, yV = 0;
 			int xF = 0, yF = 0;
-			for (File cardFile : imagesFolder.listFiles(new FilenameFilter() {
-				@Override
-				public boolean accept(File dir, String name) {
-					return name.endsWith(".png") || name.endsWith(".jpg") || name.endsWith(".jpeg");
-				}
-			})){
-				String name = cardFile.getName().substring(0, cardFile.getName().length() - (cardFile.getName().endsWith(".jpeg") ? 5 : 4));
-				if (cardData.containsKey(name)){
-					CardInfo info = cardData.get(name);
-					label.setText("Loading "+name+"'s image data from it's file.");
-					BufferedImage imageData = load(cardFile);
-					for (int i = 0; i < info.copies; i++) {
-						if (info.deck==0) {
-							gV.drawImage(imageData, xV, yV, null);
-							xV+=620;
-							if (xV >= resultImageV.getWidth()) {
-								xV = 0;
-								yV+=880;
+			
+			boolean forceFate = false;
+			int done = 0;
+			for (int row = 4; done <=20; row++) {
+				Cell<SpreadSheet> A = sheet.getCellAt("A"+row);
+				try {
+					Cell<SpreadSheet> B = sheet.getCellAt("B"+row);
+					Cell<SpreadSheet> C = sheet.getCellAt("C"+row);
+					Cell<SpreadSheet> D = sheet.getCellAt("D"+row);
+					Cell<SpreadSheet> E = sheet.getCellAt("E"+row);
+					Cell<SpreadSheet> F = sheet.getCellAt("F"+row);
+					Cell<SpreadSheet> G = sheet.getCellAt("G"+row);
+					Cell<SpreadSheet> H = sheet.getCellAt("H"+row);
+					Cell<SpreadSheet> I = sheet.getCellAt("I"+row);
+					Cell<SpreadSheet> J = sheet.getCellAt("J"+row);
+					Cell<SpreadSheet> K = sheet.getCellAt("K"+row);
+					Cell<SpreadSheet> L = sheet.getCellAt("L"+row);
+					Cell<SpreadSheet> M = sheet.getCellAt("M"+row);
+
+					done++;
+					if (!B.isEmpty()) {
+						if (cardsInfo.containsKey(B.getTextValue())) {
+							CardInfo ci = cardsInfo.get(B.getTextValue());
+							
+							if (A.isEmpty() || K.isEmpty()
+									&& (!C.isEmpty() || !D.isEmpty() || !E.isEmpty() || !F.isEmpty() || 
+											!G.isEmpty() || !H.isEmpty() || !I.isEmpty() || !J.isEmpty() || 
+											!L.isEmpty() || !M.isEmpty())
+								) {
+								problems.add("Detected error in card "+B.getTextValue()+"."
+										+(A.getTextValue().isBlank() ? " Number of copies (Column A) not filled.":"")
+										+(K.getTextValue().isBlank() ? " Villain/Fate deck (Column K) not filled.":"")
+										);
+								System.err.println("Error reading: "+row+ " (Card "+B.getTextValue()+" not proper)");
+							} else {
+								done = 0;
+
+								ci.copies = Integer.parseInt(A.getTextValue());
+								
+								ci.deck = 0;
+								if (K.getTextValue().equals("Fate") || K.getTextValue().equals("1") || forceFate) {
+									ci.deck = 1;
+								}
+								
+								System.out.println("Photocopying card "+B.getTextValue()+": "+ci.copies+" copies in deck "+ci.deck);
+								label.setText("Photocopying card "+B.getTextValue()+": "+ci.copies+" copies in "+(ci.deck==0?"Villain":"Fate")+" deck.");
+								
+								for (int i = 0; i < ci.copies; i++) {
+									if (ci.deck==0) {
+										gV.drawImage(ci.imageData, xV, yV, null);
+										xV+=620;
+										if (xV >= resultImageV.getWidth()) {
+											xV = 0;
+											yV+=880;
+										}
+										copiesToV++;
+									} else {
+										gF.drawImage(ci.imageData, xF, yF, null);
+										xF+=620;
+										if (xF >= resultImageF.getWidth()) {
+											xF = 0;
+											yF+=880;
+										}
+										copiesToF++;
+									}
+								}
 							}
-							copiesToV++;
-						} else {
-							gF.drawImage(imageData, xF, yF, null);
-							xF+=620;
-							if (xF >= resultImageF.getWidth()) {
-								xF = 0;
-								yF+=880;
-							}
-							copiesToF++;
 						}
 					}
-				} else {
-					System.err.println("!!!!!!! Data does not contain image \"" + name + "\" !!!!!!!");
+				} catch (IllegalArgumentException e) {
+					System.err.println(e.getLocalizedMessage());
+					System.err.println("Line: "+A.getTextValue());
+					done++;
+					if (A.getTextValue().contains("- Fate -")) {
+						forceFate = true;
+						System.out.println("Detected \"- Fate -\". Forcing fate from now on");
+					} else {
+						forceFate = false;
+						System.out.println("Interpreted as end of force Fate. No longer forcing fate");
+					}
 				}
 			}
 
