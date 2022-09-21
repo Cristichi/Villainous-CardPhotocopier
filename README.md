@@ -12,7 +12,7 @@ If you have **ANY** doubt regarding how to install it or how to configure it or 
 
 ## Instalation
 
-1. You need to be using the **Villainous Card Generator** (https://drive.google.com/drive/u/0/folders/1wNyGRrege46Kob-1tvYbb8eixMeOFf81). If you are not, **I highly recommend using it** along with my tool.
+1. You need to be using the **Villainous Card Generator** (https://drive.google.com/drive/u/0/folders/1wNyGRrege46Kob-1tvYbb8eixMeOFf81). If you are not, **I highly doubt my tool will be useful to you** because it reads the .ods file that it provides to read information about each card (number of copies and the deck it belongs to).
 2. You need **Java 1.8 or superior** installed. If you are not sure if you have it installed, just keep following the instructions and at the end if you can't open the .jar with a double click, you need to install Java. After you install Java it should work.
 3. Click here to **download the executable .jar file**: [https://github.com/Cristichi/Villainous-CardPhotocopier/releases/tag/main-release-v1.1](https://github.com/Cristichi/Villainous-CardPhotocopier/releases/tag/main-release-v1.1)
 <br>You may download the source code if you are a Java nerd so you can modify it in any way. Feel free to modify it or ask me if you have any specific needs.
