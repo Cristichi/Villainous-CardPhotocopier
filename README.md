@@ -46,7 +46,7 @@ There is also a special usage for it. If you are using a special Fate deck that 
 
 I won't do an automatic updater, but you can always check this page again for an update. To update is quite easy:
 
-1. **Download the lastest release* on this same GitHub project.
+1. **Download the lastest release** on this same GitHub project.
 2. **Substitute the outdated .jar** file with the new one you just downloaded.
 3. Done!
 
