@@ -15,7 +15,9 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 
 import javax.imageio.ImageIO;
 import javax.swing.JFrame;
@@ -27,6 +29,7 @@ import org.jopendocument.dom.spreadsheet.Sheet;
 import org.jopendocument.dom.spreadsheet.SpreadSheet;
 
 import es.cristichi.cardphotocopier.obj.CardInfo;
+import es.cristichi.cardphotocopier.obj.Range;
 
 /**
 * Feel free to edit the code. Have an evil day!
@@ -36,6 +39,27 @@ public class CardPhotocopier {
 	private static String CONFIG = "config.txt";
 	private static int VILLAIN_DECK_SIZE = 30;
 	private static int FATE_DECK_SIZE = 15;
+	private static HashMap<Range, Dimension> DECK_SIZES;
+	static {
+		DECK_SIZES = new HashMap<>(18);
+		DECK_SIZES.put(new Range(1, 1), new Dimension(1, 1));
+		DECK_SIZES.put(new Range(2, 2), new Dimension(2, 1));
+		DECK_SIZES.put(new Range(3, 3), new Dimension(3, 1));
+		DECK_SIZES.put(new Range(4, 4), new Dimension(2, 2));
+		DECK_SIZES.put(new Range(5, 6), new Dimension(3, 2));
+		DECK_SIZES.put(new Range(7, 8), new Dimension(4, 2));
+		DECK_SIZES.put(new Range(9, 9), new Dimension(3, 3));
+		DECK_SIZES.put(new Range(10, 12), new Dimension(4, 3));
+		DECK_SIZES.put(new Range(13, 15), new Dimension(5, 3));
+		DECK_SIZES.put(new Range(16, 20), new Dimension(5, 4));
+		DECK_SIZES.put(new Range(21, 24), new Dimension(6, 4));
+		DECK_SIZES.put(new Range(25, 25), new Dimension(5, 5));
+		DECK_SIZES.put(new Range(26, 30), new Dimension(6, 5));
+		DECK_SIZES.put(new Range(31, 35), new Dimension(7, 5));
+		DECK_SIZES.put(new Range(36, 36), new Dimension(6, 6));
+		DECK_SIZES.put(new Range(37, 42), new Dimension(7, 6));
+		DECK_SIZES.put(new Range(43, 48), new Dimension(7, 6));
+	}
 	
 	private static ArrayList<String> problems;
 	
@@ -86,6 +110,8 @@ public class CardPhotocopier {
 		//File directory = new File("./");
 		//System.out.println("\n\nAll relative paths are relative to: "+directory.getAbsolutePath());
 
+		
+		//TODO: Completely rework the config file to be .yml. Way easier to use.
 		File configFile = new File(CONFIG);
 		if (!configFile.exists()){
 			configFile.createNewFile();
@@ -94,7 +120,8 @@ public class CardPhotocopier {
 				+"../Villainous Card Generator V33.2/Villainous Card Generator V33_Data/-Exports\n"
 				+"Results\n"
 				+"../Villainous Card Generator V33.2/Villainous Card Generator V33_Data/-TextFiles/Villainous Template.ods\n"
-				+ "Autoclose");
+				+ "Autoclose\n"
+				+ "");
 				fw.close();
 				System.out.println("Successfully created config.txt. Please edit it.");
 			} catch (IOException e) {
@@ -158,9 +185,7 @@ public class CardPhotocopier {
 			for (File cardFile : imagesFolder.listFiles(new FilenameFilter() {
 				@Override
 				public boolean accept(File dir, String name) {
-					return name.endsWith(".png")
-							|| name.endsWith(".jpg")
-							|| name.endsWith(".jpeg");
+					return name.endsWith(".png") || name.endsWith(".jpg") || name.endsWith(".jpeg");
 				}
 			})){
 				String name = cardFile.getName().substring(0, cardFile.getName().length() - (cardFile.getName().endsWith(".jpeg") ? 5 : 4));
@@ -174,19 +199,6 @@ public class CardPhotocopier {
 				}
 			}
 			
-			//This is the data of the two images. We now create it empty (black) and we'll draw each card over it.
-
-//			BufferedImage resultImageV = new BufferedImage(3720, 4400, BufferedImage.TYPE_INT_RGB);
-			BufferedImage resultImageV = new BufferedImage(3720, 4400, BufferedImage.TYPE_INT_RGB);
-			Graphics gV = resultImageV.getGraphics();
-			BufferedImage resultImageF = new BufferedImage(3100, 2640, BufferedImage.TYPE_INT_RGB);
-			Graphics gF = resultImageF.getGraphics();
-			//Each ard is 620x880 (WxH)
-			//Those numbers are calculated for 30 Villain cards and 15 Fate cards and won't allow MORE (but will allow less)
-			//It will resize, growing always higher and never wider, if there are more than 30 Villain/15 Fate.
-			//It's not quite optimal, ngl but it gets the work done and it's exactly the same if the number is expected or lower.
-			//Solution: because it is expected that each villain has its own config, maybe it could be configured in the config file the number of cards.
-			
 			int copiesToV = 0, copiesToF= 0;
 			int xV = 0, yV = 0;
 			int xF = 0, yF = 0;
@@ -194,6 +206,7 @@ public class CardPhotocopier {
 			boolean forceFate = false;
 			int done = 0;
 			//We are going to look into each row in the .ods and check if it's a card that exists withing the images folder and draw it into it's corresponding deck.
+			//TODO: do the loop twice, once for reading everything so we have the number of copies of each ddeck, then factorize those numbers to create the proper size for the images, then do the painting. 
 			for (int row = 4; done <=20; row++) {
 				Cell<SpreadSheet> A = sheet.getCellAt("A"+row);
 				try {
@@ -233,43 +246,9 @@ public class CardPhotocopier {
 								ci.deck = 0;
 								if (K.getTextValue().equals("Fate") || K.getTextValue().equals("1") || forceFate) {
 									ci.deck = 1;
-								}
-								
-								System.out.println("Photocopying card "+B.getTextValue()+": "+ci.copies+" copies in deck "+ci.deck);
-								label.setText("Photocopying card "+B.getTextValue()+": "+ci.copies+" copies in "+(ci.deck==0?"Villain":"Fate")+" deck.");
-								
-								for (int i = 0; i < ci.copies; i++) {
-									if (ci.deck==0) {
-										if (yV >= resultImageV.getHeight()) {
-											int newHeight = resultImageV.getHeight() + 880;
-											BufferedImage newImage = new BufferedImage(resultImageV.getWidth(), newHeight, BufferedImage.TYPE_INT_RGB);
-											newImage.getGraphics().drawImage(resultImageV, 0, 0, null);
-											resultImageV = newImage;
-											gV = resultImageV.getGraphics();
-										}
-										gV.drawImage(ci.imageData, xV, yV, null);
-										xV+=620;
-										if (xV >= resultImageV.getWidth()) {
-											xV = 0;
-											yV+=880;
-										}
-										copiesToV++;
-									} else {
-										if (yF >= resultImageF.getHeight()) {
-											int newHeight = resultImageF.getHeight() + 880;
-											BufferedImage newImage = new BufferedImage(resultImageF.getWidth(), newHeight, BufferedImage.TYPE_INT_RGB);
-											newImage.getGraphics().drawImage(resultImageF, 0, 0, null);
-											resultImageF = newImage;
-											gF = resultImageF.getGraphics();
-										}
-										gF.drawImage(ci.imageData, xF, yF, null);
-										xF+=620;
-										if (xF >= resultImageF.getWidth()) {
-											xF = 0;
-											yF+=880;
-										}
-										copiesToF++;
-									}
+									copiesToF+=ci.copies;
+								} else {
+									copiesToV+=ci.copies;
 								}
 							}
 						}
@@ -287,6 +266,49 @@ public class CardPhotocopier {
 					} else {
 						forceFate = false;
 						System.out.println("Interpreted as end of force Fate. No longer forcing fate");
+					}
+				}
+			}
+
+			Dimension gridV = getGrid(copiesToV);
+			Dimension gridF = getGrid(copiesToF);	
+			
+			//This is the data of the two images. We now create it empty (black) and we'll draw each card over it.
+			int cardW = 620, cardH = 880;
+
+//			BufferedImage resultImageV = new BufferedImage(3720, 4400, BufferedImage.TYPE_INT_RGB);
+			BufferedImage resultImageV = new BufferedImage(cardW*gridV.width, cardH*gridV.height, BufferedImage.TYPE_INT_RGB);
+			Graphics gV = resultImageV.getGraphics();
+//			BufferedImage resultImageF = new BufferedImage(3100, 2640, BufferedImage.TYPE_INT_RGB);
+			BufferedImage resultImageF = new BufferedImage(cardW*gridF.width, cardH*gridF.height, BufferedImage.TYPE_INT_RGB);
+			Graphics gF = resultImageF.getGraphics();
+			//Each ard is 620x880 (WxH)
+			//Those numbers are calculated for 30 Villain cards and 15 Fate cards and won't allow MORE (but will allow less)
+			//It will resize, growing always higher and never wider, if there are more than 30 Villain/15 Fate.
+			//It's not quite optimal, ngl but it gets the work done and it's exactly the same if the number is expected or lower.
+			//Solution: because it is expected that each villain has its own config, maybe it could be configured in the config file the number of cards.
+			
+			for(String cardName : cardsInfo.keySet()) {
+				CardInfo ci = cardsInfo.get(cardName);
+				
+				System.out.println("Photocopying card "+cardName+": "+ci.copies+" copies in deck "+ci.deck);
+				label.setText("Photocopying card "+cardName+": "+ci.copies+" copies in "+(ci.deck==0?"Villain":"Fate")+" deck.");
+				
+				for (int i = 0; i < ci.copies; i++) {
+					if (ci.deck==0) {
+						gV.drawImage(ci.imageData, xV, yV, null);
+						xV+=620;
+						if (xV >= resultImageV.getWidth()) {
+							xV = 0;
+							yV+=880;
+						}
+					} else {
+						gF.drawImage(ci.imageData, xF, yF, null);
+						xF+=620;
+						if (xF >= resultImageF.getWidth()) {
+							xF = 0;
+							yF+=880;
+						}
 					}
 				}
 			}
@@ -334,5 +356,59 @@ public class CardPhotocopier {
 	    try (InputStream is = new ByteArrayInputStream(bytes)){
 	        return ImageIO.read(is);
 	    }
+	}
+	
+	private static Dimension getGrid(int quantity) {
+		for (Range index : DECK_SIZES.keySet()) {
+			if (index.inRange(quantity)) {
+				return DECK_SIZES.get(index);
+			}
+		}
+		List<Integer> divisors = getDivisors(quantity);
+		divisors.add(1);
+		divisors.add(quantity);
+		Collections.sort(divisors);
+		double sqrt = Math.sqrt(quantity);
+		List<Integer> sol;
+		if (divisors.size()==2) {
+			sol = divisors;
+		} else {
+			sol = findKClosestElements(divisors, 2, ((int) Math.round(sqrt)));
+		}
+		System.out.println("Grid for "+quantity+": "+sol);
+		System.out.println("Divisors: "+divisors+" sqrt: "+sqrt);
+		return new Dimension(sol.get(1), sol.get(0));
+	}
+	
+	private static ArrayList<Integer> getDivisors(int n){
+		ArrayList<Integer> divisors = new ArrayList<>();
+		for (int i = 2; i * i <= n; ++i)
+			if (n % i == 0) {
+				divisors.add(i);
+				if (i != n / i)
+					divisors.add(n / i);
+			}
+		return divisors;
+    }
+	
+	private static List<Integer> findKClosestElements(List<Integer> input, int k, int target) {
+		int i = Collections.binarySearch(input, target);
+		if (i < 0) {
+			i = -(i + 1);
+		}
+
+		int left = i - 1;
+		int right = i;
+
+		while (k-- > 0) {
+			if (left < 0 || (right < input.size()
+					&& Math.abs(input.get(left) - target) > Math.abs(input.get(right) - target))) {
+				right++;
+			} else {
+				left--;
+			}
+		}
+
+		return input.subList(left + 1, right);
 	}
 }
