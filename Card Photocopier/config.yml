@@ -1,0 +1,26 @@
+#	Villainous Card Photocopier
+
+#The number of cards that should be expected for this Villain to have in his main deck. Useful in case you didn't count the cards well.
+Villain Deck's Expected cards: 30
+
+#The name of the main deck's file to be generated.
+Villain Deck Name: Villain deck
+
+#The name of the Fate deck's file to be generated.
+Fate Deck Name: Fate deck
+
+#Folder where all the generated images of your Villain's cards are. It must not contain other Villains' cards
+Card Images Folder: C:\Users\crist\Pictures\Cartas Custom\Villainous\Destroy and Create\The Stig/Villainous Card Generator V33.2/Villainous Card Generator V33_Data/-Exports
+
+#Where you want the Villain/Fate deck images to be created.
+Results Folder: Results
+
+#True if you want the info window to be automatically closed if everything was ok and expected.
+Autoclose: true
+
+#The number of cards that should be expected for this Villain to have in his Fate deck. Useful in case you didn't count the cards well.
+Fate Deck's Expected cards: 15
+
+#The path to the .ods file where you have your cards' info. It may contain other Villains' cards, that's fine.
+Cards' Info Document: C:\Users\crist\Pictures\Cartas Custom\Villainous\Destroy and Create\The Stig\Villainous Card Generator V33.2\Villainous Card Generator V33_Data\-TextFiles\Villainous Template.ods
+

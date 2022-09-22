@@ -1,0 +1,5 @@
+This line is ignored. Write in the 2nd line the path to the cards folder (-Exports) with the generated images of the cards, on the 3rd line the path to the result, and on the 4th line the path to the .ods file with all the information on the cards. Remove the 5th line to let the window open after it's done (it won't close if there is an error).
+C:\Users\crist\Pictures\Cartas Custom\Villainous\Destroy and Create\The Stig/Villainous Card Generator V33.2/Villainous Card Generator V33_Data/-Exports
+Results
+C:\Users\crist\Pictures\Cartas Custom\Villainous\Destroy and Create\The Stig\Villainous Card Generator V33.2\Villainous Card Generator V33_Data\-TextFiles\Villainous Template.ods
+Autoclose
