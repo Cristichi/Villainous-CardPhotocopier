@@ -90,6 +90,8 @@ public class CardPhotocopier {
 			e.printStackTrace();
 			System.err.println("Ended with error.");
 			label.setText(e.getLocalizedMessage());
+			window.pack();
+			window.setLocationRelativeTo(null);
 		} finally {
 			System.out.println("Done.");
 			if (problems.size() > 0) {
@@ -239,29 +241,39 @@ public class CardPhotocopier {
 				Cell<SpreadSheet> L = sheet.getCellAt("L" + row);
 				Cell<SpreadSheet> M = sheet.getCellAt("M" + row);
 
-				done++;
-				if (!B.getTextValue().trim().isEmpty() && cardsInfo.containsKey(B.getTextValue())) {
-					CardInfo ci = cardsInfo.get(B.getTextValue());
-
-					if (A.isEmpty() || K.isEmpty()
-							&& (!C.isEmpty() || !D.isEmpty() || !E.isEmpty() || !F.isEmpty() || !G.isEmpty()
-									|| !H.isEmpty() || !I.isEmpty() || !J.isEmpty() || !L.isEmpty() || !M.isEmpty())) {
-						problems.add("Detected error in card " + B.getTextValue() + "."
-								+ (A.getTextValue().trim().isEmpty() ? " Number of copies (Column A) not filled." : "")
-								+ (K.getTextValue().trim().isEmpty() ? " Villain/Fate deck (Column K) not filled."
-										: ""));
-						System.err.println("Error reading: " + row + " (Card " + B.getTextValue() + " not proper)");
-					} else {
+				// If we find too many empty lines we are going to call it a day, because it
+				// might mean we are at the end but there are tons of empty lines.
+				// Well, not neccesarily empty lines, but if there is nothing in column B then
+				// those are not cards anyway.
+				if (B.isEmpty()) {
+					done++;
+				} else {
+					if (cardsInfo.containsKey(B.getTextValue())) {
+						// We want "done" to count the CONSECUTIVE empty lines, so if we find a proper
+						// card we are going to reset it why not
 						done = 0;
 
-						ci.copies = Integer.parseInt(A.getTextValue());
+						CardInfo ci = cardsInfo.get(B.getTextValue());
 
-						ci.deck = 0;
-						if (K.getTextValue().equals("Fate") || K.getTextValue().equals("1") || forceFate) {
-							ci.deck = 1;
-							copiesToF += ci.copies;
+						if (A.isEmpty() || K.isEmpty() && (!C.isEmpty() || !D.isEmpty() || !E.isEmpty() || !F.isEmpty()
+								|| !G.isEmpty() || !H.isEmpty() || !I.isEmpty() || !J.isEmpty() || !L.isEmpty()
+								|| !M.isEmpty())) {
+							problems.add("Detected error in card " + B.getTextValue() + "."
+									+ (A.getTextValue().trim().isEmpty() ? " Number of copies (Column A) not filled."
+											: "")
+									+ (K.getTextValue().trim().isEmpty() ? " Villain/Fate deck (Column K) not filled."
+											: ""));
+							System.err.println("Error reading: " + row + " (Card " + B.getTextValue() + " not proper)");
 						} else {
-							copiesToV += ci.copies;
+							ci.copies = Integer.parseInt(A.getTextValue());
+
+							ci.deck = 0;
+							if (K.getTextValue().equals("Fate") || K.getTextValue().equals("1") || forceFate) {
+								ci.deck = 1;
+								copiesToF += ci.copies;
+							} else {
+								copiesToV += ci.copies;
+							}
 						}
 					}
 				}
@@ -270,7 +282,7 @@ public class CardPhotocopier {
 				// card.
 				System.err.println(e.getLocalizedMessage());
 				System.err.println("Line: " + A.getTextValue());
-				done++;
+
 				// If the column A contains "- Fate -", it's Fate forcing time. This allows
 				// villains that need to generate Fate cards as Villain cards with
 				// a different layout to still tell my tool which cards are Fate. Read the Usage
@@ -288,7 +300,7 @@ public class CardPhotocopier {
 		Dimension gridV = getGrid(copiesToV);
 		Dimension gridF = getGrid(copiesToF);
 
-		if (gridV.height == 0 || gridV.width == 0 || gridF.height == 0 || gridF.width == 0) {
+		if (copiesToV == 0 || copiesToF == 0) {
 			throw new IllegalArgumentException("One of your decks has 0 cards! Check it please.");
 		}
 
@@ -377,12 +389,22 @@ public class CardPhotocopier {
 		}
 	}
 
+	// It calculates the optimal dimensions of the file
+	// In number of cards wide and number of cards high
 	private static Dimension getGrid(int quantity) {
+		// Because it was quite hard to calculate it, it first sees if I already did the
+		// work manually
 		for (Range index : DECK_SIZES.keySet()) {
 			if (index.inRange(quantity)) {
 				return DECK_SIZES.get(index);
 			}
 		}
+		
+		//If the number of cards is quite wild, then
+		//it tries it best to calculate a good one.
+		//It probably will be wacky
+		problems.add("The number of cards ("+quantity+") was a little bit too high so the result might be wicked.");
+		problems.add("Please tell Cristichi#5193 to add support for "+quantity+" cards.");
 		List<Integer> divisors = getDivisors(quantity);
 		divisors.add(1);
 		divisors.add(quantity);
