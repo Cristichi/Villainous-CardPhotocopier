@@ -113,11 +113,7 @@ public class CardPhotocopier {
 
 	public static void generate() throws Exception {
 		label.setText("Reading config file.");
-		// File directory = new File("./");
-		// System.out.println("\n\nAll relative paths are relative to:
-		// "+directory.getAbsolutePath());
 
-		// TODO: Completely rework the config file to be .yml. Way easier to use.
 		Configuration config = new Configuration(CONFIG_YAML, "Villainous Card Photocopier");
 		if (!config.exists()) {
 			config.setValue(CONFIG_CARD_IMAGES,
