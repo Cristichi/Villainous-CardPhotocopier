@@ -33,7 +33,8 @@ import es.cristichi.cardphotocopier.obj.Configuration;
 import es.cristichi.cardphotocopier.obj.Range;
 
 /**
- * Feel free to edit the code. Have an evil day!
+ * Feel free to modify the code for yourself and/or propose modifications and
+ * improvements. Have an evil day!
  * 
  * @author Cristichi#5193
  */
@@ -67,14 +68,15 @@ public class CardPhotocopier {
 			CONFIG_VILLAIN_NAME = "Villain Deck Name", CONFIG_FATE_QUANTITY = "Fate Deck's Expected cards",
 			CONFIG_VILLAIN_QUANTITY = "Villain Deck's Expected cards";
 
-	private static ArrayList<String> problems;
+	private static ArrayList<String> warnings;
 
 	private static JFrame window;
 	private static JLabel label;
 
 	public static void main(String[] args) {
-		problems = new ArrayList<>(10);
+		warnings = new ArrayList<>(10);
 		try {
+			// We first create a new window so we can tell the user how things are going.
 			window = new JFrame("Villainous Card Photocopier");
 			window.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 			label = new JLabel("Starting");
@@ -86,21 +88,28 @@ public class CardPhotocopier {
 			window.setVisible(true);
 			generate();
 			label.setText("Done. Close this window to finish.");
+
 		} catch (Exception e) {
+			// If anything happens that makes the proccess unable to continue (things are
+			// missing, wrong values in the .ods file, etc) then we just stop and tell
+			// the user what happened. We also print in the console just in case.
+			System.err.println("Ended badly with error. Sadge.");
 			e.printStackTrace();
-			System.err.println("Ended with error.");
 			label.setText(e.getLocalizedMessage());
 			window.pack();
 			window.setLocationRelativeTo(null);
+
 		} finally {
-			System.out.println("Done.");
-			if (problems.size() > 0) {
+			// After we are done, no matter if there was an error or not, we are going to
+			// show any item in "warnings" so the user can fix whatever weird thing we found
+			// (cards missing information, too many copies or not enough, etc)
+			if (warnings.size() > 0) {
 				window.remove(label);
-				window.setLayout(new GridLayout(problems.size() + 1, 1));
+				window.setLayout(new GridLayout(warnings.size() + 1, 1));
 				JLabel problemTitle = new JLabel("Process completed succesfully but with some weird things:");
 				problemTitle.setBorder(new EmptyBorder(2, 5, 2, 5));
 				window.add(problemTitle);
-				for (String problem : problems) {
+				for (String problem : warnings) {
 					JLabel lbl = new JLabel(problem);
 					lbl.setBorder(new EmptyBorder(2, 5, 2, 5));
 					window.add(lbl);
@@ -207,7 +216,7 @@ public class CardPhotocopier {
 			CardInfo info = new CardInfo(load(cardFile));
 			if (info.imageData == null) {
 				System.err.println("Image " + cardFile + " could not be loaded.");
-				problems.add("Image \"" + cardFile.getName() + "\" could not be loaded.");
+				warnings.add("Image \"" + cardFile.getName() + "\" could not be loaded.");
 			} else {
 				cardsInfo.put(name, info);
 			}
@@ -246,21 +255,24 @@ public class CardPhotocopier {
 				} else {
 					if (cardsInfo.containsKey(B.getTextValue())) {
 						// We want "done" to count the CONSECUTIVE empty lines, so if we find a proper
-						// card we are going to reset it why not
+						// card we are going to reset it why not.
 						done = 0;
-
-						CardInfo ci = cardsInfo.get(B.getTextValue());
 
 						if (A.isEmpty() || K.isEmpty() && (!C.isEmpty() || !D.isEmpty() || !E.isEmpty() || !F.isEmpty()
 								|| !G.isEmpty() || !H.isEmpty() || !I.isEmpty() || !J.isEmpty() || !L.isEmpty()
 								|| !M.isEmpty())) {
-							problems.add("Detected error in card " + B.getTextValue() + "."
+							// If we are missing data and it's not because everything is empty, we are going
+							// to warn the user so they can check if the .ods document is not properly
+							// filled.
+							warnings.add("Detected error in card " + B.getTextValue() + "."
 									+ (A.getTextValue().trim().isEmpty() ? " Number of copies (Column A) not filled."
 											: "")
 									+ (K.getTextValue().trim().isEmpty() ? " Villain/Fate deck (Column K) not filled."
 											: ""));
 							System.err.println("Error reading: " + row + " (Card " + B.getTextValue() + " not proper)");
 						} else {
+							// We add the information found about this card
+							CardInfo ci = cardsInfo.get(B.getTextValue());
 							ci.copies = Integer.parseInt(A.getTextValue());
 
 							ci.deck = 0;
@@ -293,6 +305,8 @@ public class CardPhotocopier {
 			}
 		}
 
+		// We get the proper dimensions for the final image, depending on the number of
+		// cards.
 		Dimension gridV = getGrid(copiesToV);
 		Dimension gridF = getGrid(copiesToF);
 
@@ -337,44 +351,42 @@ public class CardPhotocopier {
 
 		label.setText("Removing Herobrine.");
 
+		// If the number of copies is not the expected, we notify the user in case they
+		// forgot to save their .ods after some changes.
 		int villainExpectedSize = config.getInt(CONFIG_VILLAIN_QUANTITY);
 		int fateExpectedSize = config.getInt(CONFIG_FATE_QUANTITY);
 
-		// If the number of copies is not the expected, we notify the user in case they
-		// forgot to save their .ods after some changes.
 		if (copiesToV != villainExpectedSize) {
-			problems.add("Unexpected number of copies to Vilain deck. Expected was " + villainExpectedSize
+			warnings.add("Unexpected number of copies to Vilain deck. Expected was " + villainExpectedSize
 					+ " but it was \"" + copiesToV + "\".");
 		}
 		if (copiesToF != fateExpectedSize) {
-			problems.add("Unexpected error number of copies to Fate deck. Expected was " + fateExpectedSize
+			warnings.add("Unexpected error number of copies to Fate deck. Expected was " + fateExpectedSize
 					+ " but it was \"" + copiesToF + "\".");
 		}
 
 		label.setText("Writing the images for TTS decks.");
 
+		// We create the results folder if it doesn't exist.
 		if (!resultsFolder.exists()) {
 			resultsFolder.mkdir();
 		}
 
+		// We save the image data into .jpgs files.
 		File villainDeck = new File(resultsFolder, config.getString(CONFIG_VILLAIN_NAME) + ".jpg");
 		File fateDeck = new File(resultsFolder, config.getString(CONFIG_FATE_NAME) + ".jpg");
 
-		if (villainDeck.exists()) {
-			villainDeck.delete();
-		}
-		if (fateDeck.exists()) {
-			fateDeck.delete();
-		}
-
+		// ImageIO.write is going to discard any previous images anyway.
 		ImageIO.write(resultImageV, "jpg", villainDeck);
 		ImageIO.write(resultImageF, "jpg", fateDeck);
 
-		if (autoclose && problems.isEmpty()) {
+		// We check if the user wants to autoclose and we do it after 500ms if there are
+		// no problems whatsoever.
+		if (autoclose && warnings.isEmpty()) {
 			System.out.println("Autoclose goes brr");
 			label.setText("Done. Autoclosing.");
 			Thread.sleep(500);
-			System.exit(0);
+			window.dispose();
 		}
 	}
 
@@ -395,12 +407,12 @@ public class CardPhotocopier {
 				return DECK_SIZES.get(index);
 			}
 		}
-		
-		//If the number of cards is quite wild, then
-		//it tries it best to calculate a good one.
-		//It probably will be wacky
-		problems.add("The number of cards ("+quantity+") was a little bit too high so the result might be wicked.");
-		problems.add("Please tell Cristichi#5193 to add support for "+quantity+" cards.");
+
+		// If the number of cards is quite wild, then
+		// it tries it best to calculate a good one.
+		// It probably will be wacky
+		warnings.add("The number of cards (" + quantity + ") was a little bit too high so the result might be wicked.");
+		warnings.add("Please tell Cristichi#5193 to add support for " + quantity + " cards.");
 		List<Integer> divisors = getDivisors(quantity);
 		divisors.add(1);
 		divisors.add(quantity);
