@@ -163,7 +163,7 @@ public class Configuration extends File implements Cloneable {
 	 * 
 	 */
 	public void saveConfig() throws IOException {
-		String configTxt = header == null ? "" : "#\t" + header + "\n\n";
+		String configTxt = header == null ? "" : "#\t" + header.replace("\n", "\n#\t") + "\n\n";
 		Set<String> keys = settings.keySet();
 		for (String key : keys) {
 			String value = settings.get(key).toString();

@@ -123,7 +123,7 @@ public class CardPhotocopier {
 	public static void generate() throws Exception {
 		label.setText("Reading config file.");
 
-		Configuration config = new Configuration(CONFIG_YAML, "Villainous Card Photocopier");
+		Configuration config = new Configuration(CONFIG_YAML, "Villainous Card Photocopier configuration.\n For help, contact Cristichi#5193 on discord.");
 		if (!config.exists()) {
 			config.setValue(CONFIG_CARD_IMAGES,
 					"../Villainous Card Generator V33.2/Villainous Card Generator V33_Data/-Exports",
@@ -169,6 +169,7 @@ public class CardPhotocopier {
 		}
 
 		config.reloadConfigFromFile();
+		config.saveConfig();
 
 		boolean autoclose = config.getBoolean(CONFIG_AUTOCLOSE);
 
