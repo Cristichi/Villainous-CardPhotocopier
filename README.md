@@ -23,7 +23,7 @@ If you have **ANY** doubt regarding how to install it or how to configure it or 
 
 ## Usage
 
-You may not use this program to generate a 3rd deck that is neither the Villain nor Fate deck. But **you still may use my tool for that Villain's Fate and Villain deck normally**, to do so just make sure that the value in the K column of the .ods for the cards that are neither in the Fate nor Villain decks is not a valid value to be interpreted as either Fate nor Villain ("**0**", "**1**", "**Villain**" or "**Fate**", without the quotation marks of course).
+You may not use this program to generate a 3rd deck that is neither the Villain nor Fate deck. But **you still may use my tool for that Villain's Fate and Villain deck normally**, to do so just make sure that the value in the A column of the .ods (Card count) for the cards that are neither in the Fate nor Villain decks is "**0**".
 
 If you followed the instructions, **just make sure your .ods file is saved** and **it has the A column filled with the number of copies for each card**, as well as the information of each card, **and double click in the .jar file** you downloaded and it will open a window telling you what it's currently doing. Also note that everything must be in teh first page of the .ods file. If you need support for other pages, just tell me. It hasn't been done yet because I think everyone would be using the first page only.
 
