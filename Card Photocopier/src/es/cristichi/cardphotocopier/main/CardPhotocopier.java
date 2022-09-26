@@ -106,11 +106,11 @@ public class CardPhotocopier {
 			if (warnings.size() > 0) {
 				window.remove(label);
 				window.setLayout(new GridLayout(warnings.size() + 1, 1));
-				JLabel problemTitle = new JLabel("Process completed succesfully but with some weird things:");
-				problemTitle.setBorder(new EmptyBorder(2, 5, 2, 5));
-				window.add(problemTitle);
-				for (String problem : warnings) {
-					JLabel lbl = new JLabel(problem);
+				JLabel warningTitle = new JLabel("Process completed succesfully but with some weird things:");
+				warningTitle.setBorder(new EmptyBorder(2, 5, 2, 5));
+				window.add(warningTitle);
+				for (String w : warnings) {
+					JLabel lbl = new JLabel(w);
 					lbl.setBorder(new EmptyBorder(2, 5, 2, 5));
 					window.add(lbl);
 				}
@@ -305,14 +305,14 @@ public class CardPhotocopier {
 			}
 		}
 
+		if (copiesToV == 0 || copiesToF == 0) {
+			throw new IllegalArgumentException("One of your decks has 0 cards! Check it please.");
+		}
+
 		// We get the proper dimensions for the final image, depending on the number of
 		// cards.
 		Dimension gridV = getGrid(copiesToV);
 		Dimension gridF = getGrid(copiesToF);
-
-		if (copiesToV == 0 || copiesToF == 0) {
-			throw new IllegalArgumentException("One of your decks has 0 cards! Check it please.");
-		}
 
 		// This is the data of the two images. We now create it empty (black) and we'll
 		// draw each card over it.
@@ -381,7 +381,7 @@ public class CardPhotocopier {
 		ImageIO.write(resultImageF, "jpg", fateDeck);
 
 		// We check if the user wants to autoclose and we do it after 500ms if there are
-		// no problems whatsoever.
+		// no warnings whatsoever.
 		if (autoclose && warnings.isEmpty()) {
 			System.out.println("Autoclose goes brr");
 			label.setText("Done. Autoclosing.");
@@ -400,8 +400,9 @@ public class CardPhotocopier {
 	// It calculates the optimal dimensions of the file
 	// In number of cards wide and number of cards high
 	private static Dimension getGrid(int quantity) {
-		// Because it was quite hard to calculate it, it first sees if I already did the
-		// work manually
+		// Because it was quite hard to calculate it I just guessed case by case which
+		// dimensions would be the most appropriate for each number of cards, including
+		// the common 30 and 15, so it first sees if I already did the work manually
 		for (Range index : DECK_SIZES.keySet()) {
 			if (index.inRange(quantity)) {
 				return DECK_SIZES.get(index);
