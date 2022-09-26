@@ -1,8 +1,7 @@
 /bin/
 /Results/
-/config.txt
+/config.yml
 /.classpath
 /.project
+/.gitignore
 /README.md
-/old_config.txt
-/config.yml
