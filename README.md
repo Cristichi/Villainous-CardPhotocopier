@@ -12,9 +12,9 @@ If you have **ANY** doubt regarding how to install it or how to configure it or 
 
 ## Instalation
 
-1. You need to be using the **Villainous Card Generator** (https://drive.google.com/drive/u/0/folders/1wNyGRrege46Kob-1tvYbb8eixMeOFf81). If you are not, **I highly doubt my tool will be useful to you** because it reads the .ods file that it provides to read information about each card (number of copies and the deck it belongs to).
-2. You need **Java 1.8 or superior** installed. If you are not sure if you have it installed, just keep following the instructions and at the end if you can't open the .jar with a double click, you need to install Java. After you install Java it should work.
-3. Click here to **download the executable .jar file**: [https://github.com/Cristichi/Villainous-CardPhotocopier/releases/tag/main-release-v1.1](https://github.com/Cristichi/Villainous-CardPhotocopier/releases/tag/main-release-v1.1)
+1. You need to be using the **Villainous Card Generator** (https://drive.google.com/drive/u/0/folders/1wNyGRrege46Kob-1tvYbb8eixMeOFf81). If you are not, **I highly doubt my tool will be useful to you** because it reads the .ods file that it provides to read information about each card (number of copies and the deck it belongs to). If for some reason you are not, you need to create a .ods file where you put the number of copies in the A column, the exact name of the card in column B and "**Villain**"/"**0**" or "**Fate**"/"**1**" on the column K and you are good to go.
+2. You need **Java** installed. If you are not sure if you have it installed, just keep following the instructions and at the end if you can't open the .jar with a double click, you need to install Java. After you install Java it should work.
+3. Click here to **download the executable .jar file**: [https://github.com/Cristichi/Villainous-CardPhotocopier/releases/tag/main-release-v2.1](https://github.com/Cristichi/Villainous-CardPhotocopier/releases/tag/main-release-v2.1)
 <br>You may download the source code if you are a Java nerd so you can modify it in any way. Feel free to modify it or ask me if you have any specific needs.
 4. Place it in the folder where you are managing one of your villains. I recommend to copy this .jar file into a new folder dedicated to my tool for each of your villains. Organize it the way you desire, tho.
 5. **Double click it so it generates the config.yml file**. Please don't move that file or rename it or it will be generated again if my tool can't find it.
