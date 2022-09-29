@@ -47,6 +47,6 @@ I won't do an automatic updater, but you can always check this page again for an
 
 ## The future
 
-I might want to add new configuration values for the name of the Villain and Fate decks that are generated.
+I want to add support for extra decks, which might be represented by higher numbers than 0 and 1.
 
 Also, please contact me if you have any request.
