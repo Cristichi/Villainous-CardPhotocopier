@@ -17,6 +17,7 @@ import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 
 import javax.imageio.ImageIO;
@@ -67,6 +68,14 @@ public class CardPhotocopier {
 			CONFIG_RESULTS = "Results Folder", CONFIG_AUTOCLOSE = "Autoclose", CONFIG_FATE_NAME = "Fate Deck Name",
 			CONFIG_VILLAIN_NAME = "Villain Deck Name", CONFIG_FATE_QUANTITY = "Fate Deck's Expected cards",
 			CONFIG_VILLAIN_QUANTITY = "Villain Deck's Expected cards";
+	public static String INFO_DOC = "The path to the .ods file where you have your cards' info. It may contain other Villains' cards, that's fine.",
+			INFO_CARD_IMAGES = "Folder where all the generated images of your Villain's cards are. It must not contain other Villains' cards",
+			INFO_RESULTS = "Where you want the Villain/Fate deck images to be created.",
+			INFO_AUTOCLOSE = "True if you want the info window to be automatically closed if everything was ok and expected.",
+			INFO_FATE_NAME = "The name of the Fate deck's file to be generated.",
+			INFO_VILLAIN_NAME = "The name of the main deck's file to be generated.",
+			INFO_FATE_QUANTITY = "The number of cards that should be expected for this Villain to have in his Fate deck. Useful in case you didn't count the cards well.",
+			INFO_VILLAIN_QUANTITY = "The number of cards that should be expected for this Villain to have in his main deck. Useful in case you didn't count the cards well.";
 
 	private static ArrayList<String> warnings;
 
@@ -123,23 +132,20 @@ public class CardPhotocopier {
 	public static void generate() throws Exception {
 		label.setText("Reading config file.");
 
-		Configuration config = new Configuration(CONFIG_YAML, "Villainous Card Photocopier configuration.\n For help, contact Cristichi#5193 on discord.");
+		Configuration config = new Configuration(CONFIG_YAML,
+				"Villainous Card Photocopier configuration.\n For help, contact Cristichi#5193 on discord.");
 		if (!config.exists()) {
 			config.setValue(CONFIG_CARD_IMAGES,
-					"../Villainous Card Generator V33.2/Villainous Card Generator V33_Data/-Exports",
-					"Folder where all the generated images of your Villain's cards are. It must not contain other Villains' cards");
+					"../Villainous Card Generator V33.2/Villainous Card Generator V33_Data/-Exports", INFO_CARD_IMAGES);
 			config.setValue(CONFIG_DOC,
 					"../Villainous Card Generator V33.2/Villainous Card Generator V33_Data/-TextFiles/Villainous Template.ods",
-					"The path to the .ods file where you have your cards' info. It may contain other Villains' cards, that's fine.");
-			config.setValue(CONFIG_RESULTS, "Results", "Where you want the Villain/Fate deck images to be created.");
-			config.setValue(CONFIG_AUTOCLOSE, true,
-					"True if you want the info window to be automatically closed if everything was ok and expected.");
-			config.setValue(CONFIG_VILLAIN_NAME, "Villain deck", "The name of the main deck's file to be generated.");
-			config.setValue(CONFIG_FATE_NAME, "Fate deck", "The name of the Fate deck's file to be generated.");
-			config.setValue(CONFIG_VILLAIN_QUANTITY, 30,
-					"The number of cards that should be expected for this Villain to have in his main deck. Useful in case you didn't count the cards well.");
-			config.setValue(CONFIG_FATE_QUANTITY, 15,
-					"The number of cards that should be expected for this Villain to have in his Fate deck. Useful in case you didn't count the cards well.");
+					INFO_DOC);
+			config.setValue(CONFIG_RESULTS, "Results", INFO_RESULTS);
+			config.setValue(CONFIG_AUTOCLOSE, true, INFO_AUTOCLOSE);
+			config.setValue(CONFIG_VILLAIN_NAME, "Villain deck", INFO_VILLAIN_NAME);
+			config.setValue(CONFIG_FATE_NAME, "Fate deck", INFO_FATE_NAME);
+			config.setValue(CONFIG_VILLAIN_QUANTITY, 30, INFO_VILLAIN_QUANTITY);
+			config.setValue(CONFIG_FATE_QUANTITY, 15, INFO_FATE_QUANTITY);
 
 			config.saveConfig();
 
@@ -169,6 +175,14 @@ public class CardPhotocopier {
 		}
 
 		config.reloadConfigFromFile();
+		config.setInfo(CONFIG_CARD_IMAGES, INFO_CARD_IMAGES);
+		config.setInfo(CONFIG_DOC, INFO_DOC);
+		config.setInfo(CONFIG_RESULTS, INFO_RESULTS);
+		config.setInfo(CONFIG_AUTOCLOSE, INFO_AUTOCLOSE);
+		config.setInfo(CONFIG_VILLAIN_NAME, INFO_VILLAIN_NAME);
+		config.setInfo(CONFIG_FATE_NAME, INFO_FATE_NAME);
+		config.setInfo(CONFIG_VILLAIN_QUANTITY, INFO_VILLAIN_QUANTITY);
+		config.setInfo(CONFIG_FATE_QUANTITY, INFO_FATE_QUANTITY);
 		config.saveConfig();
 
 		boolean autoclose = config.getBoolean(CONFIG_AUTOCLOSE);
@@ -203,7 +217,7 @@ public class CardPhotocopier {
 		Sheet sheet = sheetDoc.getFirstSheet();
 
 		// First we read every .png, .jpg and .jpeg file.
-		HashMap<String, CardInfo> cardsInfo = new HashMap<>(50);
+		LinkedHashMap<String, CardInfo> cardsInfo = new LinkedHashMap<>(60);
 
 		for (File cardFile : imagesFolder.listFiles(new FilenameFilter() {
 			@Override
@@ -214,6 +228,7 @@ public class CardPhotocopier {
 			String name = cardFile.getName().substring(0,
 					cardFile.getName().length() - (cardFile.getName().endsWith(".jpeg") ? 5 : 4));
 			label.setText("Loading " + name + "'s image data from it's file.");
+			System.out.println("Loading " + name + "'s image data from it's file.");
 			CardInfo info = new CardInfo(load(cardFile));
 			if (info.imageData == null) {
 				System.err.println("Image " + cardFile + " could not be loaded.");

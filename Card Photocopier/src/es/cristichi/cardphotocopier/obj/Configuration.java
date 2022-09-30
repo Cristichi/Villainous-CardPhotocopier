@@ -7,8 +7,7 @@ import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.LinkedHashMap;
 import java.util.Set;
 import java.util.StringTokenizer;
 
@@ -19,13 +18,13 @@ public class Configuration extends File implements Cloneable {
 	private static final long serialVersionUID = 115L;
 
 	private String header;
-	private Map<String, Object> settings;
-	private Map<String, String> info;
+	private LinkedHashMap<String, Object> settings;
+	private LinkedHashMap<String, String> info;
 
 	public Configuration(String file, String header) {
 		super(file);
-		settings = new HashMap<>();
-		info = new HashMap<>();
+		settings = new LinkedHashMap<>();
+		info = new LinkedHashMap<>();
 		this.header = header;
 	}
 
