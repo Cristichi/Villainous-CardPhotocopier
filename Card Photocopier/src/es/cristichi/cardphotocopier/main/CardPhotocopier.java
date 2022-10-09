@@ -19,7 +19,11 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 
+import javax.imageio.IIOImage;
 import javax.imageio.ImageIO;
+import javax.imageio.ImageWriteParam;
+import javax.imageio.ImageWriter;
+import javax.imageio.stream.ImageOutputStream;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.border.EmptyBorder;
@@ -81,7 +85,7 @@ public class CardPhotocopier {
 					+ "number of empty lines in a row we suppose we reached the end of the document. We recommend a value of 20 and if it's lower it will finish way "
 					+ "faster but it might not reach your villain's cards if they are at the end of your .ods document.",
 			INFO_TYPE_ORDER = "Here you can alter the order of the types. To make it use the default order, write something like "
-					+ "\""+CONFIG_TYPE_ORDER+": Condition, Effect, Hero, Ally, Item\" (without quotation marks). To make it order by name, remove this value entirely.";
+					+ "\""+CONFIG_TYPE_ORDER+": Hero, Condition, Effect, Ally, Item\" (without quotation marks). To make it order by name, remove this value entirely.";
 
 	private static ArrayList<String> warnings;
 
@@ -153,7 +157,7 @@ public class CardPhotocopier {
 			config.setValue(CONFIG_VILLAIN_QUANTITY, 30, INFO_VILLAIN_QUANTITY);
 			config.setValue(CONFIG_FATE_QUANTITY, 15, INFO_FATE_QUANTITY);
 			config.setValue(CONFIG_EMPTY_ROWS_TO_END, 20, INFO_EMPTY_ROWS_TO_END);
-			config.setValue(CONFIG_TYPE_ORDER, "ignore_type", INFO_TYPE_ORDER);
+			config.setValue(CONFIG_TYPE_ORDER, "Hero, Condition, Effect, Ally, Item", INFO_TYPE_ORDER);
 
 			config.saveConfig();
 
@@ -381,7 +385,7 @@ public class CardPhotocopier {
 			config.setValue(CONFIG_TYPE_ORDER, "ignore_type", INFO_TYPE_ORDER);
 			config.saveConfig();
 		}
-		String order = config.getString(CONFIG_TYPE_ORDER);
+		String order = config.getString(CONFIG_TYPE_ORDER, "ignore type");
 		String[] orderSplit = order.split(",");
 		for (int i = 0; i < orderSplit.length; i++) {
 			orderSplit[i] = orderSplit[i].trim();
@@ -440,9 +444,9 @@ public class CardPhotocopier {
 		File villainDeck = new File(resultsFolder, config.getString(CONFIG_VILLAIN_NAME) + ".jpg");
 		File fateDeck = new File(resultsFolder, config.getString(CONFIG_FATE_NAME) + ".jpg");
 
-		// ImageIO.write is going to discard any previous images anyway.
-		ImageIO.write(resultImageV, "jpg", villainDeck);
-		ImageIO.write(resultImageF, "jpg", fateDeck);
+		// Big chad compressed writing to file.
+		writeImage(resultImageV, villainDeck, .7f);
+		writeImage(resultImageF, fateDeck, .7f);
 
 		// We check if the user wants to autoclose and we do it after 500ms if there are
 		// no warnings whatsoever.
@@ -451,6 +455,28 @@ public class CardPhotocopier {
 			label.setText("Done. Autoclosing.");
 			Thread.sleep(500);
 			window.dispose();
+		}
+	}
+
+	/**
+	 * 
+	 * @param resultImage A BufferedImage containing the image data.
+	 * @param deckFile A File, existing or not, to save the data to.
+	 * @param quality 0 for priorizing compression, 1 for priorizing quality, or any value in between.
+	 * @throws IOException
+	 */
+	private static void writeImage(BufferedImage resultImage, File deckFile, float quality) throws IOException {
+		try (ImageOutputStream ios = ImageIO.createImageOutputStream(deckFile)) {
+			ImageWriter jpgWriter = ImageIO.getImageWritersByFormatName("JPEG").next();
+			
+			ImageWriteParam jpgWriteParam = jpgWriter.getDefaultWriteParam();
+			jpgWriteParam.setCompressionMode(ImageWriteParam.MODE_EXPLICIT);
+			jpgWriteParam.setCompressionQuality(quality);
+			
+			jpgWriter.setOutput(ios);
+			
+			jpgWriter.write(null, new IIOImage(resultImage, null, null), jpgWriteParam);
+			jpgWriter.dispose();
 		}
 	}
 
