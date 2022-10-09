@@ -88,7 +88,7 @@ public class CardPhotocopier {
 					+ "\"" + CONFIG_TYPE_ORDER
 					+ ": Hero, Condition, Effect, Ally, Item\" (without quotation marks). To make it order by name, remove this value entirely.",
 			INFO_IMAGE_QUALITY = "The quality of the resulting images. Put \"1\" for the best quality but large image, "
-					+ "\"0\" for the poorest quality (horrible trust me) and smallest image possible. Recommended is \"0.7\" so keep it that way unless you need the file to be even smaller.";
+					+ "\"0\" for the poorest quality (horrible trust me) and smallest image possible. Recommended is \"0.8\" so keep it that way unless you need the file to be even smaller.";
 
 	private static ArrayList<String> warnings;
 
@@ -161,7 +161,7 @@ public class CardPhotocopier {
 			config.setValue(CONFIG_FATE_QUANTITY, 15, INFO_FATE_QUANTITY);
 			config.setValue(CONFIG_EMPTY_ROWS_TO_END, 20, INFO_EMPTY_ROWS_TO_END);
 			config.setValue(CONFIG_TYPE_ORDER, "Hero, Condition, Effect, Ally, Item", INFO_TYPE_ORDER);
-			config.setValue(CONFIG_IMAGE_QUALITY, "0.7", INFO_IMAGE_QUALITY);
+			config.setValue(CONFIG_IMAGE_QUALITY, "0.8", INFO_IMAGE_QUALITY);
 
 			config.saveConfig();
 
@@ -451,7 +451,7 @@ public class CardPhotocopier {
 
 		if (!config.contains(CONFIG_IMAGE_QUALITY)) {
 			config.setInfo(CONFIG_IMAGE_QUALITY, INFO_IMAGE_QUALITY);
-			config.setValue(CONFIG_IMAGE_QUALITY, "0.7", INFO_IMAGE_QUALITY);
+			config.setValue(CONFIG_IMAGE_QUALITY, "0.8", INFO_IMAGE_QUALITY);
 			config.saveConfig();
 		}
 		float quality = config.getFloat(CONFIG_IMAGE_QUALITY);
