@@ -201,6 +201,7 @@ public class CardPhotocopier {
 		config.setInfo(CONFIG_FATE_QUANTITY, INFO_FATE_QUANTITY);
 		config.setInfo(CONFIG_EMPTY_ROWS_TO_END, INFO_EMPTY_ROWS_TO_END);
 		config.setInfo(CONFIG_TYPE_ORDER, INFO_TYPE_ORDER);
+		config.setInfo(CONFIG_IMAGE_QUALITY, INFO_IMAGE_QUALITY);
 		config.saveConfig();
 
 		boolean autoclose = config.getBoolean(CONFIG_AUTOCLOSE);
