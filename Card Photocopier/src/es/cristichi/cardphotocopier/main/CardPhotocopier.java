@@ -80,7 +80,8 @@ public class CardPhotocopier {
 			INFO_EMPTY_ROWS_TO_END = "This is a little bit technical. It's not easy to detect when we can stop reading new lines so what we do is that if we detect an X "
 					+ "number of empty lines in a row we suppose we reached the end of the document. We recommend a value of 20 and if it's lower it will finish way "
 					+ "faster but it might not reach your villain's cards if they are at the end of your .ods document.",
-			INFO_TYPE_ORDER = "Here you can alter the order of the types. To make it use the default order, use \""+CONFIG_TYPE_ORDER+": Condition, Effect, Hero, Ally, Item\" (without quotation marks). To make it order by name, remove this value entirely.";
+			INFO_TYPE_ORDER = "Here you can alter the order of the types. To make it use the default order, write something like "
+					+ "\""+CONFIG_TYPE_ORDER+": Condition, Effect, Hero, Ally, Item\" (without quotation marks). To make it order by name, remove this value entirely.";
 
 	private static ArrayList<String> warnings;
 
@@ -152,7 +153,7 @@ public class CardPhotocopier {
 			config.setValue(CONFIG_VILLAIN_QUANTITY, 30, INFO_VILLAIN_QUANTITY);
 			config.setValue(CONFIG_FATE_QUANTITY, 15, INFO_FATE_QUANTITY);
 			config.setValue(CONFIG_EMPTY_ROWS_TO_END, 20, INFO_EMPTY_ROWS_TO_END);
-			config.setValue(CONFIG_TYPE_ORDER, "Condition, Effect, Hero, Ally, Item", INFO_TYPE_ORDER);
+			config.setValue(CONFIG_TYPE_ORDER, "ignore_type", INFO_TYPE_ORDER);
 
 			config.saveConfig();
 
