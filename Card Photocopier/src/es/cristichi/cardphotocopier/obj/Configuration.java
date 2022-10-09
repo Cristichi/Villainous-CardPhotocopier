@@ -220,4 +220,8 @@ public class Configuration extends File implements Cloneable {
 			e.printStackTrace();
 		}
 	}
+
+	public boolean contains(Object key) {
+		return settings.containsKey(key);
+	}
 }

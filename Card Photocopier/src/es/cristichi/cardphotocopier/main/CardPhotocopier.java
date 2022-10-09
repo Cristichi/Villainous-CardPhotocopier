@@ -67,7 +67,7 @@ public class CardPhotocopier {
 	public static String CONFIG_DOC = "Cards' Info Document", CONFIG_CARD_IMAGES = "Card Images Folder",
 			CONFIG_RESULTS = "Results Folder", CONFIG_AUTOCLOSE = "Autoclose", CONFIG_FATE_NAME = "Fate Deck Name",
 			CONFIG_VILLAIN_NAME = "Villain Deck Name", CONFIG_FATE_QUANTITY = "Fate Deck's Expected cards",
-			CONFIG_VILLAIN_QUANTITY = "Villain Deck's Expected cards";
+			CONFIG_VILLAIN_QUANTITY = "Villain Deck's Expected cards", CONFIG_EMPTY_ROWS_TO_END = "Empty Rows to End";
 	public static String INFO_DOC = "The path to the .ods file where you have your cards' info. It may contain other Villains' cards, that's fine.",
 			INFO_CARD_IMAGES = "Folder where all the generated images of your Villain's cards are. It must not contain other Villains' cards",
 			INFO_RESULTS = "Where you want the Villain/Fate deck images to be created.",
@@ -75,7 +75,10 @@ public class CardPhotocopier {
 			INFO_FATE_NAME = "The name of the Fate deck's file to be generated.",
 			INFO_VILLAIN_NAME = "The name of the main deck's file to be generated.",
 			INFO_FATE_QUANTITY = "The number of cards that should be expected for this Villain to have in his Fate deck. Useful in case you didn't count the cards well.",
-			INFO_VILLAIN_QUANTITY = "The number of cards that should be expected for this Villain to have in his main deck. Useful in case you didn't count the cards well.";
+			INFO_VILLAIN_QUANTITY = "The number of cards that should be expected for this Villain to have in his main deck. Useful in case you didn't count the cards well.",
+			INFO_EMPTY_ROWS_TO_END = "This is a little bit technical. It's not easy to detect when we can stop reading new lines so what we do is that if we detect an X "
+					+ "number of empty lines in a row we suppose we reached the end of the document. We recommend a value of 20 and if it's lower it will finish way "
+					+ "faster but it might not reach your villain's cards if they are at the end of your .ods document.";
 
 	private static ArrayList<String> warnings;
 
@@ -120,7 +123,7 @@ public class CardPhotocopier {
 				window.add(warningTitle);
 				for (String w : warnings) {
 					JLabel lbl = new JLabel(w);
-					lbl.setBorder(new EmptyBorder(2, 5, 2, 5));
+					lbl.setBorder(new EmptyBorder(1, 5, 1, 5));
 					window.add(lbl);
 				}
 				window.pack();
@@ -146,6 +149,7 @@ public class CardPhotocopier {
 			config.setValue(CONFIG_FATE_NAME, "Fate deck", INFO_FATE_NAME);
 			config.setValue(CONFIG_VILLAIN_QUANTITY, 30, INFO_VILLAIN_QUANTITY);
 			config.setValue(CONFIG_FATE_QUANTITY, 15, INFO_FATE_QUANTITY);
+			config.setValue(CONFIG_EMPTY_ROWS_TO_END, 20, INFO_EMPTY_ROWS_TO_END);
 
 			config.saveConfig();
 
@@ -171,7 +175,7 @@ public class CardPhotocopier {
 			label.setText(
 					"Configuration file (config.yml) not found. We generated one for you, please close this window and edit it accordingly.");
 			throw new FileNotFoundException(
-					"Configuration file (config.yml) not found. We generated one for you, please close this window and edit it.");
+					"Configuration file (config.yml) not found. We generated one for you, please close this window and edit it accordingly.");
 		}
 
 		config.reloadConfigFromFile();
@@ -183,6 +187,7 @@ public class CardPhotocopier {
 		config.setInfo(CONFIG_FATE_NAME, INFO_FATE_NAME);
 		config.setInfo(CONFIG_VILLAIN_QUANTITY, INFO_VILLAIN_QUANTITY);
 		config.setInfo(CONFIG_FATE_QUANTITY, INFO_FATE_QUANTITY);
+		config.setInfo(CONFIG_EMPTY_ROWS_TO_END, INFO_EMPTY_ROWS_TO_END);
 		config.saveConfig();
 
 		boolean autoclose = config.getBoolean(CONFIG_AUTOCLOSE);
@@ -227,14 +232,16 @@ public class CardPhotocopier {
 		})) {
 			String name = cardFile.getName().substring(0,
 					cardFile.getName().length() - (cardFile.getName().endsWith(".jpeg") ? 5 : 4));
-			label.setText("Loading " + name + "'s image data from it's file.");
-			System.out.println("Loading " + name + "'s image data from it's file.");
-			CardInfo info = new CardInfo(load(cardFile));
-			if (info.imageData == null) {
-				System.err.println("Image " + cardFile + " could not be loaded.");
-				warnings.add("Image \"" + cardFile.getName() + "\" could not be loaded.");
-			} else {
-				cardsInfo.put(name, info);
+			if (!name.isEmpty()) {
+				label.setText("Loading " + name + "'s image data from it's file.");
+				System.out.println("Loading " + name + "'s image data from it's file.");
+				CardInfo info = new CardInfo(load(cardFile));
+				if (info.imageData == null) {
+					System.err.println("Image " + cardFile + " could not be loaded.");
+					warnings.add("Image \"" + cardFile.getName() + "\" could not be loaded.");
+				} else {
+					cardsInfo.put(name, info);
+				}
 			}
 		}
 
@@ -244,9 +251,14 @@ public class CardPhotocopier {
 
 		boolean forceFate = false;
 		int done = 0;
+		if (!config.contains(CONFIG_EMPTY_ROWS_TO_END)) {
+			config.setValue(CONFIG_EMPTY_ROWS_TO_END, 20, INFO_EMPTY_ROWS_TO_END);
+			config.saveConfig();
+		}
+		int doneLimit = config.getInt(CONFIG_EMPTY_ROWS_TO_END, 20);
 		// We are going to look into each row in the .ods and check if it's a card that
 		// exists withing the images folder and draw it into it's corresponding deck.
-		for (int row = 4; done <= 20; row++) {
+		for (int row = 4; done <= doneLimit; row++) {
 			Cell<SpreadSheet> A = sheet.getCellAt("A" + row);
 			try {
 				Cell<SpreadSheet> B = sheet.getCellAt("B" + row);
@@ -269,10 +281,10 @@ public class CardPhotocopier {
 				if (B.isEmpty()) {
 					done++;
 				} else {
+					done = 0;
 					if (cardsInfo.containsKey(B.getTextValue())) {
 						// We want "done" to count the CONSECUTIVE empty lines, so if we find a proper
 						// card we are going to reset it why not.
-						done = 0;
 
 						if (A.isEmpty() || K.isEmpty() && (!C.isEmpty() || !D.isEmpty() || !E.isEmpty() || !F.isEmpty()
 								|| !G.isEmpty() || !H.isEmpty() || !I.isEmpty() || !J.isEmpty() || !L.isEmpty()
@@ -290,13 +302,17 @@ public class CardPhotocopier {
 							// We add the information found about this card
 							CardInfo ci = cardsInfo.get(B.getTextValue());
 							ci.copies = Integer.parseInt(A.getTextValue());
+							System.out.println("Loading data for " + B.getTextValue() + ": x" + ci.copies + ".");
 
-							ci.deck = 0;
-							if (K.getTextValue().equals("Fate") || K.getTextValue().equals("1") || forceFate) {
+							if ((K.getTextValue().equals("Villain") || K.getTextValue().equals("0")) && !forceFate) {
+								ci.deck = 0;
+								copiesToV += ci.copies;
+							} else if (K.getTextValue().equals("Fate") || K.getTextValue().equals("1") || forceFate) {
 								ci.deck = 1;
 								copiesToF += ci.copies;
 							} else {
-								copiesToV += ci.copies;
+								System.out.println("Card "+B.getTextValue()+" is from another deck.");
+								cardsInfo.remove(B.getTextValue());
 							}
 						}
 					}
@@ -321,8 +337,12 @@ public class CardPhotocopier {
 			}
 		}
 
-		if (copiesToV == 0 || copiesToF == 0) {
-			throw new IllegalArgumentException("One of your decks has 0 cards! Check it please.");
+		if (copiesToV == 0 && copiesToF == 0) {
+			throw new IllegalArgumentException("Both your Villain and Fate decks has 0 cards! Check it please.");
+		} else if (copiesToV == 0) {
+			throw new IllegalArgumentException("Your Villain deck has 0 cards! Check it please.");
+		} else if (copiesToF == 0) {
+			throw new IllegalArgumentException("Your Fate deck has 0 cards! Check it please.");
 		}
 
 		// We get the proper dimensions for the final image, depending on the number of
