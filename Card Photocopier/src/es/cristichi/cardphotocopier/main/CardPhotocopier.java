@@ -17,7 +17,6 @@ import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.LinkedHashMap;
 import java.util.List;
 
 import javax.imageio.ImageIO;
@@ -81,7 +80,7 @@ public class CardPhotocopier {
 			INFO_EMPTY_ROWS_TO_END = "This is a little bit technical. It's not easy to detect when we can stop reading new lines so what we do is that if we detect an X "
 					+ "number of empty lines in a row we suppose we reached the end of the document. We recommend a value of 20 and if it's lower it will finish way "
 					+ "faster but it might not reach your villain's cards if they are at the end of your .ods document.",
-			INFO_TYPE_ORDER = "Here you can alter the order of the types. To make it use the default order, use \"Condition, Effect, Hero, Ally, Item\". To make it not order by type, remove this value entirely.";
+			INFO_TYPE_ORDER = "Here you can alter the order of the types. To make it use the default order, use \""+CONFIG_TYPE_ORDER+": Condition, Effect, Hero, Ally, Item\" (without quotation marks). To make it order by name, remove this value entirely.";
 
 	private static ArrayList<String> warnings;
 
@@ -192,6 +191,7 @@ public class CardPhotocopier {
 		config.setInfo(CONFIG_VILLAIN_QUANTITY, INFO_VILLAIN_QUANTITY);
 		config.setInfo(CONFIG_FATE_QUANTITY, INFO_FATE_QUANTITY);
 		config.setInfo(CONFIG_EMPTY_ROWS_TO_END, INFO_EMPTY_ROWS_TO_END);
+		config.setInfo(CONFIG_TYPE_ORDER, INFO_TYPE_ORDER);
 		config.saveConfig();
 
 		boolean autoclose = config.getBoolean(CONFIG_AUTOCLOSE);
@@ -226,7 +226,7 @@ public class CardPhotocopier {
 		Sheet sheet = sheetDoc.getFirstSheet();
 
 		// First we read every .png, .jpg and .jpeg file.
-		LinkedHashMap<String, CardInfo> cardsInfo = new LinkedHashMap<>(60);
+		HashMap<String, CardInfo> cardsInfo = new HashMap<>(60);
 
 		for (File cardFile : imagesFolder.listFiles(new FilenameFilter() {
 			@Override
@@ -377,7 +377,7 @@ public class CardPhotocopier {
 		//We are going to read the order the user wants and sort the cards by that order
 		if (!config.contains(CONFIG_TYPE_ORDER)) {
 			config.setInfo(CONFIG_TYPE_ORDER, INFO_TYPE_ORDER);
-			config.setValue(CONFIG_TYPE_ORDER, "", INFO_TYPE_ORDER);
+			config.setValue(CONFIG_TYPE_ORDER, "ignore_type", INFO_TYPE_ORDER);
 			config.saveConfig();
 		}
 		String order = config.getString(CONFIG_TYPE_ORDER);
