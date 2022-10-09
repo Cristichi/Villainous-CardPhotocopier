@@ -259,6 +259,7 @@ public class CardPhotocopier {
 		boolean forceFate = false;
 		int done = 0;
 		if (!config.contains(CONFIG_EMPTY_ROWS_TO_END)) {
+			config.setInfo(CONFIG_EMPTY_ROWS_TO_END, INFO_EMPTY_ROWS_TO_END);
 			config.setValue(CONFIG_EMPTY_ROWS_TO_END, 20, INFO_EMPTY_ROWS_TO_END);
 			config.saveConfig();
 		}
@@ -375,6 +376,7 @@ public class CardPhotocopier {
 
 		//We are going to read the order the user wants and sort the cards by that order
 		if (!config.contains(CONFIG_TYPE_ORDER)) {
+			config.setInfo(CONFIG_TYPE_ORDER, INFO_TYPE_ORDER);
 			config.setValue(CONFIG_TYPE_ORDER, "", INFO_TYPE_ORDER);
 			config.saveConfig();
 		}
