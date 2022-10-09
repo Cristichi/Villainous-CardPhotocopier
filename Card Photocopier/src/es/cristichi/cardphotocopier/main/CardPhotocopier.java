@@ -29,6 +29,7 @@ import org.jopendocument.dom.spreadsheet.Cell;
 import org.jopendocument.dom.spreadsheet.Sheet;
 import org.jopendocument.dom.spreadsheet.SpreadSheet;
 
+import es.cristichi.cardphotocopier.obj.CardComparator;
 import es.cristichi.cardphotocopier.obj.CardInfo;
 import es.cristichi.cardphotocopier.obj.Configuration;
 import es.cristichi.cardphotocopier.obj.Range;
@@ -67,7 +68,8 @@ public class CardPhotocopier {
 	public static String CONFIG_DOC = "Cards' Info Document", CONFIG_CARD_IMAGES = "Card Images Folder",
 			CONFIG_RESULTS = "Results Folder", CONFIG_AUTOCLOSE = "Autoclose", CONFIG_FATE_NAME = "Fate Deck Name",
 			CONFIG_VILLAIN_NAME = "Villain Deck Name", CONFIG_FATE_QUANTITY = "Fate Deck's Expected cards",
-			CONFIG_VILLAIN_QUANTITY = "Villain Deck's Expected cards", CONFIG_EMPTY_ROWS_TO_END = "Empty Rows to End";
+			CONFIG_VILLAIN_QUANTITY = "Villain Deck's Expected cards", CONFIG_EMPTY_ROWS_TO_END = "Empty Rows to End",
+			CONFIG_TYPE_ORDER = "Card Order";
 	public static String INFO_DOC = "The path to the .ods file where you have your cards' info. It may contain other Villains' cards, that's fine.",
 			INFO_CARD_IMAGES = "Folder where all the generated images of your Villain's cards are. It must not contain other Villains' cards",
 			INFO_RESULTS = "Where you want the Villain/Fate deck images to be created.",
@@ -78,7 +80,8 @@ public class CardPhotocopier {
 			INFO_VILLAIN_QUANTITY = "The number of cards that should be expected for this Villain to have in his main deck. Useful in case you didn't count the cards well.",
 			INFO_EMPTY_ROWS_TO_END = "This is a little bit technical. It's not easy to detect when we can stop reading new lines so what we do is that if we detect an X "
 					+ "number of empty lines in a row we suppose we reached the end of the document. We recommend a value of 20 and if it's lower it will finish way "
-					+ "faster but it might not reach your villain's cards if they are at the end of your .ods document.";
+					+ "faster but it might not reach your villain's cards if they are at the end of your .ods document.",
+			INFO_TYPE_ORDER = "Here you can alter the order of the types. To make it use the default order, use \"Condition, Effect, Hero, Ally, Item\". To make it not order by type, remove this value entirely.";
 
 	private static ArrayList<String> warnings;
 
@@ -150,6 +153,7 @@ public class CardPhotocopier {
 			config.setValue(CONFIG_VILLAIN_QUANTITY, 30, INFO_VILLAIN_QUANTITY);
 			config.setValue(CONFIG_FATE_QUANTITY, 15, INFO_FATE_QUANTITY);
 			config.setValue(CONFIG_EMPTY_ROWS_TO_END, 20, INFO_EMPTY_ROWS_TO_END);
+			config.setValue(CONFIG_TYPE_ORDER, "Condition, Effect, Hero, Ally, Item", INFO_TYPE_ORDER);
 
 			config.saveConfig();
 
@@ -245,6 +249,9 @@ public class CardPhotocopier {
 			}
 		}
 
+		ArrayList<CardInfo> usefulCards = new ArrayList<>(
+				config.getInt(CONFIG_VILLAIN_QUANTITY) + config.getInt(CONFIG_FATE_QUANTITY));
+
 		int copiesToV = 0, copiesToF = 0;
 		int xV = 0, yV = 0;
 		int xF = 0, yF = 0;
@@ -301,20 +308,25 @@ public class CardPhotocopier {
 						} else {
 							// We add the information found about this card
 							CardInfo ci = cardsInfo.get(B.getTextValue());
+							ci.name = B.getTextValue();
+							ci.type = F.getTextValue();
 							ci.copies = Integer.parseInt(A.getTextValue());
-							System.out.println("Loading data for " + B.getTextValue() + ": x" + ci.copies + ".");
+							System.out.println("Loading data for " + ci.name + ": x" + ci.copies + ".");
 
 							if ((K.getTextValue().equals("Villain") || K.getTextValue().equals("0")) && !forceFate) {
 								ci.deck = 0;
 								copiesToV += ci.copies;
+								usefulCards.add(ci);
 							} else if (K.getTextValue().equals("Fate") || K.getTextValue().equals("1") || forceFate) {
 								ci.deck = 1;
 								copiesToF += ci.copies;
+								usefulCards.add(ci);
 							} else {
-								System.out.println("Card "+B.getTextValue()+" is from another deck.");
-								cardsInfo.remove(B.getTextValue());
+								System.out.println("Card " + B.getTextValue() + " is from another deck.");
 							}
 						}
+
+						cardsInfo.remove(B.getTextValue());
 					}
 				}
 			} catch (IllegalArgumentException e) {
@@ -359,11 +371,24 @@ public class CardPhotocopier {
 				BufferedImage.TYPE_INT_RGB);
 		Graphics gF = resultImageF.getGraphics();
 
-		for (String cardName : cardsInfo.keySet()) {
-			CardInfo ci = cardsInfo.get(cardName);
+		cardsInfo.clear();
 
-			System.out.println("Photocopying card " + cardName + ": " + ci.copies + " copies in deck " + ci.deck);
-			label.setText("Photocopying card " + cardName + ": " + ci.copies + " copies in "
+		//We are going to read the order the user wants and sort the cards by that order
+		if (!config.contains(CONFIG_TYPE_ORDER)) {
+			config.setValue(CONFIG_TYPE_ORDER, "", INFO_TYPE_ORDER);
+			config.saveConfig();
+		}
+		String order = config.getString(CONFIG_TYPE_ORDER);
+		String[] orderSplit = order.split(",");
+		for (int i = 0; i < orderSplit.length; i++) {
+			orderSplit[i] = orderSplit[i].trim();
+		}
+		usefulCards.sort(new CardComparator(orderSplit));
+		
+		//It's time to write the images of every card!
+		for (CardInfo ci : usefulCards) {
+			System.out.println("Photocopying card " + ci.name + ": " + ci.copies + " copies in deck " + ci.deck);
+			label.setText("Photocopying card " + ci.name + ": " + ci.copies + " copies in "
 					+ (ci.deck == 0 ? "Villain" : "Fate") + " deck.");
 
 			for (int i = 0; i < ci.copies; i++) {
