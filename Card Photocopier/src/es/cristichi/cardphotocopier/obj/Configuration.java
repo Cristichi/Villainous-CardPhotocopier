@@ -90,7 +90,7 @@ public class Configuration extends File implements Cloneable {
 					+ "\" could not be parsed to integer)");
 		}
 	}
-
+	
 	public double getDouble(String key, double defaultValue) {
 		String str = settings.getOrDefault(key, defaultValue + "").toString();
 		try {
@@ -101,13 +101,36 @@ public class Configuration extends File implements Cloneable {
 			return defaultValue;
 		}
 	}
-
+	
 	public double getDouble(String key) throws ConfigValueNotParsed, ConfigValueNotFound {
 		String str = settings.get(key).toString();
 		if (str == null)
 			throw new ConfigValueNotFound("The key \"" + key + "\" was never set in the config file.");
 		try {
 			return Double.parseDouble(str.replace(",", "."));
+		} catch (NumberFormatException e) {
+			throw new ConfigValueNotParsed("Error trying to get double value from config file (Value \"" + str
+					+ "\" could not be parsed to double)");
+		}
+	}
+
+	public float getFloat(String key, float defaultValue) {
+		String str = settings.getOrDefault(key, defaultValue + "").toString();
+		try {
+			return Float.parseFloat(str.replace(",", "."));
+		} catch (NumberFormatException e) {
+			System.err.println("Error trying to get double value from config file");
+			System.err.println("(Value \"" + str + "\" could not be parsed to double)");
+			return defaultValue;
+		}
+	}
+
+	public float getFloat(String key) throws ConfigValueNotParsed, ConfigValueNotFound {
+		String str = settings.get(key).toString();
+		if (str == null)
+			throw new ConfigValueNotFound("The key \"" + key + "\" was never set in the config file.");
+		try {
+			return Float.parseFloat(str.replace(",", "."));
 		} catch (NumberFormatException e) {
 			throw new ConfigValueNotParsed("Error trying to get double value from config file (Value \"" + str
 					+ "\" could not be parsed to double)");

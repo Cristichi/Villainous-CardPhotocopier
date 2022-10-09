@@ -49,6 +49,8 @@ public class CardPhotocopier {
 	private static HashMap<Range, Dimension> DECK_SIZES;
 	static {
 		DECK_SIZES = new HashMap<>(18);
+		DECK_SIZES.put(new Range(13, 15), new Dimension(5, 3));
+		DECK_SIZES.put(new Range(26, 30), new Dimension(6, 5));
 		DECK_SIZES.put(new Range(1, 1), new Dimension(1, 1));
 		DECK_SIZES.put(new Range(2, 2), new Dimension(2, 1));
 		DECK_SIZES.put(new Range(3, 3), new Dimension(3, 1));
@@ -57,11 +59,9 @@ public class CardPhotocopier {
 		DECK_SIZES.put(new Range(7, 8), new Dimension(4, 2));
 		DECK_SIZES.put(new Range(9, 9), new Dimension(3, 3));
 		DECK_SIZES.put(new Range(10, 12), new Dimension(4, 3));
-		DECK_SIZES.put(new Range(13, 15), new Dimension(5, 3));
 		DECK_SIZES.put(new Range(16, 20), new Dimension(5, 4));
 		DECK_SIZES.put(new Range(21, 24), new Dimension(6, 4));
 		DECK_SIZES.put(new Range(25, 25), new Dimension(5, 5));
-		DECK_SIZES.put(new Range(26, 30), new Dimension(6, 5));
 		DECK_SIZES.put(new Range(31, 35), new Dimension(7, 5));
 		DECK_SIZES.put(new Range(36, 36), new Dimension(6, 6));
 		DECK_SIZES.put(new Range(37, 42), new Dimension(7, 6));
@@ -72,7 +72,7 @@ public class CardPhotocopier {
 			CONFIG_RESULTS = "Results Folder", CONFIG_AUTOCLOSE = "Autoclose", CONFIG_FATE_NAME = "Fate Deck Name",
 			CONFIG_VILLAIN_NAME = "Villain Deck Name", CONFIG_FATE_QUANTITY = "Fate Deck's Expected cards",
 			CONFIG_VILLAIN_QUANTITY = "Villain Deck's Expected cards", CONFIG_EMPTY_ROWS_TO_END = "Empty Rows to End",
-			CONFIG_TYPE_ORDER = "Card Order";
+			CONFIG_TYPE_ORDER = "Card Order", CONFIG_IMAGE_QUALITY = "Image Quality";
 	public static String INFO_DOC = "The path to the .ods file where you have your cards' info. It may contain other Villains' cards, that's fine.",
 			INFO_CARD_IMAGES = "Folder where all the generated images of your Villain's cards are. It must not contain other Villains' cards",
 			INFO_RESULTS = "Where you want the Villain/Fate deck images to be created.",
@@ -85,7 +85,10 @@ public class CardPhotocopier {
 					+ "number of empty lines in a row we suppose we reached the end of the document. We recommend a value of 20 and if it's lower it will finish way "
 					+ "faster but it might not reach your villain's cards if they are at the end of your .ods document.",
 			INFO_TYPE_ORDER = "Here you can alter the order of the types. To make it use the default order, write something like "
-					+ "\""+CONFIG_TYPE_ORDER+": Hero, Condition, Effect, Ally, Item\" (without quotation marks). To make it order by name, remove this value entirely.";
+					+ "\"" + CONFIG_TYPE_ORDER
+					+ ": Hero, Condition, Effect, Ally, Item\" (without quotation marks). To make it order by name, remove this value entirely.",
+			INFO_IMAGE_QUALITY = "The quality of the resulting images. Put \"1\" for the best quality but large image, "
+					+ "\"0\" for the poorest quality (horrible trust me) and smallest image possible. Recomended is \"0.7\" so keep it that way unless you need the file to be even smaller.";
 
 	private static ArrayList<String> warnings;
 
@@ -158,6 +161,7 @@ public class CardPhotocopier {
 			config.setValue(CONFIG_FATE_QUANTITY, 15, INFO_FATE_QUANTITY);
 			config.setValue(CONFIG_EMPTY_ROWS_TO_END, 20, INFO_EMPTY_ROWS_TO_END);
 			config.setValue(CONFIG_TYPE_ORDER, "Hero, Condition, Effect, Ally, Item", INFO_TYPE_ORDER);
+			config.setValue(CONFIG_IMAGE_QUALITY, "0.7", INFO_IMAGE_QUALITY);
 
 			config.saveConfig();
 
@@ -444,9 +448,15 @@ public class CardPhotocopier {
 		File villainDeck = new File(resultsFolder, config.getString(CONFIG_VILLAIN_NAME) + ".jpg");
 		File fateDeck = new File(resultsFolder, config.getString(CONFIG_FATE_NAME) + ".jpg");
 
+		if (!config.contains(CONFIG_IMAGE_QUALITY)) {
+			config.setInfo(CONFIG_IMAGE_QUALITY, INFO_IMAGE_QUALITY);
+			config.setValue(CONFIG_IMAGE_QUALITY, "0.7", INFO_IMAGE_QUALITY);
+			config.saveConfig();
+		}
+		float quality = config.getFloat(CONFIG_IMAGE_QUALITY);
 		// Big chad compressed writing to file.
-		writeImage(resultImageV, villainDeck, .7f);
-		writeImage(resultImageF, fateDeck, .7f);
+		writeImage(resultImageV, villainDeck, quality);
+		writeImage(resultImageF, fateDeck, quality);
 
 		// We check if the user wants to autoclose and we do it after 500ms if there are
 		// no warnings whatsoever.
@@ -461,20 +471,21 @@ public class CardPhotocopier {
 	/**
 	 * 
 	 * @param resultImage A BufferedImage containing the image data.
-	 * @param deckFile A File, existing or not, to save the data to.
-	 * @param quality 0 for priorizing compression, 1 for priorizing quality, or any value in between.
+	 * @param deckFile    A File, existing or not, to save the data to.
+	 * @param quality     0 for priorizing compression, 1 for priorizing quality, or
+	 *                    any value in between.
 	 * @throws IOException
 	 */
 	private static void writeImage(BufferedImage resultImage, File deckFile, float quality) throws IOException {
 		try (ImageOutputStream ios = ImageIO.createImageOutputStream(deckFile)) {
 			ImageWriter jpgWriter = ImageIO.getImageWritersByFormatName("JPEG").next();
-			
+
 			ImageWriteParam jpgWriteParam = jpgWriter.getDefaultWriteParam();
 			jpgWriteParam.setCompressionMode(ImageWriteParam.MODE_EXPLICIT);
 			jpgWriteParam.setCompressionQuality(quality);
-			
+
 			jpgWriter.setOutput(ios);
-			
+
 			jpgWriter.write(null, new IIOImage(resultImage, null, null), jpgWriteParam);
 			jpgWriter.dispose();
 		}
