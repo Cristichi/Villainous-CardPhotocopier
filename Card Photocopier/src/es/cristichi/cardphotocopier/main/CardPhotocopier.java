@@ -88,7 +88,7 @@ public class CardPhotocopier {
 					+ "\"" + CONFIG_TYPE_ORDER
 					+ ": Hero, Condition, Effect, Ally, Item\" (without quotation marks). To make it order by name, remove this value entirely.",
 			INFO_IMAGE_QUALITY = "The quality of the resulting images. Put \"1\" for the best quality but large image, "
-					+ "\"0\" for the poorest quality (horrible trust me) and smallest image possible. Recomended is \"0.7\" so keep it that way unless you need the file to be even smaller.";
+					+ "\"0\" for the poorest quality (horrible trust me) and smallest image possible. Recommended is \"0.7\" so keep it that way unless you need the file to be even smaller.";
 
 	private static ArrayList<String> warnings;
 
