@@ -300,7 +300,12 @@ public class CardPhotocopier {
 					done++;
 				} else {
 					done = 0;
-					if (cardsInfo.containsKey(B.getTextValue())) {
+					String cardName = B.getTextValue().replaceAll("[\\\\/:*?\"<>|]", "");
+//					if (B.getTextValue().contains("?")) {
+//						System.out.println("?????????????????????? "+cardName);
+//						System.out.println("?????????????????????? "+cardName);
+//					}
+					if (cardsInfo.containsKey(cardName)) {
 						// We want "done" to count the CONSECUTIVE empty lines, so if we find a proper
 						// card we are going to reset it why not.
 
@@ -310,16 +315,17 @@ public class CardPhotocopier {
 							// If we are missing data and it's not because everything is empty, we are going
 							// to warn the user so they can check if the .ods document is not properly
 							// filled.
-							warnings.add("Detected error in card " + B.getTextValue() + "."
+							warnings.add("Detected error in card " + cardName + "."
 									+ (A.getTextValue().trim().isEmpty() ? " Number of copies (Column A) not filled."
 											: "")
 									+ (K.getTextValue().trim().isEmpty() ? " Villain/Fate deck (Column K) not filled."
 											: ""));
-							System.err.println("Error reading: " + row + " (Card " + B.getTextValue() + " not proper)");
+							System.err.println("Error reading: " + row + " (Card " + cardName + " not proper)");
 						} else {
 							// We add the information found about this card
-							CardInfo ci = cardsInfo.get(B.getTextValue());
-							ci.name = B.getTextValue();
+							System.out.println(cardName);
+							CardInfo ci = cardsInfo.get(cardName);
+							ci.name = cardName;
 							ci.type = F.getTextValue();
 							ci.copies = Integer.parseInt(A.getTextValue());
 							System.out.println("Loading data for " + ci.name + ": x" + ci.copies + ".");
@@ -333,11 +339,11 @@ public class CardPhotocopier {
 								copiesToF += ci.copies;
 								usefulCards.add(ci);
 							} else {
-								System.out.println("Card " + B.getTextValue() + " is from another deck.");
+								System.out.println("Card " + cardName + " is from another deck.");
 							}
 						}
 
-						cardsInfo.remove(B.getTextValue());
+						cardsInfo.remove(cardName);
 					}
 				}
 			} catch (IllegalArgumentException e) {
