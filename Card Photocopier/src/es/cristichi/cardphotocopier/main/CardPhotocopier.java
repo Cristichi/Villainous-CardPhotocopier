@@ -299,21 +299,17 @@ public class CardPhotocopier {
 				if (B.isEmpty()) {
 					done++;
 				} else {
+					// We want "done" to count the CONSECUTIVE empty lines, so if we find a proper
+					// card we are going to reset it why not.
 					done = 0;
 					String cardName = B.getTextValue().replaceAll("[\\\\/:*?\"<>|]", "");
-//					if (B.getTextValue().contains("?")) {
-//						System.out.println("?????????????????????? "+cardName);
-//						System.out.println("?????????????????????? "+cardName);
-//					}
 					if (cardsInfo.containsKey(cardName)) {
-						// We want "done" to count the CONSECUTIVE empty lines, so if we find a proper
-						// card we are going to reset it why not.
-
+						// So this card in the ODS document is also in the exports folder. Great!
 						if (A.isEmpty() || K.isEmpty() && (!C.isEmpty() || !D.isEmpty() || !E.isEmpty() || !F.isEmpty()
 								|| !G.isEmpty() || !H.isEmpty() || !I.isEmpty() || !J.isEmpty() || !L.isEmpty()
 								|| !M.isEmpty())) {
-							// If we are missing data and it's not because everything is empty, we are going
-							// to warn the user so they can check if the .ods document is not properly
+							// If we are missing important data and it's not because everything is empty, we
+							// are going to warn the user so they can check if the .ods document is properly
 							// filled.
 							warnings.add("Detected error in card " + cardName + "."
 									+ (A.getTextValue().trim().isEmpty() ? " Number of copies (Column A) not filled."
@@ -348,14 +344,14 @@ public class CardPhotocopier {
 				}
 			} catch (IllegalArgumentException e) {
 				// This probably means that some columns are combined, so we know it's not a
-				// card.
+				// card anyway.
 				System.err.println(e.getLocalizedMessage());
 				System.err.println("Line: " + A.getTextValue());
 
-				// If the column A contains "- Fate -", it's Fate forcing time. This allows
-				// villains that need to generate Fate cards as Villain cards with
-				// a different layout to still tell my tool which cards are Fate. Read the Usage
-				// guide to know how.
+				// If the column A contains "- Fate -" and there are combined cells somewhere
+				// here, it's Fate forcing time. This allows villains that need to generate Fate
+				// cards as Villain cards with a different layout to still tell my tool which
+				// cards are Fate. Read the Usage guide to know how.
 				if (A.getTextValue().contains("- Fate -")) {
 					forceFate = true;
 					System.out.println("Detected \"- Fate -\". Forcing fate from now on");
@@ -390,7 +386,8 @@ public class CardPhotocopier {
 
 		cardsInfo.clear();
 
-		//We are going to read the order the user wants and sort the cards by that order
+		// We are going to read the order the user wants and sort the cards by that
+		// order.
 		if (!config.contains(CONFIG_TYPE_ORDER)) {
 			config.setInfo(CONFIG_TYPE_ORDER, INFO_TYPE_ORDER);
 			config.setValue(CONFIG_TYPE_ORDER, "ignore_type", INFO_TYPE_ORDER);
@@ -402,8 +399,8 @@ public class CardPhotocopier {
 			orderSplit[i] = orderSplit[i].trim();
 		}
 		usefulCards.sort(new CardComparator(orderSplit));
-		
-		//It's time to write the images of every card!
+
+		// It's time to write the images of every card!
 		for (CardInfo ci : usefulCards) {
 			System.out.println("Photocopying card " + ci.name + ": " + ci.copies + " copies in deck " + ci.deck);
 			label.setText("Photocopying card " + ci.name + ": " + ci.copies + " copies in "
@@ -505,12 +502,12 @@ public class CardPhotocopier {
 		}
 	}
 
-	// It calculates the optimal dimensions of the file
-	// In number of cards wide and number of cards high
+	// It calculates the optimal dimensions of the file, measured in number of cards
+	// wide and number of cards high.
 	private static Dimension getGrid(int quantity) {
 		// Because it was quite hard to calculate it I just guessed case by case which
 		// dimensions would be the most appropriate for each number of cards, including
-		// the common 30 and 15, so it first sees if I already did the work manually
+		// the common 30 and 15, so it first sees if I already did the work manually.
 		for (Range index : DECK_SIZES.keySet()) {
 			if (index.inRange(quantity)) {
 				return DECK_SIZES.get(index);
@@ -519,9 +516,9 @@ public class CardPhotocopier {
 
 		// If the number of cards is quite wild, then
 		// it tries it best to calculate a good one.
-		// It probably will be wacky
-		warnings.add("The number of cards (" + quantity + ") was a little bit too high so the result might be wicked.");
-		warnings.add("Please tell Cristichi#5193 to add support for " + quantity + " cards.");
+		// It probably will be wacky.
+		warnings.add("The number of cards \"" + quantity + "\" was a little bit too high so the result might be unexpected.");
+		warnings.add("Please tell Cristichi#5193 to add support for " + quantity + " cards! He'll be happy to add it.");
 		List<Integer> divisors = getDivisors(quantity);
 		divisors.add(1);
 		divisors.add(quantity);
