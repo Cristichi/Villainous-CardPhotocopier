@@ -129,7 +129,7 @@ public class CardPhotocopier {
 			if (warnings.size() > 0) {
 				window.remove(label);
 				window.setLayout(new GridLayout(warnings.size() + 1, 1));
-				JLabel warningTitle = new JLabel("Process completed succesfully but with some weird things:");
+				JLabel warningTitle = new JLabel("Process completed succesfully but with some weird notes:");
 				warningTitle.setBorder(new EmptyBorder(2, 5, 2, 5));
 				window.add(warningTitle);
 				for (String w : warnings) {
