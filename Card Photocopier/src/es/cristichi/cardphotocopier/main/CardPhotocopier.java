@@ -104,8 +104,11 @@ public class CardPhotocopier {
 			window.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 			label = new JLabel("Starting");
 			label.setHorizontalAlignment(JLabel.CENTER);
+			label.setBorder(new EmptyBorder(1, 5, 1, 5));
 			window.add(label);
 			window.setMinimumSize(new Dimension(500, 200));
+			window.setMaximumSize(new Dimension(800, 500));
+			window.setPreferredSize(new Dimension(500, 200));
 			window.setLocationRelativeTo(null);
 			window.setAlwaysOnTop(true);
 			window.setVisible(true);
@@ -118,10 +121,9 @@ public class CardPhotocopier {
 			// the user what happened. We also print in the console just in case.
 			System.err.println("Ended badly with error. Sadge.");
 			e.printStackTrace();
-			label.setText(e.getLocalizedMessage());
-			window.pack();
+			label.setText("<html>"+e.getLocalizedMessage()+"</html>");
+			//window.pack();
 			window.setLocationRelativeTo(null);
-
 		} finally {
 			// After we are done, no matter if there was an error or not, we are going to
 			// show any item in "warnings" so the user can fix whatever weird thing we found
@@ -133,11 +135,11 @@ public class CardPhotocopier {
 				warningTitle.setBorder(new EmptyBorder(2, 5, 2, 5));
 				window.add(warningTitle);
 				for (String w : warnings) {
-					JLabel lbl = new JLabel(w);
+					JLabel lbl = new JLabel("<html>"+w+"</html>");
 					lbl.setBorder(new EmptyBorder(1, 5, 1, 5));
 					window.add(lbl);
 				}
-				window.pack();
+				//window.pack();
 				window.setLocationRelativeTo(null);
 			}
 		}
@@ -169,7 +171,7 @@ public class CardPhotocopier {
 			System.out.println(config.getAbsolutePath());
 
 			window.setMinimumSize(new Dimension(800, 200));
-			window.pack();
+			//window.pack();
 			window.setLocationRelativeTo(null);
 			window.addWindowListener(new WindowAdapter() {
 				@Override
@@ -213,7 +215,7 @@ public class CardPhotocopier {
 
 		if (!imagesFolder.exists()) {
 			window.setMinimumSize(new Dimension(800, 200));
-			window.pack();
+			//window.pack();
 			window.setLocationRelativeTo(null);
 			label.setText("The folder where the already existing images for the cards are supposed to be ("
 					+ imagesFolder.getAbsolutePath() + ") was not found. We need that one.");
@@ -223,7 +225,7 @@ public class CardPhotocopier {
 		}
 		if (!documentFile.exists()) {
 			window.setMinimumSize(new Dimension(800, 200));
-			window.pack();
+			//window.pack();
 			window.setLocationRelativeTo(null);
 			label.setText("The .ods document with the information for each card (" + documentFile.getAbsolutePath()
 					+ ") was not found. We need that one.");
