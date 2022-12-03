@@ -1,4 +1,4 @@
-package es.cristichi.cardphotocopier.main;
+package es.cristichi.cardphotocopier;
 
 import java.awt.Desktop;
 import java.awt.Dimension;
@@ -43,8 +43,10 @@ import es.cristichi.cardphotocopier.obj.Range;
  * 
  * @author Cristichi#5193
  */
+//TODO: Support to export two .json files with each card's name and description/rules. One for each deck.
+//TODO: Tabletop Simulator script that takes that .json and give each card the correct description.
 public class CardPhotocopier {
-	private static String CONFIG_YAML = "config.yml";
+	private static String CONFIG_TXT = "config.txt";
 	private static Dimension CARD_SIZE = new Dimension(620, 880);
 	private static HashMap<Range, Dimension> DECK_SIZES;
 	static {
@@ -69,11 +71,11 @@ public class CardPhotocopier {
 		DECK_SIZES.put(new Range(0, 0), new Dimension(0, 0));
 	}
 
-	public static String CONFIG_DOC = "Cards' Info Document", CONFIG_CARD_IMAGES = "Card Images Folder",
-			CONFIG_RESULTS = "Results Folder", CONFIG_AUTOCLOSE = "Autoclose", CONFIG_FATE_NAME = "Fate Deck Name",
-			CONFIG_VILLAIN_NAME = "Villain Deck Name", CONFIG_FATE_QUANTITY = "Fate Deck's Expected cards",
-			CONFIG_VILLAIN_QUANTITY = "Villain Deck's Expected cards", CONFIG_EMPTY_ROWS_TO_END = "Empty Rows to End",
-			CONFIG_TYPE_ORDER = "Card Order", CONFIG_IMAGE_QUALITY = "Image Quality";
+	public static String CONFIG_DOC = "cardsInfoOds", CONFIG_CARD_IMAGES = "generatedCardsFolder",
+			CONFIG_RESULTS = "resultsFolder", CONFIG_AUTOCLOSE = "autoclose", CONFIG_FATE_NAME = "fateDeckName",
+			CONFIG_VILLAIN_NAME = "villainDeckName", CONFIG_FATE_QUANTITY = "fateDeckQuantity",
+			CONFIG_VILLAIN_QUANTITY = "villainDeckQuantity", CONFIG_EMPTY_ROWS_TO_END = "maxEmptyRowsToEnd",
+			CONFIG_TYPE_ORDER = "cardTypeOrder", CONFIG_IMAGE_QUALITY = "imageQuality";
 	public static String INFO_DOC = "The path to the .ods file where you have your cards' info. It may contain other Villains' cards, that's fine.",
 			INFO_CARD_IMAGES = "Folder where all the generated images of your Villain's cards are. It must not contain other Villains' cards",
 			INFO_RESULTS = "Where you want the Villain/Fate deck images to be created.",
@@ -85,11 +87,12 @@ public class CardPhotocopier {
 			INFO_EMPTY_ROWS_TO_END = "This is a little bit technical. It's not easy to detect when we can stop reading new lines so what we do is that if we detect an X "
 					+ "number of empty lines in a row we suppose we reached the end of the document. We recommend a value of 20 and if it's lower it will finish way "
 					+ "faster but it might not reach your villain's cards if they are at the end of your .ods document.",
-			INFO_TYPE_ORDER = "Here you can alter the order of the types. To make it use the default order, write something like "
+			INFO_TYPE_ORDER = "Here you can alter the order depending the types. Cards of the same type will be ordered by name respective to each other, and cards of an unlisted "
+					+ "type will be last by name. To make use of the default order recommended by me, write something like "
 					+ "\"" + CONFIG_TYPE_ORDER
 					+ ": Hero, Condition, Effect, Ally, Item\" (without quotation marks). To make it order by name, remove this value entirely.",
 			INFO_IMAGE_QUALITY = "The quality of the resulting images. Put \"1\" for the best quality but large image, "
-					+ "\"0\" for the poorest quality (horrible trust me) and smallest image possible. Recommended is \"0.8\" so keep it that way unless you need the file to be even smaller.";
+					+ "\"0\" for the poorest quality (horrible trust me) and smallest image possible. Recommended is \"0.9\" so keep it that way unless you need the file to be even smaller.";
 
 	private static ArrayList<String> warnings;
 
@@ -121,8 +124,8 @@ public class CardPhotocopier {
 			// the user what happened. We also print in the console just in case.
 			System.err.println("Ended badly with error. Sadge.");
 			e.printStackTrace();
-			label.setText("<html>"+e.getLocalizedMessage()+"</html>");
-			//window.pack();
+			label.setText("<html>" + e.getLocalizedMessage() + "</html>");
+			// window.pack();
 			window.setLocationRelativeTo(null);
 		} finally {
 			// After we are done, no matter if there was an error or not, we are going to
@@ -135,11 +138,11 @@ public class CardPhotocopier {
 				warningTitle.setBorder(new EmptyBorder(2, 5, 2, 5));
 				window.add(warningTitle);
 				for (String w : warnings) {
-					JLabel lbl = new JLabel("<html>"+w+"</html>");
+					JLabel lbl = new JLabel("<html>" + w + "</html>");
 					lbl.setBorder(new EmptyBorder(1, 5, 1, 5));
 					window.add(lbl);
 				}
-				//window.pack();
+				// window.pack();
 				window.setLocationRelativeTo(null);
 			}
 		}
@@ -148,7 +151,7 @@ public class CardPhotocopier {
 	public static void generate() throws Exception {
 		label.setText("Reading config file.");
 
-		Configuration config = new Configuration(CONFIG_YAML,
+		Configuration config = new Configuration(CONFIG_TXT,
 				"Villainous Card Photocopier configuration.\n For help, contact Cristichi#5193 on discord.");
 		if (!config.exists()) {
 			config.setValue(CONFIG_CARD_IMAGES,
@@ -164,14 +167,14 @@ public class CardPhotocopier {
 			config.setValue(CONFIG_FATE_QUANTITY, 15, INFO_FATE_QUANTITY);
 			config.setValue(CONFIG_EMPTY_ROWS_TO_END, 20, INFO_EMPTY_ROWS_TO_END);
 			config.setValue(CONFIG_TYPE_ORDER, "Hero, Condition, Effect, Ally, Item", INFO_TYPE_ORDER);
-			config.setValue(CONFIG_IMAGE_QUALITY, "0.8", INFO_IMAGE_QUALITY);
+			config.setValue(CONFIG_IMAGE_QUALITY, "0.9", INFO_IMAGE_QUALITY);
 
 			config.saveConfig();
 
 			System.out.println(config.getAbsolutePath());
 
 			window.setMinimumSize(new Dimension(800, 200));
-			//window.pack();
+			// window.pack();
 			window.setLocationRelativeTo(null);
 			window.addWindowListener(new WindowAdapter() {
 				@Override
@@ -187,10 +190,10 @@ public class CardPhotocopier {
 					}
 				}
 			});
-			label.setText(
-					"Configuration file (config.yml) not found. We generated one for you, please close this window and edit it accordingly.");
-			throw new FileNotFoundException(
-					"Configuration file (config.yml) not found. We generated one for you, please close this window and edit it accordingly.");
+			label.setText("Configuration file (" + CONFIG_TXT
+					+ ") not found. We generated one for you, please close this window and edit it accordingly.");
+			throw new FileNotFoundException("Configuration file (" + CONFIG_TXT
+					+ ") not found. We generated one for you, please close this window and edit it accordingly.");
 		}
 
 		config.reloadConfigFromFile();
@@ -215,7 +218,7 @@ public class CardPhotocopier {
 
 		if (!imagesFolder.exists()) {
 			window.setMinimumSize(new Dimension(800, 200));
-			//window.pack();
+			// window.pack();
 			window.setLocationRelativeTo(null);
 			label.setText("The folder where the already existing images for the cards are supposed to be ("
 					+ imagesFolder.getAbsolutePath() + ") was not found. We need that one.");
@@ -225,7 +228,7 @@ public class CardPhotocopier {
 		}
 		if (!documentFile.exists()) {
 			window.setMinimumSize(new Dimension(800, 200));
-			//window.pack();
+			// window.pack();
 			window.setLocationRelativeTo(null);
 			label.setText("The .ods document with the information for each card (" + documentFile.getAbsolutePath()
 					+ ") was not found. We need that one.");
@@ -242,11 +245,14 @@ public class CardPhotocopier {
 		HashMap<String, CardInfo> cardsInfo = new HashMap<>(60);
 
 		for (File cardFile : imagesFolder.listFiles(new FilenameFilter() {
+
 			@Override
 			public boolean accept(File dir, String name) {
+				name = name.toLowerCase();
 				return name.endsWith(".png") || name.endsWith(".jpg") || name.endsWith(".jpeg");
 			}
 		})) {
+
 			String name = cardFile.getName().substring(0,
 					cardFile.getName().length() - (cardFile.getName().endsWith(".jpeg") ? 5 : 4));
 			if (!name.isEmpty()) {
@@ -457,10 +463,11 @@ public class CardPhotocopier {
 
 		if (!config.contains(CONFIG_IMAGE_QUALITY)) {
 			config.setInfo(CONFIG_IMAGE_QUALITY, INFO_IMAGE_QUALITY);
-			config.setValue(CONFIG_IMAGE_QUALITY, "0.8", INFO_IMAGE_QUALITY);
+			config.setValue(CONFIG_IMAGE_QUALITY, "0.9", INFO_IMAGE_QUALITY);
 			config.saveConfig();
 		}
 		float quality = config.getFloat(CONFIG_IMAGE_QUALITY);
+
 		// Big chad compressed writing to file.
 		writeImage(resultImageV, villainDeck, quality);
 		writeImage(resultImageF, fateDeck, quality);
@@ -520,7 +527,8 @@ public class CardPhotocopier {
 		// If the number of cards is quite wild, then
 		// it tries it best to calculate a good one.
 		// It probably will be wacky.
-		warnings.add("The number of cards \"" + quantity + "\" was a little bit too high so the result might be unexpected.");
+		warnings.add("The number of cards \"" + quantity
+				+ "\" was a little bit too high so the result might be unexpected.");
 		warnings.add("Please tell Cristichi#5193 to add support for " + quantity + " cards! He'll be happy to add it.");
 		List<Integer> divisors = getDivisors(quantity);
 		divisors.add(1);
