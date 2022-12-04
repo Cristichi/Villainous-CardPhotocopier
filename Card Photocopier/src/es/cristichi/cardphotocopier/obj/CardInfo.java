@@ -2,10 +2,10 @@ package es.cristichi.cardphotocopier.obj;
 
 import java.awt.image.BufferedImage;
 
-public class CardInfo{
+public class CardInfo {
 	
 	public int copies, deck;
-	public String name, type;
+	public String name, type, desc;
 	public BufferedImage imageData;
 	
 	

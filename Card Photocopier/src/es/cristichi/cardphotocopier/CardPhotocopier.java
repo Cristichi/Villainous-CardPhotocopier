@@ -13,11 +13,13 @@ import java.io.FileNotFoundException;
 import java.io.FilenameFilter;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.PrintWriter;
 import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
+import java.util.concurrent.Semaphore;
 
 import javax.imageio.IIOImage;
 import javax.imageio.ImageIO;
@@ -31,6 +33,8 @@ import javax.swing.border.EmptyBorder;
 import org.jopendocument.dom.spreadsheet.Cell;
 import org.jopendocument.dom.spreadsheet.Sheet;
 import org.jopendocument.dom.spreadsheet.SpreadSheet;
+import org.json.simple.JSONArray;
+import org.json.simple.JSONObject;
 
 import es.cristichi.cardphotocopier.obj.CardComparator;
 import es.cristichi.cardphotocopier.obj.CardInfo;
@@ -43,7 +47,7 @@ import es.cristichi.cardphotocopier.obj.Range;
  * 
  * @author Cristichi#5193
  */
-//TODO: Support to export two .json files with each card's name and description/rules. One for each deck.
+//TODO: Support to export two .json files with each card's name and description/rules. One for each deck. Use a secon thread pls. Semaphore time!
 //TODO: Tabletop Simulator script that takes that .json and give each card the correct description.
 public class CardPhotocopier {
 	private static String CONFIG_TXT = "config.txt";
@@ -75,7 +79,8 @@ public class CardPhotocopier {
 			CONFIG_RESULTS = "resultsFolder", CONFIG_AUTOCLOSE = "autoclose", CONFIG_FATE_NAME = "fateDeckName",
 			CONFIG_VILLAIN_NAME = "villainDeckName", CONFIG_FATE_QUANTITY = "fateDeckQuantity",
 			CONFIG_VILLAIN_QUANTITY = "villainDeckQuantity", CONFIG_EMPTY_ROWS_TO_END = "maxEmptyRowsToEnd",
-			CONFIG_TYPE_ORDER = "cardTypeOrder", CONFIG_IMAGE_QUALITY = "imageQuality";
+			CONFIG_TYPE_ORDER = "cardTypeOrder", CONFIG_IMAGE_QUALITY = "imageQuality",
+			CONFIG_GENERATE_JSON = "generateJsonDescriptions";
 	public static String INFO_DOC = "The path to the .ods file where you have your cards' info. It may contain other Villains' cards, that's fine.",
 			INFO_CARD_IMAGES = "Folder where all the generated images of your Villain's cards are. It must not contain other Villains' cards",
 			INFO_RESULTS = "Where you want the Villain/Fate deck images to be created.",
@@ -92,7 +97,11 @@ public class CardPhotocopier {
 					+ "\"" + CONFIG_TYPE_ORDER
 					+ ": Hero, Condition, Effect, Ally, Item\" (without quotation marks). To make it order by name, remove this value entirely.",
 			INFO_IMAGE_QUALITY = "The quality of the resulting images. Put \"1\" for the best quality but large image, "
-					+ "\"0\" for the poorest quality (horrible trust me) and smallest image possible. Recommended is \"0.9\" so keep it that way unless you need the file to be even smaller.";
+					+ "\"0\" for the poorest quality (horrible trust me) and smallest image possible."
+					+ " Recommended is \"0.9\" so keep it that way unless you need the file to be even smaller.",
+			INFO_GENERATE_JSON = "If true, apart from generating the images, it will take the N column of the "
+					+ ".ods document of each card and create a JSON that the Card Descriptions Loader can read "
+					+ "in TTS in order to apply each description to each card.";
 
 	private static ArrayList<String> warnings;
 
@@ -168,6 +177,7 @@ public class CardPhotocopier {
 			config.setValue(CONFIG_EMPTY_ROWS_TO_END, 20, INFO_EMPTY_ROWS_TO_END);
 			config.setValue(CONFIG_TYPE_ORDER, "Hero, Condition, Effect, Ally, Item", INFO_TYPE_ORDER);
 			config.setValue(CONFIG_IMAGE_QUALITY, "0.9", INFO_IMAGE_QUALITY);
+			config.setValue(CONFIG_GENERATE_JSON, "false", INFO_GENERATE_JSON);
 
 			config.saveConfig();
 
@@ -208,6 +218,7 @@ public class CardPhotocopier {
 		config.setInfo(CONFIG_EMPTY_ROWS_TO_END, INFO_EMPTY_ROWS_TO_END);
 		config.setInfo(CONFIG_TYPE_ORDER, INFO_TYPE_ORDER);
 		config.setInfo(CONFIG_IMAGE_QUALITY, INFO_IMAGE_QUALITY);
+		config.setInfo(CONFIG_GENERATE_JSON, INFO_GENERATE_JSON);
 		config.saveConfig();
 
 		boolean autoclose = config.getBoolean(CONFIG_AUTOCLOSE);
@@ -300,6 +311,7 @@ public class CardPhotocopier {
 				Cell<SpreadSheet> K = sheet.getCellAt("K" + row);
 				Cell<SpreadSheet> L = sheet.getCellAt("L" + row);
 				Cell<SpreadSheet> M = sheet.getCellAt("M" + row);
+				Cell<SpreadSheet> N = sheet.getCellAt("N" + row);
 
 				// If we find too many empty lines we are going to call it a day, because it
 				// might mean we are at the end but there are tons of empty lines.
@@ -333,6 +345,7 @@ public class CardPhotocopier {
 							ci.name = cardName;
 							ci.type = F.getTextValue();
 							ci.copies = Integer.parseInt(A.getTextValue());
+							ci.desc = N.getTextValue();
 							System.out.println("Loading data for " + ci.name + ": x" + ci.copies + ".");
 
 							if ((K.getTextValue().equals("Villain") || K.getTextValue().equals("0")) && !forceFate) {
@@ -409,6 +422,66 @@ public class CardPhotocopier {
 		}
 		usefulCards.sort(new CardComparator(orderSplit));
 
+		Semaphore sem = new Semaphore(0);
+		if (config.getBoolean(CONFIG_GENERATE_JSON, false)) {
+			new Thread(new Runnable() {
+
+				@Override
+				public void run() {
+					System.out.println("   (Thread) Generating JSON file.");
+
+					JSONObject jsonV = new JSONObject();
+					jsonV.put("deck", "1");
+					jsonV.put("name", config.getString(CONFIG_VILLAIN_NAME, "Villain Deck"));
+					JSONArray cardsV = new JSONArray();
+					
+					JSONObject jsonF = new JSONObject();
+					jsonF.put("deck", "0");
+					jsonF.put("name", config.getString(CONFIG_FATE_NAME, "Fate Deck"));
+					JSONArray cardsF = new JSONArray();
+					for (CardInfo ci : usefulCards) {
+						System.out.println("   (Thread) Writing " + ci.name + ": " + ci.desc);
+						JSONObject c = new JSONObject();
+						c.put("name", ci.name);
+						c.put("desc", ci.desc);
+						if (ci.deck == 0) {
+							cardsF.add(c);
+						} else {
+							cardsV.add(c);
+						}
+					}
+					jsonV.put("cards", cardsV);
+					jsonF.put("cards", cardsF);
+					
+					JSONObject jsonT = new JSONObject();
+					jsonT.put("villain", jsonV);
+					jsonT.put("fate", jsonF);
+
+					File jsonVFile = new File(resultsFolder, "Villain Desc.json");
+					File jsonFFile = new File(resultsFolder, "Fate Desc.json");
+					File jsonTFile = new File(resultsFolder, "Total Desc.json");
+
+					try {
+						try (PrintWriter out = new PrintWriter(jsonVFile)) {
+							out.println(jsonV.toString());
+						}
+						try (PrintWriter out = new PrintWriter(jsonFFile)) {
+							out.println(jsonF.toString());
+						}
+						try (PrintWriter out = new PrintWriter(jsonTFile)) {
+							out.println(jsonT.toString());
+						}
+					} catch (IOException e) {
+						e.printStackTrace();
+						warnings.add("JSON Files could not be generated.");
+						sem.release();
+					}
+					sem.release();
+				}
+			}).start();
+		} else
+			sem.release();
+
 		// It's time to write the images of every card!
 		for (CardInfo ci : usefulCards) {
 			System.out.println("Photocopying card " + ci.name + ": " + ci.copies + " copies in deck " + ci.deck);
@@ -469,9 +542,10 @@ public class CardPhotocopier {
 		float quality = config.getFloat(CONFIG_IMAGE_QUALITY);
 
 		// Big chad compressed writing to file.
-		writeImage(resultImageV, villainDeck, quality);
-		writeImage(resultImageF, fateDeck, quality);
+		writeJpgImage(resultImageV, villainDeck, quality);
+		writeJpgImage(resultImageF, fateDeck, quality);
 
+		sem.acquire();
 		// We check if the user wants to autoclose and we do it after 500ms if there are
 		// no warnings whatsoever.
 		if (autoclose && warnings.isEmpty()) {
@@ -490,7 +564,7 @@ public class CardPhotocopier {
 	 *                    any value in between.
 	 * @throws IOException
 	 */
-	private static void writeImage(BufferedImage resultImage, File deckFile, float quality) throws IOException {
+	private static void writeJpgImage(BufferedImage resultImage, File deckFile, float quality) throws IOException {
 		try (ImageOutputStream ios = ImageIO.createImageOutputStream(deckFile)) {
 			ImageWriter jpgWriter = ImageIO.getImageWritersByFormatName("JPEG").next();
 
