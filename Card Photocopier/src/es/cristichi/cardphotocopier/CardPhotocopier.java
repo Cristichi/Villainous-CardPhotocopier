@@ -4,6 +4,9 @@ import java.awt.Desktop;
 import java.awt.Dimension;
 import java.awt.Graphics;
 import java.awt.GridLayout;
+import java.awt.Toolkit;
+import java.awt.datatransfer.Clipboard;
+import java.awt.datatransfer.StringSelection;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.awt.image.BufferedImage;
@@ -80,7 +83,7 @@ public class CardPhotocopier {
 			CONFIG_VILLAIN_NAME = "villainDeckName", CONFIG_FATE_QUANTITY = "fateDeckQuantity",
 			CONFIG_VILLAIN_QUANTITY = "villainDeckQuantity", CONFIG_EMPTY_ROWS_TO_END = "maxEmptyRowsToEnd",
 			CONFIG_TYPE_ORDER = "cardTypeOrder", CONFIG_IMAGE_QUALITY = "imageQuality",
-			CONFIG_GENERATE_JSON = "generateJsonDescriptions";
+			CONFIG_GENERATE_JSON = "generateJsonDescriptions", CONFIG_COPY_JSON = "copyJsonToClipboard";
 	public static String INFO_DOC = "The path to the .ods file where you have your cards' info. It may contain other Villains' cards, that's fine.",
 			INFO_CARD_IMAGES = "Folder where all the generated images of your Villain's cards are. It must not contain other Villains' cards",
 			INFO_RESULTS = "Where you want the Villain/Fate deck images to be created.",
@@ -101,7 +104,7 @@ public class CardPhotocopier {
 					+ " Recommended is \"0.9\" so keep it that way unless you need the file to be even smaller.",
 			INFO_GENERATE_JSON = "If true, apart from generating the images, it will take the N column of the "
 					+ ".ods document of each card and create a JSON that the Card Descriptions Loader can read "
-					+ "in TTS in order to apply each description to each card.";
+					+ "in TTS in order to apply each description to each card.", INFO_COPY_JSON = "If true, if the JSON file is generated, it will be copied to the clipboard as well.";
 
 	private static ArrayList<String> warnings;
 
@@ -178,6 +181,7 @@ public class CardPhotocopier {
 			config.setValue(CONFIG_TYPE_ORDER, "Hero, Condition, Effect, Ally, Item", INFO_TYPE_ORDER);
 			config.setValue(CONFIG_IMAGE_QUALITY, "0.9", INFO_IMAGE_QUALITY);
 			config.setValue(CONFIG_GENERATE_JSON, "false", INFO_GENERATE_JSON);
+			config.setValue(CONFIG_COPY_JSON, "true", INFO_COPY_JSON);
 
 			config.saveConfig();
 
@@ -219,6 +223,7 @@ public class CardPhotocopier {
 		config.setInfo(CONFIG_TYPE_ORDER, INFO_TYPE_ORDER);
 		config.setInfo(CONFIG_IMAGE_QUALITY, INFO_IMAGE_QUALITY);
 		config.setInfo(CONFIG_GENERATE_JSON, INFO_GENERATE_JSON);
+		config.setInfo(CONFIG_COPY_JSON, INFO_COPY_JSON);
 		config.saveConfig();
 
 		boolean autoclose = config.getBoolean(CONFIG_AUTOCLOSE);
@@ -431,45 +436,53 @@ public class CardPhotocopier {
 					System.out.println("   (Thread) Generating JSON file.");
 
 					JSONObject jsonV = new JSONObject();
-					jsonV.put("deck", "1");
 					jsonV.put("name", config.getString(CONFIG_VILLAIN_NAME, "Villain Deck"));
 					JSONArray cardsV = new JSONArray();
-					
+
 					JSONObject jsonF = new JSONObject();
-					jsonF.put("deck", "0");
 					jsonF.put("name", config.getString(CONFIG_FATE_NAME, "Fate Deck"));
 					JSONArray cardsF = new JSONArray();
+
+					int contV = 0;
+					int contF = 0;
 					for (CardInfo ci : usefulCards) {
-						System.out.println("   (Thread) Writing " + ci.name + ": " + ci.desc);
-						JSONObject c = new JSONObject();
-						c.put("name", ci.name);
-						c.put("desc", ci.desc);
-						if (ci.deck == 0) {
-							cardsF.add(c);
-						} else {
-							cardsV.add(c);
+						System.out.println("   (Thread) Writing " + ci.name + ": " + ci.desc+" x"+ci.copies+" times");
+						for (int i = 0; i < ci.copies; i++) {
+							JSONObject c = new JSONObject();
+							c.put("name", ci.name);
+							c.put("desc", ci.desc);
+							if (ci.deck == 0) {
+								cardsV.add(contV++, c);
+							} else {
+								cardsF.add(contF++, c);
+							}
 						}
 					}
 					jsonV.put("cards", cardsV);
 					jsonF.put("cards", cardsF);
-					
+
 					JSONObject jsonT = new JSONObject();
 					jsonT.put("villain", jsonV);
 					jsonT.put("fate", jsonF);
 
-					File jsonVFile = new File(resultsFolder, "Villain Desc.json");
-					File jsonFFile = new File(resultsFolder, "Fate Desc.json");
-					File jsonTFile = new File(resultsFolder, "Total Desc.json");
+//					File jsonVFile = new File(resultsFolder, "Villain Desc.json");
+//					File jsonFFile = new File(resultsFolder, "Fate Desc.json");
+					File jsonTFile = new File(resultsFolder, "Descriptions.json");
 
 					try {
-						try (PrintWriter out = new PrintWriter(jsonVFile)) {
-							out.println(jsonV.toString());
-						}
-						try (PrintWriter out = new PrintWriter(jsonFFile)) {
-							out.println(jsonF.toString());
-						}
+//						try (PrintWriter out = new PrintWriter(jsonVFile)) {
+//							out.println(jsonV.toString());
+//						}
+//						try (PrintWriter out = new PrintWriter(jsonFFile)) {
+//							out.println(jsonF.toString());
+//						}
 						try (PrintWriter out = new PrintWriter(jsonTFile)) {
 							out.println(jsonT.toString());
+							
+							if (config.getBoolean(CONFIG_COPY_JSON, false)) {
+								Clipboard clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
+								clipboard.setContents(new StringSelection(jsonT.toString()), null);	
+							}
 						}
 					} catch (IOException e) {
 						e.printStackTrace();

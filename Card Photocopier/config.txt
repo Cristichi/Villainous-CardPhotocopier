@@ -14,10 +14,10 @@ resultsFolder: Results
 autoclose: true
 
 #The name of the main deck's file to be generated.
-villainDeckName: Villain deck
+villainDeckName: Malefor Villain deck
 
 #The name of the Fate deck's file to be generated.
-fateDeckName: Fate deck
+fateDeckName: Malefor Fate deck
 
 #The number of cards that should be expected for this Villain to have in his main deck. Useful in case you didn't count the cards well.
 villainDeckQuantity: 30
