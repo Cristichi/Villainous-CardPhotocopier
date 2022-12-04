@@ -50,8 +50,6 @@ import es.cristichi.cardphotocopier.obj.Range;
  * 
  * @author Cristichi#5193
  */
-//TODO: Support to export two .json files with each card's name and description/rules. One for each deck. Use a secon thread pls. Semaphore time!
-//TODO: Tabletop Simulator script that takes that .json and give each card the correct description.
 public class CardPhotocopier {
 	private static String CONFIG_TXT = "config.yml";
 	private static Dimension CARD_SIZE = new Dimension(620, 880);
