@@ -37,3 +37,6 @@ imageQuality: 0.9
 #If true, apart from generating the images, it will take the N column of the .ods document of each card and create a JSON that the Card Descriptions Loader can read in TTS in order to apply each description to each card.
 generateJsonDescriptions: true
 
+#If true, if the JSON file is generated, it will be copied to the clipboard as well.
+copyJsonToClipboard: true
+

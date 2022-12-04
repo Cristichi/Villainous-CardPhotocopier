@@ -446,11 +446,13 @@ public class CardPhotocopier {
 					int contV = 0;
 					int contF = 0;
 					for (CardInfo ci : usefulCards) {
-						System.out.println("   (Thread) Writing " + ci.name + ": " + ci.desc+" x"+ci.copies+" times");
+						String name = ci.name.replace("   ", " ");
+						String desc = ci.desc.replace("   ", "\n");
+						System.out.println("   (Thread) Writing " + name + ":  x"+ci.copies+" times");
 						for (int i = 0; i < ci.copies; i++) {
 							JSONObject c = new JSONObject();
-							c.put("name", ci.name);
-							c.put("desc", ci.desc);
+							c.put("name", name);
+							c.put("desc", desc);
 							if (ci.deck == 0) {
 								cardsV.add(contV++, c);
 							} else {
@@ -459,7 +461,9 @@ public class CardPhotocopier {
 						}
 					}
 					jsonV.put("cards", cardsV);
+					jsonV.put("count", contV);
 					jsonF.put("cards", cardsF);
+					jsonF.put("count", contF);
 
 					JSONObject jsonT = new JSONObject();
 					jsonT.put("villain", jsonV);
@@ -479,6 +483,11 @@ public class CardPhotocopier {
 						try (PrintWriter out = new PrintWriter(jsonTFile)) {
 							out.println(jsonT.toString());
 							
+							if (!config.contains(CONFIG_COPY_JSON)) {
+								config.setInfo(CONFIG_COPY_JSON, INFO_COPY_JSON);
+								config.setValue(CONFIG_COPY_JSON, "false", INFO_COPY_JSON);
+								config.saveConfig();
+							}
 							if (config.getBoolean(CONFIG_COPY_JSON, false)) {
 								Clipboard clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
 								clipboard.setContents(new StringSelection(jsonT.toString()), null);	
