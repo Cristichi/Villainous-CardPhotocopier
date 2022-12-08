@@ -471,29 +471,19 @@ public class CardPhotocopier {
 					jsonT.put("villain", jsonV);
 					jsonT.put("fate", jsonF);
 
-//					File jsonVFile = new File(resultsFolder, "Villain Desc.json");
-//					File jsonFFile = new File(resultsFolder, "Fate Desc.json");
 					File jsonTFile = new File(resultsFolder, "Descriptions.json");
 
-					try {
-//						try (PrintWriter out = new PrintWriter(jsonVFile)) {
-//							out.println(jsonV.toString());
-//						}
-//						try (PrintWriter out = new PrintWriter(jsonFFile)) {
-//							out.println(jsonF.toString());
-//						}
-						try (PrintWriter out = new PrintWriter(jsonTFile)) {
-							out.println(jsonT.toString());
+					try (PrintWriter out = new PrintWriter(jsonTFile)) {
+						out.println(jsonT.toString());
 
-							if (!config.contains(CONFIG_COPY_JSON)) {
-								config.setInfo(CONFIG_COPY_JSON, INFO_COPY_JSON);
-								config.setValue(CONFIG_COPY_JSON, "false", INFO_COPY_JSON);
-								config.saveConfig();
-							}
-							if (config.getBoolean(CONFIG_COPY_JSON, false)) {
-								Clipboard clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
-								clipboard.setContents(new StringSelection(jsonT.toString()), null);
-							}
+						if (!config.contains(CONFIG_COPY_JSON)) {
+							config.setInfo(CONFIG_COPY_JSON, INFO_COPY_JSON);
+							config.setValue(CONFIG_COPY_JSON, "false", INFO_COPY_JSON);
+							config.saveConfig();
+						}
+						if (config.getBoolean(CONFIG_COPY_JSON, false)) {
+							Clipboard clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
+							clipboard.setContents(new StringSelection(jsonT.toString()), null);
 						}
 					} catch (IOException e) {
 						e.printStackTrace();
