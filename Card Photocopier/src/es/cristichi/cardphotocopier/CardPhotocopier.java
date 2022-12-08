@@ -51,6 +51,9 @@ import es.cristichi.cardphotocopier.obj.Range;
  * @author Cristichi#5193
  */
 public class CardPhotocopier {
+	private static String VERSION = "v2.3";
+	private static String NAME = "Villainous Card Photocopier "+VERSION;
+	
 	private static String CONFIG_TXT = "config.yml";
 	private static Dimension CARD_SIZE = new Dimension(620, 880);
 	private static HashMap<Range, Dimension> DECK_SIZES;
@@ -114,7 +117,7 @@ public class CardPhotocopier {
 		warnings = new ArrayList<>(10);
 		try {
 			// We first create a new window so we can tell the user how things are going.
-			window = new JFrame("Villainous Card Photocopier");
+			window = new JFrame(NAME);
 			window.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 			label = new JLabel("Starting");
 			label.setHorizontalAlignment(JLabel.CENTER);
@@ -163,7 +166,7 @@ public class CardPhotocopier {
 		label.setText("Reading config file.");
 
 		Configuration config = new Configuration(CONFIG_TXT,
-				"Villainous Card Photocopier v2.3 configuration.\n For help, contact Cristichi#5193 on discord.");
+				NAME+" configuration.\n For help, contact Cristichi#5193 on discord.");
 		if (!config.exists()) {
 			config.setValue(CONFIG_CARD_IMAGES,
 					"../Villainous Card Generator V33.2/Villainous Card Generator V33_Data/-Exports", INFO_CARD_IMAGES);
