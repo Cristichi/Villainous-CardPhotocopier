@@ -102,7 +102,8 @@ public class CardPhotocopier {
 					+ " Recommended is \"0.9\" so keep it that way unless you need the file to be even smaller.",
 			INFO_GENERATE_JSON = "If true, apart from generating the images, it will take the N column of the "
 					+ ".ods document of each card and create a JSON that the Card Descriptions Loader can read "
-					+ "in TTS in order to apply each description to each card.", INFO_COPY_JSON = "If true, if the JSON file is generated, it will be copied to the clipboard as well.";
+					+ "in TTS in order to apply each description to each card.",
+			INFO_COPY_JSON = "If true, if the JSON file is generated, it will be copied to the clipboard as well.";
 
 	private static ArrayList<String> warnings;
 
@@ -387,11 +388,14 @@ public class CardPhotocopier {
 			}
 		}
 
-		if (copiesToV == 0 && copiesToF == 0) {
+		int villainExpectedSize = config.getInt(CONFIG_VILLAIN_QUANTITY);
+		int fateExpectedSize = config.getInt(CONFIG_FATE_QUANTITY);
+
+		if (copiesToV == 0 && copiesToV != villainExpectedSize && copiesToF == 0 && copiesToF != fateExpectedSize) {
 			throw new IllegalArgumentException("Both your Villain and Fate decks has 0 cards! Check it please.");
-		} else if (copiesToV == 0) {
+		} else if (copiesToV == 0 && copiesToV != villainExpectedSize) {
 			throw new IllegalArgumentException("Your Villain deck has 0 cards! Check it please.");
-		} else if (copiesToF == 0) {
+		} else if (copiesToF == 0 && copiesToF != fateExpectedSize) {
 			throw new IllegalArgumentException("Your Fate deck has 0 cards! Check it please.");
 		}
 
@@ -446,7 +450,7 @@ public class CardPhotocopier {
 					for (CardInfo ci : usefulCards) {
 						String name = ci.name.replace("   ", " ");
 						String desc = ci.desc.replace("   ", "\n");
-						System.out.println("   (Thread) Writing " + name + ":  x"+ci.copies+" times");
+						System.out.println("   (Thread) Writing " + name + ":  x" + ci.copies + " times");
 						for (int i = 0; i < ci.copies; i++) {
 							JSONObject c = new JSONObject();
 							c.put("name", name);
@@ -480,7 +484,7 @@ public class CardPhotocopier {
 //						}
 						try (PrintWriter out = new PrintWriter(jsonTFile)) {
 							out.println(jsonT.toString());
-							
+
 							if (!config.contains(CONFIG_COPY_JSON)) {
 								config.setInfo(CONFIG_COPY_JSON, INFO_COPY_JSON);
 								config.setValue(CONFIG_COPY_JSON, "false", INFO_COPY_JSON);
@@ -488,7 +492,7 @@ public class CardPhotocopier {
 							}
 							if (config.getBoolean(CONFIG_COPY_JSON, false)) {
 								Clipboard clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
-								clipboard.setContents(new StringSelection(jsonT.toString()), null);	
+								clipboard.setContents(new StringSelection(jsonT.toString()), null);
 							}
 						}
 					} catch (IOException e) {
@@ -531,8 +535,6 @@ public class CardPhotocopier {
 
 		// If the number of copies is not the expected, we notify the user in case they
 		// forgot to save their .ods after some changes.
-		int villainExpectedSize = config.getInt(CONFIG_VILLAIN_QUANTITY);
-		int fateExpectedSize = config.getInt(CONFIG_FATE_QUANTITY);
 
 		if (copiesToV != villainExpectedSize) {
 			warnings.add("Unexpected number of copies to Vilain deck. Expected was " + villainExpectedSize
