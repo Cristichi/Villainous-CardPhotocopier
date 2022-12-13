@@ -51,9 +51,9 @@ import es.cristichi.cardphotocopier.obj.Range;
  * @author Cristichi#5193
  */
 public class CardPhotocopier {
-	private static String VERSION = "v2.3";
-	private static String NAME = "Villainous Card Photocopier "+VERSION;
-	
+	private static String VERSION = "v2.3.2";
+	private static String NAME = "Villainous Card Photocopier " + VERSION;
+
 	private static String CONFIG_TXT = "config.yml";
 	private static Dimension CARD_SIZE = new Dimension(620, 880);
 	private static HashMap<Range, Dimension> DECK_SIZES;
@@ -166,7 +166,7 @@ public class CardPhotocopier {
 		label.setText("Reading config file.");
 
 		Configuration config = new Configuration(CONFIG_TXT,
-				NAME+" configuration.\n For help, contact Cristichi#5193 on discord.");
+				NAME + " configuration.\n For help, contact Cristichi#5193 on discord.");
 		if (!config.exists()) {
 			config.setValue(CONFIG_CARD_IMAGES,
 					"../Villainous Card Generator V33.2/Villainous Card Generator V33_Data/-Exports", INFO_CARD_IMAGES);
@@ -303,7 +303,7 @@ public class CardPhotocopier {
 		int doneLimit = config.getInt(CONFIG_EMPTY_ROWS_TO_END, 20);
 		// We are going to look into each row in the .ods and check if it's a card that
 		// exists withing the images folder and draw it into it's corresponding deck.
-		for (int row = 4; done <= doneLimit; row++) {
+		for (int row = 1; done <= doneLimit; row++) {
 			Cell<SpreadSheet> A = sheet.getCellAt("A" + row);
 			try {
 				Cell<SpreadSheet> B = sheet.getCellAt("B" + row);
@@ -347,13 +347,12 @@ public class CardPhotocopier {
 							System.err.println("Error reading: " + row + " (Card " + cardName + " not proper)");
 						} else {
 							// We add the information found about this card
-							System.out.println(cardName);
 							CardInfo ci = cardsInfo.get(cardName);
 							ci.name = cardName;
 							ci.type = F.getTextValue();
 							ci.copies = Integer.parseInt(A.getTextValue());
 							ci.desc = N.getTextValue();
-							System.out.println("Loading data for " + ci.name + ": x" + ci.copies + ".");
+							System.out.println("Loading .ods data for " + ci.name + ": x" + ci.copies + ".");
 
 							if ((K.getTextValue().equals("Villain") || K.getTextValue().equals("0")) && !forceFate) {
 								ci.deck = 0;
@@ -384,7 +383,7 @@ public class CardPhotocopier {
 				if (A.getTextValue().contains("- Fate -")) {
 					forceFate = true;
 					System.out.println("Detected \"- Fate -\". Forcing fate from now on");
-				} else {
+				} else if (forceFate) {
 					forceFate = false;
 					System.out.println("Interpreted as end of force Fate. No longer forcing fate");
 				}
@@ -395,7 +394,11 @@ public class CardPhotocopier {
 		int fateExpectedSize = config.getInt(CONFIG_FATE_QUANTITY);
 
 		if (copiesToV == 0 && copiesToV != villainExpectedSize && copiesToF == 0 && copiesToF != fateExpectedSize) {
-			throw new IllegalArgumentException("Both your Villain and Fate decks has 0 cards! Check it please.");
+			throw new IllegalArgumentException(
+					"Both your Villain and Fate decks have 0 cards! Check it please." + (doneLimit < 20
+							? " You might have to increase the " + CONFIG_EMPTY_ROWS_TO_END + " (it is " + doneLimit
+									+ ")"
+							: ""));
 		} else if (copiesToV == 0 && copiesToV != villainExpectedSize) {
 			throw new IllegalArgumentException("Your Villain deck has 0 cards! Check it please.");
 		} else if (copiesToF == 0 && copiesToF != fateExpectedSize) {
