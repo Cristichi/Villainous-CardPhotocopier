@@ -51,7 +51,7 @@ import es.cristichi.cardphotocopier.obj.Range;
  * @author Cristichi#5193
  */
 public class CardPhotocopier {
-	private static String VERSION = "v2.3.2";
+	private static String VERSION = "v2.3.3";
 	private static String NAME = "Villainous Card Photocopier " + VERSION;
 
 	private static String CONFIG_TXT = "config.yml";
@@ -454,7 +454,24 @@ public class CardPhotocopier {
 					int contV = 0;
 					int contF = 0;
 					for (CardInfo ci : usefulCards) {
-						String name = ci.name.replace("   ", " ");
+						String name = ci.name.replace("   ", " ").replace("\n", " ");
+						
+						boolean stopAdding = false;
+						char startStop = '[';
+						char endStop = ']';
+						char[] nameArray = name.toCharArray();
+						name = "";
+						for (int i = 0; i < nameArray.length; i++) {
+							if (nameArray[i] == startStop) {
+								stopAdding = true;
+							}
+							if (!stopAdding)
+								name += Character.toString(nameArray[i]);
+							if (nameArray[i] == endStop) {
+								stopAdding = false;
+							}
+						}
+						name = name.trim();
 						String desc = ci.desc.replace("   ", "\n");
 						System.out.println("   (Thread) Writing " + name + ":  x" + ci.copies + " times");
 						for (int i = 0; i < ci.copies; i++) {
