@@ -16,6 +16,7 @@ import java.io.FileNotFoundException;
 import java.io.FilenameFilter;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.PrintStream;
 import java.io.PrintWriter;
 import java.nio.file.Files;
 import java.util.ArrayList;
@@ -51,10 +52,12 @@ import es.cristichi.cardphotocopier.obj.Range;
  * @author Cristichi#5193
  */
 public class CardPhotocopier {
-	private static String VERSION = "v2.3.3";
+	private static String VERSION = "v2.3.4";
 	private static String NAME = "Villainous Card Photocopier " + VERSION;
 
 	private static String CONFIG_TXT = "config.yml";
+	private static String ERROR_LOG = "error.log";
+	
 	private static Dimension CARD_SIZE = new Dimension(620, 880);
 	private static HashMap<Range, Dimension> DECK_SIZES;
 	static {
@@ -141,6 +144,11 @@ public class CardPhotocopier {
 			label.setText("<html>" + e.getLocalizedMessage() + "</html>");
 			// window.pack();
 			window.setLocationRelativeTo(null);
+			try {
+				e.printStackTrace(new PrintStream(ERROR_LOG));
+			} catch (FileNotFoundException e1) {
+				e1.printStackTrace();
+			}
 		} finally {
 			// After we are done, no matter if there was an error or not, we are going to
 			// show any item in "warnings" so the user can fix whatever weird thing we found
@@ -229,7 +237,7 @@ public class CardPhotocopier {
 		config.saveConfig();
 
 		boolean autoclose = config.getBoolean(CONFIG_AUTOCLOSE);
-
+	
 		File imagesFolder = new File(config.getString(CONFIG_CARD_IMAGES));
 		File resultsFolder = new File(config.getString(CONFIG_RESULTS));
 		File documentFile = new File(config.getString(CONFIG_DOC));

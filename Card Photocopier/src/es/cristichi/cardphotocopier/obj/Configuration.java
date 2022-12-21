@@ -50,9 +50,12 @@ public class Configuration extends File implements Cloneable {
 	}
 
 	public String getString(String key) throws ConfigValueNotFound {
-		String sol = settings.get(key).toString();
-		if (sol == null)
-			throw new ConfigValueNotFound("The key \"" + key + "\" was never set in the config file.");
+		if (key == null)
+			throw new ConfigValueNotFound("The key is null.");
+		Object obj = settings.get(key);
+		if (obj == null)
+			throw new ConfigValueNotFound("The key \"" + key + "\" is nto properly set in the config file. Check the config file.");
+		String sol = obj.toString();
 		return sol;
 	}
 
