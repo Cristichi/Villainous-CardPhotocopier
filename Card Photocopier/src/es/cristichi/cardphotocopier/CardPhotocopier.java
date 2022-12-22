@@ -56,7 +56,7 @@ public class CardPhotocopier {
 	private static String NAME = "Villainous Card Photocopier " + VERSION;
 
 	private static String CONFIG_TXT = "config.yml";
-	private static String DESCRIPTIONS_JSON = "card descriptions.yml";
+	private static String DESCRIPTIONS_JSON = "card descriptions.json";
 	private static String ERROR_LOG = "error.log";
 	
 	private static Dimension CARD_SIZE = new Dimension(620, 880);
