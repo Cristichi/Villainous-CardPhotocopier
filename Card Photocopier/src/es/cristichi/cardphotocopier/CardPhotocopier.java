@@ -56,6 +56,7 @@ public class CardPhotocopier {
 	private static String NAME = "Villainous Card Photocopier " + VERSION;
 
 	private static String CONFIG_TXT = "config.yml";
+	private static String DESCRIPTIONS_JSON = "card descriptions.yml";
 	private static String ERROR_LOG = "error.log";
 	
 	private static Dimension CARD_SIZE = new Dimension(620, 880);
@@ -502,7 +503,7 @@ public class CardPhotocopier {
 					jsonT.put("villain", jsonV);
 					jsonT.put("fate", jsonF);
 
-					File jsonTFile = new File(resultsFolder, "Descriptions.json");
+					File jsonTFile = new File(resultsFolder, DESCRIPTIONS_JSON);
 
 					try (PrintWriter out = new PrintWriter(jsonTFile)) {
 						out.println(jsonT.toString());
