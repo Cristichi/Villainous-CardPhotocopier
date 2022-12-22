@@ -52,13 +52,13 @@ import es.cristichi.cardphotocopier.obj.Range;
  * @author Cristichi#5193
  */
 public class CardPhotocopier {
-	private static String VERSION = "v2.3.5";
+	private static String VERSION = "v2.3.6";
 	private static String NAME = "Villainous Card Photocopier " + VERSION;
 
 	private static String CONFIG_TXT = "config.yml";
 	private static String DESCRIPTIONS_JSON = "card descriptions.json";
 	private static String ERROR_LOG = "error.log";
-	
+
 	private static Dimension CARD_SIZE = new Dimension(620, 880);
 	private static HashMap<Range, Dimension> DECK_SIZES;
 	static {
@@ -88,7 +88,8 @@ public class CardPhotocopier {
 			CONFIG_VILLAIN_NAME = "villainDeckName", CONFIG_FATE_QUANTITY = "fateDeckQuantity",
 			CONFIG_VILLAIN_QUANTITY = "villainDeckQuantity", CONFIG_EMPTY_ROWS_TO_END = "maxEmptyRowsToEnd",
 			CONFIG_TYPE_ORDER = "cardTypeOrder", CONFIG_IMAGE_QUALITY = "imageQuality",
-			CONFIG_GENERATE_JSON = "generateJsonDescriptions", CONFIG_COPY_JSON = "copyJsonToClipboard";
+			CONFIG_GENERATE_JSON = "generateJsonDescriptions", CONFIG_COPY_JSON = "copyJsonToClipboard",
+			CONFIG_TYPE_IN_JSON = "addTypeToNameInJson";
 	public static String INFO_DOC = "The path to the .ods file where you have your cards' info. It may contain other Villains' cards, that's fine.",
 			INFO_CARD_IMAGES = "Folder where all the generated images of your Villain's cards are. It must not contain other Villains' cards",
 			INFO_RESULTS = "Where you want the Villain/Fate deck images to be created.",
@@ -110,7 +111,8 @@ public class CardPhotocopier {
 			INFO_GENERATE_JSON = "If true, apart from generating the images, it will take the N column of the "
 					+ ".ods document of each card and create a JSON that the Card Descriptions Loader can read "
 					+ "in TTS in order to apply each description to each card.",
-			INFO_COPY_JSON = "If true, if the JSON file is generated, it will be copied to the clipboard as well.";
+			INFO_COPY_JSON = "If true, if the JSON file is generated, it will be copied to the clipboard as well.",
+			INFO_TYPE_IN_JSON = "If true, if the JSON file is generated, the name of the cards will include the type of the card like [Condition]. Useful if during gameplay it is convenient to be able to search by type.";
 
 	private static ArrayList<String> warnings;
 
@@ -139,7 +141,7 @@ public class CardPhotocopier {
 		} catch (Exception e) {
 			// If anything happens that makes the proccess unable to continue (things are
 			// missing, wrong values in the .ods file, etc) then we just stop and tell
-			// the user what happened. We also print in the console just in case.
+			// the user what happened. We also print in the console and a file just in case.
 			System.err.println("Ended badly with error. Sadge.");
 			e.printStackTrace();
 			label.setText("<html>" + e.getLocalizedMessage() + "</html>");
@@ -193,6 +195,7 @@ public class CardPhotocopier {
 			config.setValue(CONFIG_IMAGE_QUALITY, "0.9", INFO_IMAGE_QUALITY);
 			config.setValue(CONFIG_GENERATE_JSON, "false", INFO_GENERATE_JSON);
 			config.setValue(CONFIG_COPY_JSON, "true", INFO_COPY_JSON);
+			config.setValue(CONFIG_TYPE_IN_JSON, "false", INFO_TYPE_IN_JSON);
 
 			config.saveConfig();
 
@@ -235,10 +238,11 @@ public class CardPhotocopier {
 		config.setInfo(CONFIG_IMAGE_QUALITY, INFO_IMAGE_QUALITY);
 		config.setInfo(CONFIG_GENERATE_JSON, INFO_GENERATE_JSON);
 		config.setInfo(CONFIG_COPY_JSON, INFO_COPY_JSON);
+		config.setInfo(CONFIG_TYPE_IN_JSON, INFO_TYPE_IN_JSON);
 		config.saveConfig();
 
 		boolean autoclose = config.getBoolean(CONFIG_AUTOCLOSE);
-	
+
 		File imagesFolder = new File(config.getString(CONFIG_CARD_IMAGES));
 		File resultsFolder = new File(config.getString(CONFIG_RESULTS));
 		File documentFile = new File(config.getString(CONFIG_DOC));
@@ -451,6 +455,8 @@ public class CardPhotocopier {
 				@Override
 				public void run() {
 					System.out.println("   (Thread) Generating JSON file.");
+					
+					boolean includeType = config.getBoolean(CONFIG_TYPE_IN_JSON, false);
 
 					JSONObject jsonV = new JSONObject();
 					jsonV.put("name", config.getString(CONFIG_VILLAIN_NAME, "Villain Deck"));
@@ -463,8 +469,8 @@ public class CardPhotocopier {
 					int contV = 0;
 					int contF = 0;
 					for (CardInfo ci : usefulCards) {
-						String name = ci.name.replace("   ", " ").replace("\n", " ");
-						
+						String name = ci.name.replace("   ", " ").replace("\n", " ").concat((includeType?" ["+ci.type+"]":""));
+
 						boolean stopAdding = false;
 						char startStop = '[';
 						char endStop = ']';
