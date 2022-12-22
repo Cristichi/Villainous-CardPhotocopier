@@ -110,7 +110,7 @@ public class CardPhotocopier {
 					+ " Recommended is \"0.9\" so keep it that way unless you need the file to be even smaller.",
 			INFO_GENERATE_JSON = "If true, apart from generating the images, it will take the N column of the "
 					+ ".ods document of each card and create a JSON that the Card Descriptions Loader can read "
-					+ "in TTS in order to apply each description to each card.",
+					+ "in TTS in order to apply each name and description to each card.",
 			INFO_COPY_JSON = "If true, if the JSON file is generated, it will be copied to the clipboard as well.",
 			INFO_TYPE_IN_JSON = "If true, if the JSON file is generated, the name of the cards will include the type of the card like [Condition]. Useful if during gameplay it is convenient to be able to search by type.";
 
@@ -455,7 +455,16 @@ public class CardPhotocopier {
 				@Override
 				public void run() {
 					System.out.println("   (Thread) Generating JSON file.");
-					
+
+					if (!config.contains(CONFIG_TYPE_IN_JSON)) {
+						config.setInfo(CONFIG_TYPE_IN_JSON, INFO_TYPE_IN_JSON);
+						config.setValue(CONFIG_TYPE_IN_JSON, false, INFO_TYPE_IN_JSON);
+						try {
+							config.saveConfig();
+						} catch (IOException e) {
+							e.printStackTrace();
+						}
+					}
 					boolean includeType = config.getBoolean(CONFIG_TYPE_IN_JSON, false);
 
 					JSONObject jsonV = new JSONObject();
@@ -469,7 +478,7 @@ public class CardPhotocopier {
 					int contV = 0;
 					int contF = 0;
 					for (CardInfo ci : usefulCards) {
-						String name = ci.name.replace("   ", " ").replace("\n", " ").concat((includeType?" ["+ci.type+"]":""));
+						String name = ci.name.replace("   ", " ").replace("\n", " ");
 
 						boolean stopAdding = false;
 						char startStop = '[';
@@ -486,7 +495,7 @@ public class CardPhotocopier {
 								stopAdding = false;
 							}
 						}
-						name = name.trim();
+						name = name.trim().concat((includeType ? " [" + ci.type + "]" : ""));
 						String desc = ci.desc.replace("   ", "\n");
 						System.out.println("   (Thread) Writing " + name + ":  x" + ci.copies + " times");
 						for (int i = 0; i < ci.copies; i++) {
@@ -509,6 +518,7 @@ public class CardPhotocopier {
 					jsonT.put("villain", jsonV);
 					jsonT.put("fate", jsonF);
 
+					resultsFolder.mkdirs();
 					File jsonTFile = new File(resultsFolder, DESCRIPTIONS_JSON);
 
 					try (PrintWriter out = new PrintWriter(jsonTFile)) {
