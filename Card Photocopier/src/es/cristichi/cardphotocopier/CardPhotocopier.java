@@ -617,7 +617,7 @@ public class CardPhotocopier {
 		if (autoclose && warnings.isEmpty()) {
 			System.out.println("Autoclose goes brr");
 			label.setText("Done. Autoclosing.");
-			Thread.sleep(500);
+			//Thread.sleep(500);
 			window.dispose();
 		}
 	}
