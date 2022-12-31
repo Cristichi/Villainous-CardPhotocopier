@@ -58,6 +58,7 @@ public class CardPhotocopier {
 	private static String CONFIG_TXT = "config.yml";
 	private static String DESCRIPTIONS_JSON = "card descriptions.json";
 	private static String ERROR_LOG = "error.log";
+	private static String ERROR_DESC_LOG = "descriptions error.log";
 
 	private static Dimension CARD_SIZE = new Dimension(620, 880);
 	private static HashMap<Range, Dimension> DECK_SIZES;
@@ -535,6 +536,12 @@ public class CardPhotocopier {
 					} catch (IOException e) {
 						e.printStackTrace();
 						warnings.add("JSON Files could not be generated.");
+
+						try {
+							e.printStackTrace(new PrintStream(ERROR_DESC_LOG));
+						} catch (FileNotFoundException e1) {
+							e1.printStackTrace();
+						}
 						sem.release();
 					}
 					sem.release();
