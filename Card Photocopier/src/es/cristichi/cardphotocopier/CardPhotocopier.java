@@ -52,7 +52,7 @@ import es.cristichi.cardphotocopier.obj.Range;
  * @author Cristichi#5193
  */
 public class CardPhotocopier {
-	private static String VERSION = "v2.3.6";
+	private static String VERSION = "v2.3.7";
 	private static String NAME = "Villainous Card Photocopier " + VERSION;
 
 	private static String CONFIG_TXT = "config.yml";
@@ -137,7 +137,6 @@ public class CardPhotocopier {
 			window.setVisible(true);
 			generate();
 			label.setText("Done. Close this window to finish.");
-
 		} catch (Exception e) {
 			// If anything happens that makes the proccess unable to continue (things are
 			// missing, wrong values in the .ods file, etc) then we just stop and tell
@@ -478,7 +477,7 @@ public class CardPhotocopier {
 					int contV = 0;
 					int contF = 0;
 					for (CardInfo ci : usefulCards) {
-						String name = ci.name.replace("   ", " ").replace("\n", " ");
+						String name = ci.name.replace("   ", " ").replace("\n", " ").trim();
 
 						boolean stopAdding = false;
 						char startStop = '[';
@@ -495,8 +494,8 @@ public class CardPhotocopier {
 								stopAdding = false;
 							}
 						}
-						name = name.trim().concat((includeType ? " [" + ci.type + "]" : ""));
-						String desc = ci.desc.replace("   ", "\n");
+						String desc = ci.desc.replace("   ", "\n").replace("$THIS_NAME", name).replace("$this_name", name).replace("$THIS_CARD", name).replace("$this_card", name);
+						name = name.concat((includeType ? " [" + ci.type + "]" : ""));
 						System.out.println("   (Thread) Writing " + name + ":  x" + ci.copies + " times");
 						for (int i = 0; i < ci.copies; i++) {
 							JSONObject c = new JSONObject();
