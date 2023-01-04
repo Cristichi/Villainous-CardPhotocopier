@@ -496,7 +496,7 @@ public class CardPhotocopier {
 							}
 						}
 						String desc = ci.desc.replace("   ", "\n").replace("$THIS_NAME", name).replace("$this_name", name).replace("$THIS_CARD", name).replace("$this_card", name);
-						name = name.concat((includeType ? " [" + ci.type + "]" : ""));
+						name = name.trim().concat((includeType ? " [" + ci.type + "]" : ""));
 						System.out.println("   (Thread) Writing " + name + ":  x" + ci.copies + " times");
 						for (int i = 0; i < ci.copies; i++) {
 							JSONObject c = new JSONObject();
@@ -589,8 +589,6 @@ public class CardPhotocopier {
 					+ " but it was \"" + copiesToF + "\".");
 		}
 
-		label.setText("Writing the images for TTS decks.");
-
 		// We create the results folder if it doesn't exist.
 		if (!resultsFolder.exists()) {
 			resultsFolder.mkdir();
@@ -606,6 +604,8 @@ public class CardPhotocopier {
 			config.saveConfig();
 		}
 		float quality = config.getFloat(CONFIG_IMAGE_QUALITY);
+
+		label.setText("Writing the images for TTS decks.");
 
 		// Big chad compressed writing to file.
 		writeJpgImage(resultImageV, villainDeck, quality);
