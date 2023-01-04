@@ -543,8 +543,9 @@ public class CardPhotocopier {
 							e1.printStackTrace();
 						}
 						sem.release();
+					} finally {
+						sem.release();
 					}
-					sem.release();
 				}
 			}).start();
 		} else
