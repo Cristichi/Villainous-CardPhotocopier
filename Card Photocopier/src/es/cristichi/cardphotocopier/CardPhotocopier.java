@@ -52,7 +52,7 @@ import es.cristichi.cardphotocopier.obj.Range;
  * @author Cristichi#5193
  */
 public class CardPhotocopier {
-	private static String VERSION = "v2.3.7";
+	private static String VERSION = "v2.3.8";
 	private static String NAME = "Villainous Card Photocopier " + VERSION;
 
 	private static String CONFIG_TXT = "config.yml";
@@ -90,7 +90,7 @@ public class CardPhotocopier {
 			CONFIG_VILLAIN_QUANTITY = "villainDeckQuantity", CONFIG_EMPTY_ROWS_TO_END = "maxEmptyRowsToEnd",
 			CONFIG_TYPE_ORDER = "cardTypeOrder", CONFIG_IMAGE_QUALITY = "imageQuality",
 			CONFIG_GENERATE_JSON = "generateJsonDescriptions", CONFIG_COPY_JSON = "copyJsonToClipboard",
-			CONFIG_TYPE_IN_JSON = "addTypeToNameInJson";
+			CONFIG_TYPE_IN_JSON = "addTypeToNameInJson", CONFIG_JSON_NUM_COPIES = "jsonNumberOfCopiesInDesc";
 	public static String INFO_DOC = "The path to the .ods file where you have your cards' info. It may contain other Villains' cards, that's fine.",
 			INFO_CARD_IMAGES = "Folder where all the generated images of your Villain's cards are. It must not contain other Villains' cards",
 			INFO_RESULTS = "Where you want the Villain/Fate deck images to be created.",
@@ -113,7 +113,10 @@ public class CardPhotocopier {
 					+ ".ods document of each card and create a JSON that the Card Descriptions Loader can read "
 					+ "in TTS in order to apply each name and description to each card.",
 			INFO_COPY_JSON = "If true, if the JSON file is generated, it will be copied to the clipboard as well.",
-			INFO_TYPE_IN_JSON = "If true, if the JSON file is generated, the name of the cards will include the type of the card like [Condition]. Useful if during gameplay it is convenient to be able to search by type.";
+			INFO_TYPE_IN_JSON = "If true, if the JSON file is generated, the name of the cards will include the type of the card like [Condition]. "
+					+ "Useful if during gameplay it is convenient to be able to search by type.",
+			INFO_JSON_NUM_COPIES = "With this option, to every description a new line will be added that informs about the number of copies of that card in the deck. "
+					+ "Values: \"true\", \"Villain\", \"Fate\", \"false\"";
 
 	private static ArrayList<String> warnings;
 
@@ -196,6 +199,7 @@ public class CardPhotocopier {
 			config.setValue(CONFIG_GENERATE_JSON, "false", INFO_GENERATE_JSON);
 			config.setValue(CONFIG_COPY_JSON, "true", INFO_COPY_JSON);
 			config.setValue(CONFIG_TYPE_IN_JSON, "false", INFO_TYPE_IN_JSON);
+			config.setValue(CONFIG_JSON_NUM_COPIES, "false", INFO_JSON_NUM_COPIES);
 
 			config.saveConfig();
 
@@ -239,6 +243,7 @@ public class CardPhotocopier {
 		config.setInfo(CONFIG_GENERATE_JSON, INFO_GENERATE_JSON);
 		config.setInfo(CONFIG_COPY_JSON, INFO_COPY_JSON);
 		config.setInfo(CONFIG_TYPE_IN_JSON, INFO_TYPE_IN_JSON);
+		config.setInfo(CONFIG_JSON_NUM_COPIES, INFO_JSON_NUM_COPIES);
 		config.saveConfig();
 
 		boolean autoclose = config.getBoolean(CONFIG_AUTOCLOSE);
@@ -311,7 +316,6 @@ public class CardPhotocopier {
 		if (!config.contains(CONFIG_EMPTY_ROWS_TO_END)) {
 			config.setInfo(CONFIG_EMPTY_ROWS_TO_END, INFO_EMPTY_ROWS_TO_END);
 			config.setValue(CONFIG_EMPTY_ROWS_TO_END, 20, INFO_EMPTY_ROWS_TO_END);
-			config.saveConfig();
 		}
 		int doneLimit = config.getInt(CONFIG_EMPTY_ROWS_TO_END, 20);
 		// We are going to look into each row in the .ods and check if it's a card that
@@ -439,7 +443,6 @@ public class CardPhotocopier {
 		if (!config.contains(CONFIG_TYPE_ORDER)) {
 			config.setInfo(CONFIG_TYPE_ORDER, INFO_TYPE_ORDER);
 			config.setValue(CONFIG_TYPE_ORDER, "ignore_type", INFO_TYPE_ORDER);
-			config.saveConfig();
 		}
 		String order = config.getString(CONFIG_TYPE_ORDER, "ignore type");
 		String[] orderSplit = order.split(",");
@@ -459,11 +462,6 @@ public class CardPhotocopier {
 					if (!config.contains(CONFIG_TYPE_IN_JSON)) {
 						config.setInfo(CONFIG_TYPE_IN_JSON, INFO_TYPE_IN_JSON);
 						config.setValue(CONFIG_TYPE_IN_JSON, false, INFO_TYPE_IN_JSON);
-						try {
-							config.saveConfig();
-						} catch (IOException e) {
-							e.printStackTrace();
-						}
 					}
 					boolean includeType = config.getBoolean(CONFIG_TYPE_IN_JSON, false);
 
@@ -495,7 +493,20 @@ public class CardPhotocopier {
 								stopAdding = false;
 							}
 						}
-						String desc = ci.desc.replace("   ", "\n").replace("$THIS_NAME", name).replace("$this_name", name).replace("$THIS_CARD", name).replace("$this_card", name);
+						String desc = ci.desc.replace("   ", "\n").replace("$THIS_NAME", name)
+								.replace("$this_name", name).replace("$THIS_CARD", name).replace("$this_card", name)
+								.trim();
+						String jsonNumCopies = config.getString(CONFIG_JSON_NUM_COPIES, "").toLowerCase();
+						if (jsonNumCopies.equals("")) {
+							config.setInfo(CONFIG_JSON_NUM_COPIES, INFO_JSON_NUM_COPIES);
+							config.setValue(CONFIG_JSON_NUM_COPIES, "false", INFO_JSON_NUM_COPIES);
+						}
+						if (jsonNumCopies.equals("true") || jsonNumCopies.equals("villain") && ci.deck == 0
+								|| jsonNumCopies.equals("fate") && ci.deck == 1) {
+							boolean sing = ci.copies==1;
+							desc = desc.concat("\n* There "+(sing?"is":"are") + " " + ci.copies + " "+(sing?"copy":"copies")+" of " + name + " in your "
+									+ (ci.deck == 0 ? "deck" : "Fate deck") + ".").trim();
+						}
 						name = name.trim().concat((includeType ? " [" + ci.type + "]" : ""));
 						System.out.println("   (Thread) Writing " + name + ":  x" + ci.copies + " times");
 						for (int i = 0; i < ci.copies; i++) {
@@ -612,12 +623,18 @@ public class CardPhotocopier {
 		writeJpgImage(resultImageF, fateDeck, quality);
 
 		sem.acquire();
+
+		try {
+			config.saveConfig();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
 		// We check if the user wants to autoclose and we do it after 500ms if there are
 		// no warnings whatsoever.
 		if (autoclose && warnings.isEmpty()) {
 			System.out.println("Autoclose goes brr");
 			label.setText("Done. Autoclosing.");
-			//Thread.sleep(500);
+			// Thread.sleep(500);
 			window.dispose();
 		}
 	}
