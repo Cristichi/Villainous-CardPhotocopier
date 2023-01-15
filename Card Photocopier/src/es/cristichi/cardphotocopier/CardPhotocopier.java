@@ -493,6 +493,7 @@ public class CardPhotocopier {
 								stopAdding = false;
 							}
 						}
+						name = name.trim();
 						String desc = ci.desc.replace("   ", "\n").replace("$THIS_NAME", name)
 								.replace("$this_name", name).replace("$THIS_CARD", name).replace("$this_card", name)
 								.trim();
@@ -507,7 +508,7 @@ public class CardPhotocopier {
 							desc = desc.concat("\n* There "+(sing?"is":"are") + " " + ci.copies + " "+(sing?"copy":"copies")+" of " + name + " in your "
 									+ (ci.deck == 0 ? "deck" : "Fate deck") + ".").trim();
 						}
-						name = name.trim().concat((includeType ? " [" + ci.type + "]" : ""));
+						name = name.trim().toUpperCase().concat((includeType ? " [" + ci.type + "]" : ""));
 						System.out.println("   (Thread) Writing " + name + ":  x" + ci.copies + " times");
 						for (int i = 0; i < ci.copies; i++) {
 							JSONObject c = new JSONObject();
