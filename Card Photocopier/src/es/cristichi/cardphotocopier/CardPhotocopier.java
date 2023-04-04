@@ -52,13 +52,13 @@ import es.cristichi.cardphotocopier.obj.Range;
  * @author Cristichi#5193
  */
 public class CardPhotocopier {
-	private static String VERSION = "v2.3.8";
+	private static String VERSION = "v2.3.10";
 	private static String NAME = "Villainous Card Photocopier " + VERSION;
 
 	private static String CONFIG_TXT = "config.yml";
-	private static String DESCRIPTIONS_JSON = "card descriptions.json";
-	private static String ERROR_LOG = "error.log";
-	private static String ERROR_DESC_LOG = "descriptions error.log";
+	private static String DESCRIPTIONS_JSON = "CardPhotocopier descriptions.json";
+	private static String ERROR_LOG = "CardPhotocopier error.log";
+	private static String ERROR_DESC_LOG = "CardPhotocopier descriptions error.log";
 
 	private static Dimension CARD_SIZE = new Dimension(620, 880);
 	private static HashMap<Range, Dimension> DECK_SIZES;
@@ -91,17 +91,17 @@ public class CardPhotocopier {
 			CONFIG_TYPE_ORDER = "cardTypeOrder", CONFIG_IMAGE_QUALITY = "imageQuality",
 			CONFIG_GENERATE_JSON = "generateJsonDescriptions", CONFIG_COPY_JSON = "copyJsonToClipboard",
 			CONFIG_TYPE_IN_JSON = "addTypeToNameInJson", CONFIG_JSON_NUM_COPIES = "jsonNumberOfCopiesInDesc";
-	public static String INFO_DOC = "The path to the .ods file where you have your cards' info. It may contain other Villains' cards, that's fine.",
+	public static String INFO_DOC = "The path to the .ods file where you have your cards' info.",
 			INFO_CARD_IMAGES = "Folder where all the generated images of your Villain's cards are. It must not contain other Villains' cards",
-			INFO_RESULTS = "Where you want the Villain/Fate deck images to be created.",
-			INFO_AUTOCLOSE = "True if you want the info window to be automatically closed if everything was ok and expected.",
-			INFO_FATE_NAME = "The name of the Fate deck's file to be generated.",
-			INFO_VILLAIN_NAME = "The name of the main deck's file to be generated.",
-			INFO_FATE_QUANTITY = "The number of cards that should be expected for this Villain to have in his Fate deck. Useful in case you didn't count the cards well.",
-			INFO_VILLAIN_QUANTITY = "The number of cards that should be expected for this Villain to have in his main deck. Useful in case you didn't count the cards well.",
-			INFO_EMPTY_ROWS_TO_END = "This is a little bit technical. It's not easy to detect when we can stop reading new lines so what we do is that if we detect an X "
-					+ "number of empty lines in a row we suppose we reached the end of the document. We recommend a value of 20 and if it's lower it will finish way "
-					+ "faster but it might not reach your villain's cards if they are at the end of your .ods document.",
+			INFO_RESULTS = "Where you want the Villain/Fate deck images to be created. I also recommend just setting it to \".\" so that they are generated in the same folder as the .jar file.",
+			INFO_AUTOCLOSE = "True if you want the info window to be automatically closed if everything was ok and expected. If anything weird happens, it won't autoclose.",
+			INFO_FATE_NAME = "The name of the Fate deck's image file to be generated.",
+			INFO_VILLAIN_NAME = "The name of the main deck's image file to be generated.",
+			INFO_FATE_QUANTITY = "The number of cards that should be expected for this Villain to have in their Fate deck. Useful in case you didn't count the cards well.",
+			INFO_VILLAIN_QUANTITY = "The number of cards that should be expected for this Villain to have in their main deck. Useful in case you didn't count the cards well.",
+			INFO_EMPTY_ROWS_TO_END = "So the way this tool knows when to stop reading the .ods document is when it encounters enough empty lines. This controls the number of empty lines. "
+					+ "Setting it lower will make the tool finish considerably faster. I recommend testing it with your .ods document to see the lowest you can set it. "
+					+ "If set too low, it finds no cards.",
 			INFO_TYPE_ORDER = "Here you can alter the order depending the types. Cards of the same type will be ordered by name respective to each other, and cards of an unlisted "
 					+ "type will be last by name. To make use of the default order recommended by me, write something like "
 					+ "\"" + CONFIG_TYPE_ORDER
@@ -112,8 +112,8 @@ public class CardPhotocopier {
 			INFO_GENERATE_JSON = "If true, apart from generating the images, it will take the N column of the "
 					+ ".ods document of each card and create a JSON that the Card Descriptions Loader can read "
 					+ "in TTS in order to apply each name and description to each card.",
-			INFO_COPY_JSON = "If true, if the JSON file is generated, it will be copied to the clipboard as well.",
-			INFO_TYPE_IN_JSON = "If true, if the JSON file is generated, the name of the cards will include the type of the card like [Condition]. "
+			INFO_COPY_JSON = "If true, and if the JSON file is generated, it will be copied to the clipboard as well.",
+			INFO_TYPE_IN_JSON = "If true, and if the JSON file is generated, the name of the cards will include the type of the card like CARD NAME [Ally]. "
 					+ "Useful if during gameplay it is convenient to be able to search by type.",
 			INFO_JSON_NUM_COPIES = "With this option, to every description a new line will be added that informs about the number of copies of that card in the deck. "
 					+ "Values: \"true\", \"Villain\", \"Fate\", \"false\"";
@@ -151,7 +151,9 @@ public class CardPhotocopier {
 			// window.pack();
 			window.setLocationRelativeTo(null);
 			try {
-				e.printStackTrace(new PrintStream(ERROR_LOG));
+				PrintStream ps = new PrintStream(ERROR_LOG);
+				ps.println("Error in version "+VERSION);
+				e.printStackTrace(ps);
 			} catch (FileNotFoundException e1) {
 				e1.printStackTrace();
 			}
@@ -504,8 +506,9 @@ public class CardPhotocopier {
 						}
 						if (jsonNumCopies.equals("true") || jsonNumCopies.equals("villain") && ci.deck == 0
 								|| jsonNumCopies.equals("fate") && ci.deck == 1) {
-							boolean sing = ci.copies==1;
-							desc = desc.concat("\n* There "+(sing?"is":"are") + " " + ci.copies + " "+(sing?"copy":"copies")+" of " + name + " in your "
+							boolean sing = ci.copies == 1;
+							desc = desc.concat("\n* There " + (sing ? "is" : "are") + " " + ci.copies + " "
+									+ (sing ? "copy" : "copies") + " of " + name + " in your "
 									+ (ci.deck == 0 ? "deck" : "Fate deck") + ".").trim();
 						}
 						name = name.trim().toUpperCase().concat((includeType ? " [" + ci.type + "]" : ""));
