@@ -152,29 +152,30 @@ public class CardPhotocopier {
 			window.setLocationRelativeTo(null);
 			try {
 				PrintStream ps = new PrintStream(ERROR_LOG);
-				ps.println("Error in version "+VERSION);
+				ps.println("Error in version " + VERSION);
 				e.printStackTrace(ps);
 			} catch (FileNotFoundException e1) {
 				e1.printStackTrace();
+				label.setText("<html><div>" + e.getLocalizedMessage() + "</div><div style=\"margin-top: 5px;\">An error occurred that prevented the error log to be created to a log file. "
+						+ "Please screenshot the error now and save it if you need further assistance from Cristichi#5193.</div></html>");
 			}
-		} finally {
-			// After we are done, no matter if there was an error or not, we are going to
-			// show any item in "warnings" so the user can fix whatever weird thing we found
-			// (cards missing information, too many copies or not enough, etc)
-			if (warnings.size() > 0) {
-				window.remove(label);
-				window.setLayout(new GridLayout(warnings.size() + 1, 1));
-				JLabel warningTitle = new JLabel("Process completed succesfully but with some weird notes:");
-				warningTitle.setBorder(new EmptyBorder(2, 5, 2, 5));
-				window.add(warningTitle);
-				for (String w : warnings) {
-					JLabel lbl = new JLabel("<html>" + w + "</html>");
-					lbl.setBorder(new EmptyBorder(1, 5, 1, 5));
-					window.add(lbl);
-				}
-				// window.pack();
-				window.setLocationRelativeTo(null);
+		}
+		// After we are done, no matter if there was an error or not, we are going to
+		// show any item in "warnings" so the user can fix whatever weird thing we found
+		// (cards missing information, too many copies or not enough, etc)
+		if (warnings.size() > 0) {
+			window.remove(label);
+			window.setLayout(new GridLayout(warnings.size() + 1, 1));
+			JLabel warningTitle = new JLabel("Process completed succesfully but with some weird notes:");
+			warningTitle.setBorder(new EmptyBorder(2, 5, 2, 5));
+			window.add(warningTitle);
+			for (String w : warnings) {
+				JLabel lbl = new JLabel("<html>" + w + "</html>");
+				lbl.setBorder(new EmptyBorder(1, 5, 1, 5));
+				window.add(lbl);
 			}
+			// window.pack();
+			window.setLocationRelativeTo(null);
 		}
 	}
 
@@ -262,7 +263,7 @@ public class CardPhotocopier {
 					+ imagesFolder.getAbsolutePath() + ") was not found. We need that one.");
 			throw new FileNotFoundException(
 					"The folder where the already existing images for the cards are supposed to be ("
-							+ imagesFolder.getAbsolutePath() + ") was not found. We need that one.");
+							+ imagesFolder.getAbsolutePath() + ") was not found. Please edit the config file.");
 		}
 		if (!documentFile.exists()) {
 			window.setMinimumSize(new Dimension(800, 200));
@@ -271,7 +272,7 @@ public class CardPhotocopier {
 			label.setText("The .ods document with the information for each card (" + documentFile.getAbsolutePath()
 					+ ") was not found. We need that one.");
 			throw new FileNotFoundException("The .ods document with the information for each card ("
-					+ documentFile.getAbsolutePath() + ") was not found. We need that one.");
+					+ documentFile.getAbsolutePath() + ") was not found. Please edit the config file.");
 		}
 
 		label.setText("Reading card data from " + documentFile.getName() + ".");
