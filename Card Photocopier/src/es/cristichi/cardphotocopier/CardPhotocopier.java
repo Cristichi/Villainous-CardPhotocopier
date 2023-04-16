@@ -20,6 +20,7 @@ import java.io.PrintStream;
 import java.io.PrintWriter;
 import java.nio.file.Files;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -52,7 +53,7 @@ import es.cristichi.cardphotocopier.obj.Range;
  * @author Cristichi#5193
  */
 public class CardPhotocopier {
-	private static String VERSION = "v2.3.10";
+	private static String VERSION = "v2.4.0";
 	private static String NAME = "Villainous Card Photocopier " + VERSION;
 
 	private static String CONFIG_TXT = "config.yml";
@@ -90,7 +91,8 @@ public class CardPhotocopier {
 			CONFIG_VILLAIN_QUANTITY = "villainDeckQuantity", CONFIG_EMPTY_ROWS_TO_END = "maxEmptyRowsToEnd",
 			CONFIG_TYPE_ORDER = "cardTypeOrder", CONFIG_IMAGE_QUALITY = "imageQuality",
 			CONFIG_GENERATE_JSON = "generateJsonDescriptions", CONFIG_COPY_JSON = "copyJsonToClipboard",
-			CONFIG_TYPE_IN_JSON = "addTypeToNameInJson", CONFIG_JSON_NUM_COPIES = "jsonNumberOfCopiesInDesc";
+			CONFIG_TYPE_IN_JSON = "addTypeToNameInJson", CONFIG_JSON_NUM_COPIES = "jsonNumberOfCopiesInDesc",
+			CONFIG_EXTRA_DECKS = "extraDecks";
 	public static String INFO_DOC = "The path to the .ods file where you have your cards' info.",
 			INFO_CARD_IMAGES = "Folder where all the generated images of your Villain's cards are. It must not contain other Villains' cards",
 			INFO_RESULTS = "Where you want the Villain/Fate deck images to be created. I also recommend just setting it to \".\" so that they are generated in the same folder as the .jar file.",
@@ -116,7 +118,8 @@ public class CardPhotocopier {
 			INFO_TYPE_IN_JSON = "If true, and if the JSON file is generated, the name of the cards will include the type of the card like CARD NAME [Ally]. "
 					+ "Useful if during gameplay it is convenient to be able to search by type.",
 			INFO_JSON_NUM_COPIES = "With this option, to every description a new line will be added that informs about the number of copies of that card in the deck. "
-					+ "Values: \"true\", \"Villain\", \"Fate\", \"false\"";
+					+ "Values: \"true\", \"Villain\", \"Fate\", \"false\"",
+			INFO_EXTRA_DECKS = "Create additional decks with this option. Just write here the list of extra decks, separated by comma if there is more than one. Use those values on the \"O\" column in the document to get them sorted into the appropriate extra deck.";
 
 	private static ArrayList<String> warnings;
 
@@ -156,7 +159,8 @@ public class CardPhotocopier {
 				e.printStackTrace(ps);
 			} catch (FileNotFoundException e1) {
 				e1.printStackTrace();
-				label.setText("<html><div>" + e.getLocalizedMessage() + "</div><div style=\"margin-top: 5px;\">An error occurred that prevented the error log to be created to a log file. "
+				label.setText("<html><div>" + e.getLocalizedMessage()
+						+ "</div><div style=\"margin-top: 5px;\">An error occurred that prevented the error log to be created to a log file. "
 						+ "Please screenshot the error now and save it if you need further assistance from Cristichi#5193.</div></html>");
 			}
 		}
@@ -166,7 +170,7 @@ public class CardPhotocopier {
 		if (warnings.size() > 0) {
 			window.remove(label);
 			window.setLayout(new GridLayout(warnings.size() + 1, 1));
-			JLabel warningTitle = new JLabel("Process completed succesfully but with some weird notes:");
+			JLabel warningTitle = new JLabel("Process completed without errors but with some weird notes:");
 			warningTitle.setBorder(new EmptyBorder(2, 5, 2, 5));
 			window.add(warningTitle);
 			for (String w : warnings) {
@@ -203,6 +207,7 @@ public class CardPhotocopier {
 			config.setValue(CONFIG_COPY_JSON, "true", INFO_COPY_JSON);
 			config.setValue(CONFIG_TYPE_IN_JSON, "false", INFO_TYPE_IN_JSON);
 			config.setValue(CONFIG_JSON_NUM_COPIES, "false", INFO_JSON_NUM_COPIES);
+			config.setValue(CONFIG_EXTRA_DECKS, "", INFO_EXTRA_DECKS);
 
 			config.saveConfig();
 
@@ -307,12 +312,21 @@ public class CardPhotocopier {
 			}
 		}
 
+		String extraDecksStr = config.getString(CONFIG_EXTRA_DECKS, "");
+		String[] extraDecks = extraDecksStr.split(",");
+		for (int i = 0; i < extraDecks.length; i++) {
+			extraDecks[i] = extraDecks[i].trim();
+		}
+		int[] extraDecksCount = new int[extraDecks.length];
+
 		ArrayList<CardInfo> usefulCards = new ArrayList<>(
 				config.getInt(CONFIG_VILLAIN_QUANTITY) + config.getInt(CONFIG_FATE_QUANTITY));
 
 		int copiesToV = 0, copiesToF = 0;
 		int xV = 0, yV = 0;
 		int xF = 0, yF = 0;
+		int[] xExtras = new int[extraDecks.length];
+		int[] yExtras = new int[extraDecks.length];
 
 		boolean forceFate = false;
 		int done = 0;
@@ -320,11 +334,19 @@ public class CardPhotocopier {
 			config.setInfo(CONFIG_EMPTY_ROWS_TO_END, INFO_EMPTY_ROWS_TO_END);
 			config.setValue(CONFIG_EMPTY_ROWS_TO_END, 20, INFO_EMPTY_ROWS_TO_END);
 		}
+		if (!config.contains(CONFIG_EXTRA_DECKS)) {
+			config.setInfo(CONFIG_EXTRA_DECKS, INFO_EXTRA_DECKS);
+			config.setValue(CONFIG_EXTRA_DECKS, "", INFO_EXTRA_DECKS);
+		}
+		Arrays.fill(extraDecksCount, 0);
 		int doneLimit = config.getInt(CONFIG_EMPTY_ROWS_TO_END, 20);
 		// We are going to look into each row in the .ods and check if it's a card that
 		// exists withing the images folder and draw it into it's corresponding deck.
 		for (int row = 1; done <= doneLimit; row++) {
 			Cell<SpreadSheet> A = sheet.getCellAt("A" + row);
+			if (A.getTextValue().trim().equalsIgnoreCase("#stop")) {
+				break;
+			}
 			try {
 				Cell<SpreadSheet> B = sheet.getCellAt("B" + row);
 				Cell<SpreadSheet> C = sheet.getCellAt("C" + row);
@@ -339,6 +361,7 @@ public class CardPhotocopier {
 				Cell<SpreadSheet> L = sheet.getCellAt("L" + row);
 				Cell<SpreadSheet> M = sheet.getCellAt("M" + row);
 				Cell<SpreadSheet> N = sheet.getCellAt("N" + row);
+				Cell<SpreadSheet> O = sheet.getCellAt("O" + row);
 
 				// If we find too many empty lines we are going to call it a day, because it
 				// might mean we are at the end but there are tons of empty lines.
@@ -374,16 +397,30 @@ public class CardPhotocopier {
 							ci.desc = N.getTextValue();
 							System.out.println("Loading .ods data for " + ci.name + ": x" + ci.copies + ".");
 
-							if ((K.getTextValue().equals("Villain") || K.getTextValue().equals("0")) && !forceFate) {
-								ci.deck = 0;
-								copiesToV += ci.copies;
-								usefulCards.add(ci);
-							} else if (K.getTextValue().equals("Fate") || K.getTextValue().equals("1") || forceFate) {
-								ci.deck = 1;
-								copiesToF += ci.copies;
-								usefulCards.add(ci);
-							} else {
-								System.out.println("Card " + cardName + " is from another deck.");
+							if (!O.getTextValue().trim().equals("")) {
+								for (int i = 0; i < extraDecks.length; i++) {
+									if (O.getTextValue().equalsIgnoreCase(extraDecks[i])) {
+										ci.deck = extraDecks[i];
+										extraDecksCount[i]+=ci.copies;
+										usefulCards.add(ci);
+										break;
+									}
+								}
+							}
+							if (ci.deck == null) {
+								if ((K.getTextValue().equals("Villain") || K.getTextValue().equals("0"))
+										&& !forceFate) {
+									ci.deck = "0";
+									copiesToV += ci.copies;
+									usefulCards.add(ci);
+								} else if (K.getTextValue().equals("Fate") || K.getTextValue().equals("1")
+										|| forceFate) {
+									ci.deck = "1";
+									copiesToF += ci.copies;
+									usefulCards.add(ci);
+								} else {
+									System.out.println("Card " + cardName + " is from another deck.");
+								}
 							}
 						}
 
@@ -439,6 +476,16 @@ public class CardPhotocopier {
 				BufferedImage.TYPE_INT_RGB);
 		Graphics gF = resultImageF.getGraphics();
 
+		Dimension[] gridExtras = new Dimension[extraDecks.length];
+		BufferedImage[] resultImageExtras = new BufferedImage[extraDecks.length];
+		Graphics[] gExtras = new Graphics[extraDecks.length];
+		for (int i = 0; i < extraDecks.length; i++) {
+			gridExtras[i] = getGrid(extraDecksCount[i]);
+			resultImageExtras[i] = new BufferedImage(CARD_SIZE.width * gridExtras[i].width,
+					CARD_SIZE.height * gridExtras[i].height, BufferedImage.TYPE_INT_RGB);
+			gExtras[i] = resultImageExtras[i].getGraphics();
+		}
+
 		cardsInfo.clear();
 
 		// We are going to read the order the user wants and sort the cards by that
@@ -454,7 +501,9 @@ public class CardPhotocopier {
 		}
 		usefulCards.sort(new CardComparator(orderSplit));
 
-		Semaphore sem = new Semaphore(0);
+		// This whole part is for the descriptions loader
+		// TODO: Descriptions on extra decks
+		Semaphore semDesc = new Semaphore(0);
 		if (config.getBoolean(CONFIG_GENERATE_JSON, false)) {
 			new Thread(new Runnable() {
 
@@ -505,12 +554,12 @@ public class CardPhotocopier {
 							config.setInfo(CONFIG_JSON_NUM_COPIES, INFO_JSON_NUM_COPIES);
 							config.setValue(CONFIG_JSON_NUM_COPIES, "false", INFO_JSON_NUM_COPIES);
 						}
-						if (jsonNumCopies.equals("true") || jsonNumCopies.equals("villain") && ci.deck == 0
-								|| jsonNumCopies.equals("fate") && ci.deck == 1) {
+						if (jsonNumCopies.equals("true") || jsonNumCopies.equals("villain") && ci.deck.equals("0")
+								|| jsonNumCopies.equals("fate") && ci.deck.equals("1")) {
 							boolean sing = ci.copies == 1;
 							desc = desc.concat("\n* There " + (sing ? "is" : "are") + " " + ci.copies + " "
 									+ (sing ? "copy" : "copies") + " of " + name + " in your "
-									+ (ci.deck == 0 ? "deck" : "Fate deck") + ".").trim();
+									+ (ci.deck.equals("0") ? "deck" : "Fate deck") + ".").trim();
 						}
 						name = name.trim().toUpperCase().concat((includeType ? " [" + ci.type + "]" : ""));
 						System.out.println("   (Thread) Writing " + name + ":  x" + ci.copies + " times");
@@ -518,9 +567,9 @@ public class CardPhotocopier {
 							JSONObject c = new JSONObject();
 							c.put("name", name);
 							c.put("desc", desc);
-							if (ci.deck == 0) {
+							if (ci.deck.equals("0")) {
 								cardsV.add(contV++, c);
-							} else {
+							} else if (ci.deck.equals("1")) {
 								cardsF.add(contF++, c);
 							}
 						}
@@ -558,34 +607,46 @@ public class CardPhotocopier {
 						} catch (FileNotFoundException e1) {
 							e1.printStackTrace();
 						}
-						sem.release();
+						semDesc.release();
 					}
-					sem.release();
+					semDesc.release();
 				}
 			}).start();
 		} else
-			sem.release();
+			semDesc.release();
 
-		// It's time to write the images of every card!
+		// It's time to print the images of every card!
 		for (CardInfo ci : usefulCards) {
 			System.out.println("Photocopying card " + ci.name + ": " + ci.copies + " copies in deck " + ci.deck);
 			label.setText("Photocopying card " + ci.name + ": " + ci.copies + " copies in "
-					+ (ci.deck == 0 ? "Villain" : "Fate") + " deck.");
+					+ (ci.deck.equals("0") ? "Villain" : (ci.deck.equals("1") ? "Fate" : ci.deck)) + " deck.");
 
 			for (int i = 0; i < ci.copies; i++) {
-				if (ci.deck == 0) {
+				if (ci.deck.equals("0")) {
 					gV.drawImage(ci.imageData, xV, yV, null);
 					xV += CARD_SIZE.width;
 					if (xV >= resultImageV.getWidth()) {
 						xV = 0;
 						yV += CARD_SIZE.height;
 					}
-				} else {
+				} else if (ci.deck.equals("1")) {
 					gF.drawImage(ci.imageData, xF, yF, null);
 					xF += CARD_SIZE.width;
 					if (xF >= resultImageF.getWidth()) {
 						xF = 0;
 						yF += CARD_SIZE.height;
+					}
+				} else {
+					for (int j = 0; j < extraDecks.length; j++) {
+						if (extraDecks[j].equalsIgnoreCase(ci.deck)) {
+							gExtras[j].drawImage(ci.imageData, xExtras[j], yExtras[j], null);
+							xExtras[j] += CARD_SIZE.width;
+							if (xExtras[j] >= resultImageExtras[j].getWidth()) {
+								xExtras[j] = 0;
+								yExtras[j] += CARD_SIZE.height;
+							}
+							break;
+						}
 					}
 				}
 			}
@@ -611,8 +672,12 @@ public class CardPhotocopier {
 		}
 
 		// We save the image data into .jpgs files.
-		File villainDeck = new File(resultsFolder, config.getString(CONFIG_VILLAIN_NAME) + ".jpg");
-		File fateDeck = new File(resultsFolder, config.getString(CONFIG_FATE_NAME) + ".jpg");
+		File fileVillainDeck = new File(resultsFolder, config.getString(CONFIG_VILLAIN_NAME) + ".jpg");
+		File fileFateDeck = new File(resultsFolder, config.getString(CONFIG_FATE_NAME) + ".jpg");
+		File[] filesExtraDecks = new File[extraDecks.length];
+		for (int i = 0; i < filesExtraDecks.length; i++) {
+			filesExtraDecks[i] = new File(resultsFolder, extraDecks[i] + " deck.jpg");
+		}
 
 		if (!config.contains(CONFIG_IMAGE_QUALITY)) {
 			config.setInfo(CONFIG_IMAGE_QUALITY, INFO_IMAGE_QUALITY);
@@ -624,16 +689,55 @@ public class CardPhotocopier {
 		label.setText("Writing the images for TTS decks.");
 
 		// Big chad compressed writing to file.
-		writeJpgImage(resultImageV, villainDeck, quality);
-		writeJpgImage(resultImageF, fateDeck, quality);
+		Semaphore semWrite = new Semaphore(-1 - extraDecks.length);
+		new Thread(new Runnable() {
+			@Override
+			public void run() {
+				try {
+					writeJpgImage(resultImageV, fileVillainDeck, quality);
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
+				semWrite.release();
+			}
+		}).start();
+		new Thread(new Runnable() {
 
-		sem.acquire();
+			@Override
+			public void run() {
+				try {
+					writeJpgImage(resultImageF, fileFateDeck, quality);
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
+				semWrite.release();
+			}
+		}).start();
+
+		for (int i = 0; i < filesExtraDecks.length; i++) {
+			final int index = i;
+			new Thread(new Runnable() {
+				@Override
+				public void run() {
+					try {
+						writeJpgImage(resultImageExtras[index], filesExtraDecks[index], quality);
+					} catch (IOException e) {
+						e.printStackTrace();
+					}
+					semWrite.release();
+				}
+			}).start();
+		}
 
 		try {
 			config.saveConfig();
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
+
+		semWrite.acquire();
+		semDesc.acquire();
+
 		// We check if the user wants to autoclose and we do it after 500ms if there are
 		// no warnings whatsoever.
 		if (autoclose && warnings.isEmpty()) {
