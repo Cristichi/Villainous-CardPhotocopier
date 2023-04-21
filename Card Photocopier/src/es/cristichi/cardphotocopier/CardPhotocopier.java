@@ -53,7 +53,7 @@ import es.cristichi.cardphotocopier.obj.Range;
  * @author Cristichi#5193
  */
 public class CardPhotocopier {
-	private static String VERSION = "v2.4.0";
+	private static String VERSION = "v2.4.1";
 	private static String NAME = "Villainous Card Photocopier " + VERSION;
 
 	private static String CONFIG_TXT = "config.yml";
@@ -524,9 +524,20 @@ public class CardPhotocopier {
 					JSONObject jsonF = new JSONObject();
 					jsonF.put("name", config.getString(CONFIG_FATE_NAME, "Fate Deck"));
 					JSONArray cardsF = new JSONArray();
+					
+					JSONObject[] jsonExtras = new JSONObject[extraDecks.length];
+					JSONArray[] cardsExtras = new JSONArray[extraDecks.length];
+					for (int i = 0; i < jsonExtras.length; i++) {
+						jsonExtras[i] = new JSONObject();
+						jsonExtras[i].put("name", extraDecks[i].toLowerCase());
+						cardsExtras[i] = new JSONArray();
+					}
 
 					int contV = 0;
 					int contF = 0;
+					int[] countExtras = new int[extraDecks.length];
+					Arrays.fill(countExtras, 0);
+					
 					for (CardInfo ci : usefulCards) {
 						String name = ci.name.replace("   ", " ").replace("\n", " ").trim();
 
@@ -559,10 +570,16 @@ public class CardPhotocopier {
 							boolean sing = ci.copies == 1;
 							desc = desc.concat("\n* There " + (sing ? "is" : "are") + " " + ci.copies + " "
 									+ (sing ? "copy" : "copies") + " of " + name + " in your "
-									+ (ci.deck.equals("0") ? "deck" : "Fate deck") + ".").trim();
+									+ (ci.deck.equals("0") ? "deck" : (ci.deck.equals("1") ? "Fate deck" : ci.deck+" deck") ) + ".").trim();
 						}
 						name = name.trim().toUpperCase().concat((includeType ? " [" + ci.type + "]" : ""));
 						System.out.println("   (Thread) Writing " + name + ":  x" + ci.copies + " times");
+						int extraDeckIndex = -1;
+						for (int i = 0; extraDeckIndex == -1 && i < extraDecks.length; i++) {
+							if (extraDecks[i].equalsIgnoreCase(ci.deck)) {
+								extraDeckIndex = i;
+							}
+						}
 						for (int i = 0; i < ci.copies; i++) {
 							JSONObject c = new JSONObject();
 							c.put("name", name);
@@ -571,9 +588,12 @@ public class CardPhotocopier {
 								cardsV.add(contV++, c);
 							} else if (ci.deck.equals("1")) {
 								cardsF.add(contF++, c);
+							} else if (extraDeckIndex>=0){
+								cardsExtras[extraDeckIndex].add(countExtras[extraDeckIndex]++, c);
 							}
 						}
 					}
+					
 					jsonV.put("cards", cardsV);
 					jsonV.put("count", contV);
 					jsonF.put("cards", cardsF);
@@ -582,6 +602,12 @@ public class CardPhotocopier {
 					JSONObject jsonT = new JSONObject();
 					jsonT.put("villain", jsonV);
 					jsonT.put("fate", jsonF);
+					
+					for (int i = 0; i < jsonExtras.length; i++) {
+						jsonExtras[i].put("cards", cardsExtras[i]);
+						jsonExtras[i].put("count", countExtras[i]);
+						jsonT.put(extraDecks[i], jsonExtras[i]);
+					}
 
 					resultsFolder.mkdirs();
 					File jsonTFile = new File(resultsFolder, DESCRIPTIONS_JSON);
