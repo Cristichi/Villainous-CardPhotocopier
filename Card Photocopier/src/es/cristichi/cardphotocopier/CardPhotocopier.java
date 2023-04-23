@@ -53,7 +53,7 @@ import es.cristichi.cardphotocopier.obj.Range;
  * @author Cristichi#5193
  */
 public class CardPhotocopier {
-	private static String VERSION = "v2.4.1";
+	private static String VERSION = "v2.4.2";
 	private static String NAME = "Villainous Card Photocopier " + VERSION;
 
 	private static String CONFIG_TXT = "config.yml";
@@ -82,7 +82,7 @@ public class CardPhotocopier {
 		DECK_SIZES.put(new Range(36, 36), new Dimension(6, 6));
 		DECK_SIZES.put(new Range(37, 42), new Dimension(7, 6));
 		DECK_SIZES.put(new Range(43, 48), new Dimension(7, 6));
-		DECK_SIZES.put(new Range(0, 0), new Dimension(0, 0));
+		DECK_SIZES.put(new Range(0, 0), new Dimension(2, 2));
 	}
 
 	public static String CONFIG_DOC = "cardsInfoOds", CONFIG_CARD_IMAGES = "generatedCardsFolder",
