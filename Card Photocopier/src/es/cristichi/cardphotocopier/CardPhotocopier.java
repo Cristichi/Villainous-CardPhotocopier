@@ -67,9 +67,9 @@ public class CardPhotocopier {
 		DECK_SIZES = new HashMap<>(18);
 		DECK_SIZES.put(new Range(13, 15), new Dimension(5, 3));
 		DECK_SIZES.put(new Range(26, 30), new Dimension(6, 5));
-		DECK_SIZES.put(new Range(1, 1), new Dimension(1, 1));
-		DECK_SIZES.put(new Range(2, 2), new Dimension(2, 1));
-		DECK_SIZES.put(new Range(3, 3), new Dimension(3, 1));
+		DECK_SIZES.put(new Range(1, 1), new Dimension(2, 2));
+		DECK_SIZES.put(new Range(2, 2), new Dimension(2, 2));
+		DECK_SIZES.put(new Range(3, 3), new Dimension(2, 2));
 		DECK_SIZES.put(new Range(4, 4), new Dimension(2, 2));
 		DECK_SIZES.put(new Range(5, 6), new Dimension(3, 2));
 		DECK_SIZES.put(new Range(7, 8), new Dimension(4, 2));
