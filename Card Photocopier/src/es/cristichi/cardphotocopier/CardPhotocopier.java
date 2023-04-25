@@ -53,7 +53,7 @@ import es.cristichi.cardphotocopier.obj.Range;
  * @author Cristichi#5193
  */
 public class CardPhotocopier {
-	private static String VERSION = "v2.4.2";
+	private static String VERSION = "v2.4.3";
 	private static String NAME = "Villainous Card Photocopier " + VERSION;
 
 	private static String CONFIG_TXT = "config.yml";
@@ -313,7 +313,7 @@ public class CardPhotocopier {
 		}
 
 		String extraDecksStr = config.getString(CONFIG_EXTRA_DECKS, "");
-		String[] extraDecks = extraDecksStr.split(",");
+		final String[] extraDecks = extraDecksStr.length()==0?new String[0]:extraDecksStr.split(",");
 		for (int i = 0; i < extraDecks.length; i++) {
 			extraDecks[i] = extraDecks[i].trim();
 		}
