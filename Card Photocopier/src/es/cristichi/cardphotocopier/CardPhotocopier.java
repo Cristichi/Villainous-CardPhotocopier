@@ -53,7 +53,7 @@ import es.cristichi.cardphotocopier.obj.Range;
  * @author Cristichi#5193
  */
 public class CardPhotocopier {
-	private static String VERSION = "v2.4.3";
+	private static String VERSION = "v2.4.4";
 	private static String NAME = "Villainous Card Photocopier " + VERSION;
 
 	private static String CONFIG_TXT = "config.yml";
@@ -606,7 +606,7 @@ public class CardPhotocopier {
 					for (int i = 0; i < jsonExtras.length; i++) {
 						jsonExtras[i].put("cards", cardsExtras[i]);
 						jsonExtras[i].put("count", countExtras[i]);
-						jsonT.put(extraDecks[i], jsonExtras[i]);
+						jsonT.put(extraDecks[i].toLowerCase(), jsonExtras[i]);
 					}
 
 					resultsFolder.mkdirs();
