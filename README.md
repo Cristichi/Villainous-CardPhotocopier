@@ -39,12 +39,12 @@ There is also a special usage for it. If you are using a special Fate deck that 
 
 I won't do an automatic updater, but you can always check this page again for an update. To update is quite easy:
 
-1. **Download the lastest release** on this same GitHub project or here: https://github.com/Cristichi/Villainous-CardPhotocopier/releases/tag/main-release-v2.2
+1. **Download the lastest release** on this same GitHub project or here: https://github.com/Cristichi/Villainous-CardPhotocopier/releases/tag/main-release-v2.4
 2. **Substitute the outdated .jar** file with the new one you just downloaded.
 3. Done!
 
 ## The future
 
-I want to add support for extra decks, which might be represented by higher numbers than 0 and 1.
+I want to keep addng support for any more features that Villains might need.
 
 Also, please contact me if you have any request.
