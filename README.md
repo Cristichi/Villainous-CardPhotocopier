@@ -18,14 +18,12 @@ If you have **ANY** doubt regarding how to install it or how to configure it or 
 <br>You may download the source code if you are a Java nerd so you can modify it in any way. Feel free to modify it or ask me if you have any specific needs. I am always happy to help with Villains with specific features.
 4. Place it in the folder where you are managing one of your villains. I recommend to copy this .jar file into a new folder dedicated to my tool for each of your villains. Organize it the way you desire, tho.
 5. **Double click it so it generates the config.yml file**. Please don't move that file or rename it or it will be generated again if my tool can't find it.
-6. Now close the window and open the config.yml file. Edit it. You may use the absolute path to the files and folders or a relative path from where the .jar file is.
+6. Now close the window and open the config.yml file. **Edit it**. You may use the absolute path to the files and folders or a relative path from where the .jar file is.
 7. **You are done!** Test it with one of your Villains that are already finished and doing their evil schemes.
 
 ## Usage
 
-You may not use this program to generate a 3rd deck that is neither the Villain nor Fate deck. But **you still may use my tool for that Villain's Fate and Villain deck normally**, to do so just make sure that the value in the A column of the .ods (Card count) for the cards that are neither in the Fate nor Villain decks is "**0**".
-
-If you followed the instructions, **just make sure your .ods file is saved** and **it has the A column filled with the number of copies for each card**, as well as the information of each card, **and double click in the .jar file** you downloaded and it will open a window telling you what it's currently doing. Also note that everything must be in teh first page of the .ods file. If you need support for other pages, just tell me. It hasn't been done yet because I think everyone would be using the first page only.
+If you followed the instructions, **just make sure your .ods file is saved** and **it has the A column filled with the number of copies for each card**, as well as the other information of each card. Then, **double click in the .jar file** you downloaded and it will open a window telling you what it's currently doing. If you need support for other pages, just tell me. It hasn't been done yet because I think everyone would be using the first page only.
 
 1. To start you need to make sure all cards of your Villain, both Villain an Fate cards, are in the -Exports folder (or whatever folder you configured in the 2nd line of the configuration) and in the .ods file you specified in the 4th line of the configuration.
 2. Then, make sure that no cards from other villains are present in both the folder and the .ods file as well, because them my tool will think they are all the same.
