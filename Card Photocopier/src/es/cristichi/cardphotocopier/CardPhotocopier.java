@@ -453,7 +453,7 @@ public class CardPhotocopier {
 		if (copiesToV == 0 && copiesToV != villainExpectedSize && copiesToF == 0 && copiesToF != fateExpectedSize) {
 			throw new IllegalArgumentException(
 					"Both your Villain and Fate decks have 0 cards! Check it please." + (doneLimit < 20
-							? " You might have to increase the " + CONFIG_EMPTY_ROWS_TO_END + " (it is " + doneLimit
+							? " You might have to increase the " + CONFIG_EMPTY_ROWS_TO_END + " (its current value is " + doneLimit
 									+ ")"
 							: ""));
 		} else if (copiesToV == 0 && copiesToV != villainExpectedSize) {
@@ -501,8 +501,8 @@ public class CardPhotocopier {
 		}
 		usefulCards.sort(new CardComparator(orderSplit));
 
-		// This whole part is for the descriptions loader
-		// TODO: Descriptions on extra decks
+		// This whole hocus pocus is for the descriptions feature to later use
+		// with the TTS Descrpton Loader (tool by me, not public right now).
 		Semaphore semDesc = new Semaphore(0);
 		if (config.getBoolean(CONFIG_GENERATE_JSON, false)) {
 			new Thread(new Runnable() {
@@ -642,6 +642,7 @@ public class CardPhotocopier {
 			semDesc.release();
 
 		// It's time to print the images of every card!
+		// But not to a file. First we draw only in the RAM.
 		for (CardInfo ci : usefulCards) {
 			System.out.println("Photocopying card " + ci.name + ": " + ci.copies + " copies in deck " + ci.deck);
 			label.setText("Photocopying card " + ci.name + ": " + ci.copies + " copies in "
@@ -682,7 +683,6 @@ public class CardPhotocopier {
 
 		// If the number of copies is not the expected, we notify the user in case they
 		// forgot to save their .ods after some changes.
-
 		if (copiesToV != villainExpectedSize) {
 			warnings.add("Unexpected number of copies to Vilain deck. Expected was " + villainExpectedSize
 					+ " but it was \"" + copiesToV + "\".");
@@ -765,7 +765,7 @@ public class CardPhotocopier {
 		semDesc.acquire();
 
 		// We check if the user wants to autoclose and we do it after 500ms if there are
-		// no warnings whatsoever.
+		// no warnings whatsoever. Forget the 500ms I want it to close asap.
 		if (autoclose && warnings.isEmpty()) {
 			System.out.println("Autoclose goes brr");
 			label.setText("Done. Autoclosing.");
@@ -817,10 +817,12 @@ public class CardPhotocopier {
 		}
 
 		// If the number of cards is quite wild, then
-		// it tries it best to calculate a good one.
+		// it tries its best to calculate a good one.
 		// It probably will be wacky.
+		// If the dimensions of your deck is weird
+		// (maybe it's like so long or tall) tell me!
 		warnings.add("The number of cards \"" + quantity
-				+ "\" was a little bit too high so the result might be unexpected.");
+				+ "\" was a little bit too high so the result might be unexpected. The result might be too tall or too wide.");
 		warnings.add("Please tell Cristichi#5193 to add support for " + quantity + " cards! He'll be happy to add it.");
 		List<Integer> divisors = getDivisors(quantity);
 		divisors.add(1);
