@@ -41,10 +41,13 @@ import org.jopendocument.dom.spreadsheet.SpreadSheet;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 
+import es.cristichi.cardphotocopier.excep.ConfigValueNotFound;
 import es.cristichi.cardphotocopier.obj.CardComparator;
 import es.cristichi.cardphotocopier.obj.CardInfo;
 import es.cristichi.cardphotocopier.obj.Configuration;
 import es.cristichi.cardphotocopier.obj.Range;
+import es.cristichi.cardphotocopier.obj.ODS.Column;
+import es.cristichi.cardphotocopier.obj.ODS.Structure;
 
 /**
  * Feel free to modify the code for yourself and/or propose modifications and
@@ -53,7 +56,7 @@ import es.cristichi.cardphotocopier.obj.Range;
  * @author Cristichi#5193
  */
 public class CardPhotocopier {
-	private static String VERSION = "v2.4.5";
+	private static String VERSION = "v2.5.0 BETA1";
 	private static String NAME = "Villainous Card Photocopier " + VERSION;
 
 	private static String CONFIG_TXT = "config.yml";
@@ -85,15 +88,18 @@ public class CardPhotocopier {
 		DECK_SIZES.put(new Range(0, 0), new Dimension(2, 2));
 	}
 
-	public static String CONFIG_DOC = "cardsInfoOds", CONFIG_CARD_IMAGES = "generatedCardsFolder",
-			CONFIG_RESULTS = "resultsFolder", CONFIG_AUTOCLOSE = "autoclose", CONFIG_FATE_NAME = "fateDeckName",
-			CONFIG_VILLAIN_NAME = "villainDeckName", CONFIG_FATE_QUANTITY = "fateDeckQuantity",
-			CONFIG_VILLAIN_QUANTITY = "villainDeckQuantity", CONFIG_EMPTY_ROWS_TO_END = "maxEmptyRowsToEnd",
-			CONFIG_TYPE_ORDER = "cardTypeOrder", CONFIG_IMAGE_QUALITY = "imageQuality",
-			CONFIG_GENERATE_JSON = "generateJsonDescriptions", CONFIG_COPY_JSON = "copyJsonToClipboard",
-			CONFIG_TYPE_IN_JSON = "addTypeToNameInJson", CONFIG_JSON_NUM_COPIES = "jsonNumberOfCopiesInDesc",
-			CONFIG_EXTRA_DECKS = "extraDecks";
-	public static String INFO_DOC = "The path to the .ods file where you have your cards' info.",
+	public static String CONFIG_GENERATOR_VERSION = "cardGeneratorVersion", CONFIG_DOC = "cardsInfoOds",
+			CONFIG_CARD_IMAGES = "generatedCardsFolder", CONFIG_RESULTS = "resultsFolder",
+			CONFIG_AUTOCLOSE = "autoclose", CONFIG_FATE_NAME = "fateDeckName", CONFIG_VILLAIN_NAME = "villainDeckName",
+			CONFIG_FATE_QUANTITY = "fateDeckQuantity", CONFIG_VILLAIN_QUANTITY = "villainDeckQuantity",
+			CONFIG_EMPTY_ROWS_TO_END = "maxEmptyRowsToEnd", CONFIG_TYPE_ORDER = "cardTypeOrder",
+			CONFIG_IMAGE_QUALITY = "imageQuality", CONFIG_GENERATE_JSON = "generateJsonDescriptions",
+			CONFIG_COPY_JSON = "copyJsonToClipboard", CONFIG_TYPE_IN_JSON = "addTypeToNameInJson",
+			CONFIG_JSON_NUM_COPIES = "jsonNumberOfCopiesInDesc", CONFIG_EXTRA_DECKS = "extraDecks";
+	public static String INFO_GENERATOR_VERSION = "The version of FailureFactory's Villainous Card Generator, as a number. "
+			+ "For example, if you are running V33.2 you have to put here \"33.2\". "
+			+ "This is improtant because the columns of the .ods file are differnt for version V35 onwards.",
+			INFO_DOC = "The path to the .ods file where you have your cards' info.",
 			INFO_CARD_IMAGES = "Folder where all the generated images of your Villain's cards are. It must not contain other Villains' cards",
 			INFO_RESULTS = "Where you want the Villain/Fate deck images to be created. I also recommend just setting it to \".\" so that they are generated in the same folder as the .jar file.",
 			INFO_AUTOCLOSE = "True if you want the info window to be automatically closed if everything was ok and expected. If anything weird happens, it won't autoclose.",
@@ -175,8 +181,8 @@ public class CardPhotocopier {
 			JLabel warningTitle = new JLabel("Process completed without errors but with some weird notes:");
 			warningTitle.setBorder(new EmptyBorder(2, 5, 2, 5));
 			window.add(warningTitle);
-			for (String w : warnings) {
-				JLabel lbl = new JLabel("<html>" + w + "</html>");
+			for (String warning : warnings) {
+				JLabel lbl = new JLabel("<html>" + warning + "</html>");
 				lbl.setBorder(new EmptyBorder(1, 5, 1, 5));
 				window.add(lbl);
 			}
@@ -196,6 +202,7 @@ public class CardPhotocopier {
 			config.setValue(CONFIG_DOC,
 					"./Villainous Card Generator V35/Villainous Card Generator_Data/-TextFiles/Villainous Template.ods",
 					INFO_DOC);
+			config.setValue(CONFIG_GENERATOR_VERSION, "33.2", INFO_GENERATOR_VERSION);
 			config.setValue(CONFIG_RESULTS, "Results", INFO_RESULTS);
 			config.setValue(CONFIG_AUTOCLOSE, true, INFO_AUTOCLOSE);
 			config.setValue(CONFIG_VILLAIN_NAME, "Villain deck", INFO_VILLAIN_NAME);
@@ -213,7 +220,7 @@ public class CardPhotocopier {
 
 			config.saveConfig();
 
-			//System.out.println(config.getAbsolutePath());
+			// System.out.println(config.getAbsolutePath());
 
 			window.setMinimumSize(new Dimension(800, 200));
 			// window.pack();
@@ -239,6 +246,7 @@ public class CardPhotocopier {
 		}
 
 		config.reloadConfigFromFile();
+		config.setInfo(CONFIG_GENERATOR_VERSION, INFO_GENERATOR_VERSION);
 		config.setInfo(CONFIG_CARD_IMAGES, INFO_CARD_IMAGES);
 		config.setInfo(CONFIG_DOC, INFO_DOC);
 		config.setInfo(CONFIG_RESULTS, INFO_RESULTS);
@@ -281,6 +289,15 @@ public class CardPhotocopier {
 			throw new FileNotFoundException("The .ods document with the information for each card ("
 					+ documentFile.getAbsolutePath() + ") was not found. Please edit the config file.");
 		}
+		
+		if (!config.contains(CONFIG_GENERATOR_VERSION)) {
+			config.setValue(CONFIG_GENERATOR_VERSION, "", INFO_GENERATOR_VERSION);
+			config.saveConfig();
+			throw new ConfigValueNotFound(
+					"You need to specify the version of the Card Generator that you are using in order to determine the layout of the .ods file.");
+		}
+
+		Structure odsStructure = new Structure(config.getDouble(CONFIG_GENERATOR_VERSION));
 
 		label.setText("Reading card data from " + documentFile.getName() + ".");
 
@@ -303,7 +320,7 @@ public class CardPhotocopier {
 					cardFile.getName().length() - (cardFile.getName().endsWith(".jpeg") ? 5 : 4));
 			if (!name.isEmpty()) {
 				label.setText("Loading " + name + "'s image data from it's file.");
-				//System.out.println("Loading " + name + "'s image data from it's file.");
+				// System.out.println("Loading " + name + "'s image data from it's file.");
 				CardInfo info = new CardInfo(load(cardFile));
 				if (info.imageData == null) {
 					System.err.println("Image " + cardFile + " could not be loaded.");
@@ -315,7 +332,7 @@ public class CardPhotocopier {
 		}
 
 		String extraDecksStr = config.getString(CONFIG_EXTRA_DECKS, "");
-		final String[] extraDecks = extraDecksStr.length()==0?new String[0]:extraDecksStr.split(",");
+		final String[] extraDecks = extraDecksStr.length() == 0 ? new String[0] : extraDecksStr.split(",");
 		for (int i = 0; i < extraDecks.length; i++) {
 			extraDecks[i] = extraDecks[i].trim();
 		}
@@ -333,95 +350,104 @@ public class CardPhotocopier {
 		boolean forceFate = false;
 		int done = 0;
 		if (!config.contains(CONFIG_EMPTY_ROWS_TO_END)) {
-			config.setInfo(CONFIG_EMPTY_ROWS_TO_END, INFO_EMPTY_ROWS_TO_END);
 			config.setValue(CONFIG_EMPTY_ROWS_TO_END, 20, INFO_EMPTY_ROWS_TO_END);
 		}
 		if (!config.contains(CONFIG_EXTRA_DECKS)) {
-			config.setInfo(CONFIG_EXTRA_DECKS, INFO_EXTRA_DECKS);
 			config.setValue(CONFIG_EXTRA_DECKS, "", INFO_EXTRA_DECKS);
 		}
 		Arrays.fill(extraDecksCount, 0);
 		int doneLimit = config.getInt(CONFIG_EMPTY_ROWS_TO_END, 20);
+
 		// We are going to look into each row in the .ods and check if it's a card that
 		// exists withing the images folder and draw it into it's corresponding deck.
 		for (int row = 1; done <= doneLimit; row++) {
-			Cell<SpreadSheet> A = sheet.getCellAt("A" + row);
-			if (A.getTextValue().trim().equalsIgnoreCase("#stop")) {
+			// Cell<SpreadSheet> cellName = sheet.getCellAt("A" + row);
+			Cell<SpreadSheet> cellCopiesCount = sheet.getCellAt(odsStructure.get(Column.COPIES_COUNT) + row);
+
+			if (cellCopiesCount.getTextValue().trim().equalsIgnoreCase("#stop")) {
 				break;
 			}
 			try {
-				Cell<SpreadSheet> B = sheet.getCellAt("B" + row);
-				Cell<SpreadSheet> C = sheet.getCellAt("C" + row);
-				Cell<SpreadSheet> D = sheet.getCellAt("D" + row);
-				Cell<SpreadSheet> E = sheet.getCellAt("E" + row);
-				Cell<SpreadSheet> F = sheet.getCellAt("F" + row);
-				Cell<SpreadSheet> G = sheet.getCellAt("G" + row);
-				Cell<SpreadSheet> H = sheet.getCellAt("H" + row);
-				Cell<SpreadSheet> I = sheet.getCellAt("I" + row);
-				Cell<SpreadSheet> J = sheet.getCellAt("J" + row);
-				Cell<SpreadSheet> K = sheet.getCellAt("K" + row);
-				Cell<SpreadSheet> L = sheet.getCellAt("L" + row);
-				Cell<SpreadSheet> M = sheet.getCellAt("M" + row);
-				Cell<SpreadSheet> N = sheet.getCellAt("N" + row);
-				Cell<SpreadSheet> O = sheet.getCellAt("O" + row);
+				// We get all the data. The unused one commented in case I want to do something with it one day.
+
+				Cell<SpreadSheet> cellName = sheet.getCellAt(odsStructure.get(Column.NAME) + row);
+				// Cell<SpreadSheet> cellCost = sheet.getCellAt(odsStructure.get(Column.COST) + row);
+				// Cell<SpreadSheet> cellStrengh = sheet.getCellAt(odsStructure.get(Column.STRENGTH) + row);
+				// Cell<SpreadSheet> cellEffect = sheet.getCellAt(odsStructure.get(Column.EFFECT) + row);
+				Cell<SpreadSheet> cellType = sheet.getCellAt(odsStructure.get(Column.TYPE) + row);
+				// Cell<SpreadSheet> cellActEffect = sheet.getCellAt(odsStructure.get(Column.ACTIVATE_EFFECT) + row);
+				// Cell<SpreadSheet> cellActCost = sheet.getCellAt(odsStructure.get(Column.ACTIVATE_COST) + row);
+				// Cell<SpreadSheet> cellTopRight = sheet.getCellAt(odsStructure.get(Column.TOP_RIGHT) + row);
+				// Cell<SpreadSheet> cellBotRight = sheet.getCellAt(odsStructure.get(Column.BOTTOM_RIGHT) + row);
+				Cell<SpreadSheet> cellDeck = sheet.getCellAt(odsStructure.get(Column.DECK) + row);
+				// Cell<SpreadSheet> cellAction = sheet.getCellAt(odsStructure.get(Column.ACTION_SYMBOL) + row);
+				// Cell<SpreadSheet> cellAutoLayout = sheet.getCellAt(odsStructure.get(Column.AUTO_LAYOUT) + row);
+				Cell<SpreadSheet> cellDescription = sheet.getCellAt(odsStructure.get(Column.DESCRIPTION) + row);
+				Cell<SpreadSheet> cellExtraDeck = sheet.getCellAt(odsStructure.get(Column.EXTRA_DECK) + row);
+				// Cell<SpreadSheet> cellCredits = sheet.getCellAt(odsStructure.get(Column.CREDITS) + row);
 
 				// If we find too many empty lines we are going to call it a day, because it
 				// might mean we are at the end but there are tons of empty lines.
 				// Well, not neccesarily empty lines, but if there is nothing in column B then
 				// those are not cards anyway.
-				if (B.isEmpty()) {
+				if (cellName.isEmpty()) {
 					done++;
 				} else {
 					// We want "done" to count the CONSECUTIVE empty lines, so if we find a proper
 					// card we are going to reset it why not.
 					done = 0;
-					String cardName = B.getTextValue().replaceAll("[\\\\/:*?\"<>|]", "");
+					String cardName = cellName.getTextValue().replaceAll("[\\\\/:*?\"<>|]", "");
 					if (cardsInfo.containsKey(cardName)) {
 						// So this card in the ODS document is also in the exports folder. Great!
-						if (A.isEmpty() || K.isEmpty() && (!C.isEmpty() || !D.isEmpty() || !E.isEmpty() || !F.isEmpty()
-								|| !G.isEmpty() || !H.isEmpty() || !I.isEmpty() || !J.isEmpty() || !L.isEmpty()
-								|| !M.isEmpty())) {
+						if (cellCopiesCount.isEmpty() || cellType.isEmpty() || cellDeck.isEmpty()) {
 							// If we are missing important data and it's not because everything is empty, we
 							// are going to warn the user so they can check if the .ods document is properly
 							// filled.
-							warnings.add("Detected error in card " + cardName + "."
-									+ (A.getTextValue().trim().isEmpty() ? " Number of copies (Column A) not filled."
+							warnings.add("Detected error in a possible card \"" + cardName + "\"."
+									+ (cellCopiesCount.getTextValue().trim().isEmpty()
+											? " Number of copies (Column "+odsStructure.get(Column.COPIES_COUNT)+") is not filled."
 											: "")
-									+ (K.getTextValue().trim().isEmpty() ? " Villain/Fate deck (Column K) not filled."
-											: ""));
+									+ (cellType.getTextValue().trim().isEmpty()
+											? " Type (Column "+odsStructure.get(Column.TYPE)+") is not filled."
+											: "")
+									+ (cellDeck.getTextValue().trim().isEmpty()
+											? " Deck (Column "+odsStructure.get(Column.DECK)+") is not filled."
+											: "")
+									);
 							System.err.println("Error reading: " + row + " (Card " + cardName + " not proper)");
 						} else {
 							// We add the information found about this card
 							CardInfo ci = cardsInfo.get(cardName);
 							ci.name = cardName;
-							ci.type = F.getTextValue();
-							ci.copies = Integer.parseInt(A.getTextValue());
-							ci.desc = N.getTextValue();
-							//System.out.println("Loading .ods data for " + ci.name + ": x" + ci.copies + ".");
+							ci.type = cellType.getTextValue();
+							ci.copies = Integer.parseInt(cellCopiesCount.getTextValue());
+							ci.desc = cellDescription.getTextValue();
+							// System.out.println("Loading .ods data for " + ci.name + ": x" + ci.copies +
+							// ".");
 
-							if (!O.getTextValue().trim().equals("")) {
+							if (!cellExtraDeck.getTextValue().trim().equals("")) {
 								for (int i = 0; i < extraDecks.length; i++) {
-									if (O.getTextValue().equalsIgnoreCase(extraDecks[i])) {
+									if (cellExtraDeck.getTextValue().equalsIgnoreCase(extraDecks[i])) {
 										ci.deck = extraDecks[i];
-										extraDecksCount[i]+=ci.copies;
+										extraDecksCount[i] += ci.copies;
 										usefulCards.add(ci);
 										break;
 									}
 								}
 							}
 							if (ci.deck == null) {
-								if ((K.getTextValue().equals("Villain") || K.getTextValue().equals("0"))
+								if ((cellDeck.getTextValue().equals("Villain") || cellDeck.getTextValue().equals("0"))
 										&& !forceFate) {
 									ci.deck = "0";
 									copiesToV += ci.copies;
 									usefulCards.add(ci);
-								} else if (K.getTextValue().equals("Fate") || K.getTextValue().equals("1")
+								} else if (cellDeck.getTextValue().equals("Fate") || cellDeck.getTextValue().equals("1")
 										|| forceFate) {
 									ci.deck = "1";
 									copiesToF += ci.copies;
 									usefulCards.add(ci);
 								} else {
-									//System.out.println("Card " + cardName + " is from another deck.");
+									// System.out.println("Card " + cardName + " is from another deck.");
 								}
 							}
 						}
@@ -432,19 +458,20 @@ public class CardPhotocopier {
 			} catch (IllegalArgumentException e) {
 				// This probably means that some columns are combined, so we know it's not a
 				// card anyway.
-				//System.err.println(e.getLocalizedMessage());
-				//System.err.println("Line: " + A.getTextValue());
+				// System.err.println(e.getLocalizedMessage());
+				// System.err.println("Line: " + A.getTextValue());
 
 				// If the column A contains "- Fate -" and there are combined cells somewhere
 				// here, it's Fate forcing time. This allows villains that need to generate Fate
 				// cards as Villain cards with a different layout to still tell my tool which
 				// cards are Fate. Read the Usage guide to know how.
-				if (A.getTextValue().contains("- Fate -")) {
+				if (cellCopiesCount.getTextValue().contains("- Fate -")) {
 					forceFate = true;
-					//System.out.println("Detected \"- Fate -\". Forcing fate from now on");
+					// System.out.println("Detected \"- Fate -\". Forcing fate from now on");
 				} else if (forceFate) {
 					forceFate = false;
-					//System.out.println("Interpreted as end of force Fate. No longer forcing fate");
+					// System.out.println("Interpreted as end of force Fate. No longer forcing
+					// fate");
 				}
 			}
 		}
@@ -455,8 +482,8 @@ public class CardPhotocopier {
 		if (copiesToV == 0 && copiesToV != villainExpectedSize && copiesToF == 0 && copiesToF != fateExpectedSize) {
 			throw new IllegalArgumentException(
 					"Both your Villain and Fate decks have 0 cards! Check it please." + (doneLimit < 20
-							? " You might have to increase the " + CONFIG_EMPTY_ROWS_TO_END + " (its current value is " + doneLimit
-									+ ")"
+							? " You might have to increase the " + CONFIG_EMPTY_ROWS_TO_END + " (its current value is "
+									+ doneLimit + ")"
 							: ""));
 		} else if (copiesToV == 0 && copiesToV != villainExpectedSize) {
 			throw new IllegalArgumentException("Your Villain deck has 0 cards! Check it please.");
@@ -511,7 +538,7 @@ public class CardPhotocopier {
 
 				@Override
 				public void run() {
-					//System.out.println("   (Thread) Generating JSON file.");
+					// System.out.println(" (Thread) Generating JSON file.");
 
 					if (!config.contains(CONFIG_TYPE_IN_JSON)) {
 						config.setInfo(CONFIG_TYPE_IN_JSON, INFO_TYPE_IN_JSON);
@@ -526,7 +553,7 @@ public class CardPhotocopier {
 					JSONObject jsonF = new JSONObject();
 					jsonF.put("name", config.getString(CONFIG_FATE_NAME, "Fate Deck"));
 					JSONArray cardsF = new JSONArray();
-					
+
 					JSONObject[] jsonExtras = new JSONObject[extraDecks.length];
 					JSONArray[] cardsExtras = new JSONArray[extraDecks.length];
 					for (int i = 0; i < jsonExtras.length; i++) {
@@ -539,7 +566,7 @@ public class CardPhotocopier {
 					int contF = 0;
 					int[] countExtras = new int[extraDecks.length];
 					Arrays.fill(countExtras, 0);
-					
+
 					for (CardInfo ci : usefulCards) {
 						String name = ci.name.replace("   ", " ").replace("\n", " ").trim();
 
@@ -570,12 +597,17 @@ public class CardPhotocopier {
 						if (jsonNumCopies.equals("true") || jsonNumCopies.equals("villain") && ci.deck.equals("0")
 								|| jsonNumCopies.equals("fate") && ci.deck.equals("1")) {
 							boolean sing = ci.copies == 1;
-							desc = desc.concat("\n* There " + (sing ? "is" : "are") + " " + ci.copies + " "
-									+ (sing ? "copy" : "copies") + " of " + name + " in your "
-									+ (ci.deck.equals("0") ? "deck" : (ci.deck.equals("1") ? "Fate deck" : ci.deck+" deck") ) + ".").trim();
+							desc = desc
+									.concat("\n* There " + (sing ? "is" : "are") + " " + ci.copies + " "
+											+ (sing ? "copy" : "copies") + " of " + name + " in your "
+											+ (ci.deck.equals("0") ? "deck"
+													: (ci.deck.equals("1") ? "Fate deck" : ci.deck + " deck"))
+											+ ".")
+									.trim();
 						}
 						name = name.trim().toUpperCase().concat((includeType ? " [" + ci.type + "]" : ""));
-						//System.out.println("   (Thread) Writing " + name + ":  x" + ci.copies + " times");
+						// System.out.println(" (Thread) Writing " + name + ": x" + ci.copies + "
+						// times");
 						int extraDeckIndex = -1;
 						for (int i = 0; extraDeckIndex == -1 && i < extraDecks.length; i++) {
 							if (extraDecks[i].equalsIgnoreCase(ci.deck)) {
@@ -590,12 +622,12 @@ public class CardPhotocopier {
 								cardsV.add(contV++, c);
 							} else if (ci.deck.equals("1")) {
 								cardsF.add(contF++, c);
-							} else if (extraDeckIndex>=0){
+							} else if (extraDeckIndex >= 0) {
 								cardsExtras[extraDeckIndex].add(countExtras[extraDeckIndex]++, c);
 							}
 						}
 					}
-					
+
 					jsonV.put("cards", cardsV);
 					jsonV.put("count", contV);
 					jsonF.put("cards", cardsF);
@@ -604,7 +636,7 @@ public class CardPhotocopier {
 					JSONObject jsonT = new JSONObject();
 					jsonT.put("villain", jsonV);
 					jsonT.put("fate", jsonF);
-					
+
 					for (int i = 0; i < jsonExtras.length; i++) {
 						jsonExtras[i].put("cards", cardsExtras[i]);
 						jsonExtras[i].put("count", countExtras[i]);
@@ -646,7 +678,8 @@ public class CardPhotocopier {
 		// It's time to print the images of every card!
 		// But not to a file. First we draw only in the RAM.
 		for (CardInfo ci : usefulCards) {
-			//System.out.println("Photocopying card " + ci.name + ": " + ci.copies + " copies in deck " + ci.deck);
+			// System.out.println("Photocopying card " + ci.name + ": " + ci.copies + "
+			// copies in deck " + ci.deck);
 			label.setText("Photocopying card " + ci.name + ": " + ci.copies + " copies in "
 					+ (ci.deck.equals("0") ? "Villain" : (ci.deck.equals("1") ? "Fate" : ci.deck)) + " deck.");
 
@@ -769,7 +802,7 @@ public class CardPhotocopier {
 		// We check if the user wants to autoclose and we do it after 500ms if there are
 		// no warnings whatsoever. Forget the 500ms I want it to close asap.
 		if (autoclose && warnings.isEmpty()) {
-			//System.out.println("Autoclose goes brr");
+			// System.out.println("Autoclose goes brr");
 			label.setText("Done. Autoclosing.");
 			// Thread.sleep(500);
 			window.dispose();
@@ -838,8 +871,8 @@ public class CardPhotocopier {
 		} else {
 			sol = findKClosestElements(divisors, 2, ((int) Math.round(sqrt)));
 		}
-		//System.out.println("Grid for " + quantity + ": " + sol);
-		//System.out.println("Divisors: " + divisors + " sqrt: " + sqrt);
+		// System.out.println("Grid for " + quantity + ": " + sol);
+		// System.out.println("Divisors: " + divisors + " sqrt: " + sqrt);
 		return new Dimension(sol.get(1), sol.get(0));
 	}
 
