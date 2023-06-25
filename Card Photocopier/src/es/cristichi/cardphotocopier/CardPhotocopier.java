@@ -64,6 +64,7 @@ public class CardPhotocopier {
 	private static String ERROR_LOG = "CardPhotocopier error.log";
 	private static String ERROR_DESC_LOG = "CardPhotocopier descriptions error.log";
 
+	// TODO: Making this configurable
 	private static Dimension CARD_SIZE = new Dimension(620, 880);
 	private static HashMap<Range, Dimension> DECK_SIZES;
 	static {
@@ -422,8 +423,7 @@ public class CardPhotocopier {
 							ci.type = cellType.getTextValue();
 							ci.copies = Integer.parseInt(cellCopiesCount.getTextValue());
 							ci.desc = cellDescription.getTextValue();
-							// System.out.println("Loading .ods data for " + ci.name + ": x" + ci.copies +
-							// ".");
+							// System.out.println("Loading .ods data for " + ci.name + ": x" + ci.copies + ".");
 
 							if (!cellExtraDeck.getTextValue().trim().equals("")) {
 								for (int i = 0; i < extraDecks.length; i++) {
@@ -470,8 +470,7 @@ public class CardPhotocopier {
 					// System.out.println("Detected \"- Fate -\". Forcing fate from now on");
 				} else if (forceFate) {
 					forceFate = false;
-					// System.out.println("Interpreted as end of force Fate. No longer forcing
-					// fate");
+					// System.out.println("Interpreted as end of force Fate. No longer forcing fate");
 				}
 			}
 		}
@@ -491,13 +490,11 @@ public class CardPhotocopier {
 			throw new IllegalArgumentException("Your Fate deck has 0 cards! Check it please.");
 		}
 
-		// We get the proper dimensions for the final image, depending on the number of
-		// cards.
+		// We get the proper dimensions for the final image, depending on the number of cards.
 		Dimension gridV = getGrid(copiesToV);
 		Dimension gridF = getGrid(copiesToF);
 
-		// This is the data of the two images. We now create it empty (black) and we'll
-		// draw each card over it.
+		// This is the data of the two images. We now create it empty (black) and we'll draw each card over it.
 		BufferedImage resultImageV = new BufferedImage(CARD_SIZE.width * gridV.width, CARD_SIZE.height * gridV.height,
 				BufferedImage.TYPE_INT_RGB);
 		Graphics gV = resultImageV.getGraphics();
@@ -517,8 +514,7 @@ public class CardPhotocopier {
 
 		cardsInfo.clear();
 
-		// We are going to read the order the user wants and sort the cards by that
-		// order.
+		// We are going to read the order the user wants and sort the cards by that order.
 		if (!config.contains(CONFIG_TYPE_ORDER)) {
 			config.setInfo(CONFIG_TYPE_ORDER, INFO_TYPE_ORDER);
 			config.setValue(CONFIG_TYPE_ORDER, "ignore_type", INFO_TYPE_ORDER);
@@ -606,8 +602,7 @@ public class CardPhotocopier {
 									.trim();
 						}
 						name = name.trim().toUpperCase().concat((includeType ? " [" + ci.type + "]" : ""));
-						// System.out.println(" (Thread) Writing " + name + ": x" + ci.copies + "
-						// times");
+						// System.out.println(" (Thread) Writing " + name + ": x" + ci.copies + " times");
 						int extraDeckIndex = -1;
 						for (int i = 0; extraDeckIndex == -1 && i < extraDecks.length; i++) {
 							if (extraDecks[i].equalsIgnoreCase(ci.deck)) {
@@ -678,8 +673,7 @@ public class CardPhotocopier {
 		// It's time to print the images of every card!
 		// But not to a file. First we draw only in the RAM.
 		for (CardInfo ci : usefulCards) {
-			// System.out.println("Photocopying card " + ci.name + ": " + ci.copies + "
-			// copies in deck " + ci.deck);
+			// System.out.println("Photocopying card " + ci.name + ": " + ci.copies + " copies in deck " + ci.deck);
 			label.setText("Photocopying card " + ci.name + ": " + ci.copies + " copies in "
 					+ (ci.deck.equals("0") ? "Villain" : (ci.deck.equals("1") ? "Fate" : ci.deck)) + " deck.");
 
@@ -716,8 +710,7 @@ public class CardPhotocopier {
 
 		label.setText("Removing Herobrine.");
 
-		// If the number of copies is not the expected, we notify the user in case they
-		// forgot to save their .ods after some changes.
+		// If the number of copies is not the expected, we notify the user in case they forgot to save their .ods after some changes.
 		if (copiesToV != villainExpectedSize) {
 			warnings.add("Unexpected number of copies to Vilain deck. Expected was " + villainExpectedSize
 					+ " but it was \"" + copiesToV + "\".");

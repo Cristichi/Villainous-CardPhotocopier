@@ -3,10 +3,12 @@ package es.cristichi.cardphotocopier.obj.ODS;
 import java.util.HashMap;
 
 public class Structure extends HashMap<Column, String> {
-	
+
+	private static final long serialVersionUID = -1675080188225802319L;
+
 	public Structure(double version) {
 		if (version < 35) {
-			//COPIES,NAME,COST,STRENGTH,EFFECT,TYPE,ACTIVATE_EFFECT,ACTIVATE_COST,TOP_RIGHT,BOTTOM_RIGHT,DECK,ACTION_SYMBOL,AUTO_LAYOUT,DESCRIPTION,EXTRA_DECK
+			// Old .ods format
 			super.put(Column.COPIES_COUNT, "A");
 			super.put(Column.NAME, "B");
 			super.put(Column.COST, "C");
@@ -22,7 +24,9 @@ public class Structure extends HashMap<Column, String> {
 			super.put(Column.AUTO_LAYOUT, "M");
 			super.put(Column.DESCRIPTION, "N");
 			super.put(Column.EXTRA_DECK, "O");
+			
 		} else {
+			// New .ods format
 			super.put(Column.COPIES_COUNT, "A");
 			super.put(Column.NAME, "B");
 			super.put(Column.COST, "C");
@@ -40,7 +44,7 @@ public class Structure extends HashMap<Column, String> {
 			super.put(Column.EXTRA_DECK, "O");
 		}
 		
-		System.out.println("Using Structure: "+toString());
+		// System.out.println("Using Structure: "+toString());
 	}
 	
 	@Override
