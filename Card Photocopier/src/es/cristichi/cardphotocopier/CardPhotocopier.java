@@ -197,12 +197,12 @@ public class CardPhotocopier {
 		Configuration config = new Configuration(CONFIG_TXT,
 				NAME + " configuration.\n For help, contact Cristichi#5193 on Discord.");
 		if (!config.exists()) {
+			config.setValue(CONFIG_GENERATOR_VERSION, "33.2", INFO_GENERATOR_VERSION);
 			config.setValue(CONFIG_CARD_IMAGES,
 					"./Villainous Card Generator V35/Villainous Card Generator_Data/-Exports", INFO_CARD_IMAGES);
 			config.setValue(CONFIG_DOC,
 					"./Villainous Card Generator V35/Villainous Card Generator_Data/-TextFiles/Villainous Template.ods",
 					INFO_DOC);
-			config.setValue(CONFIG_GENERATOR_VERSION, "33.2", INFO_GENERATOR_VERSION);
 			config.setValue(CONFIG_RESULTS, "Results", INFO_RESULTS);
 			config.setValue(CONFIG_AUTOCLOSE, true, INFO_AUTOCLOSE);
 			config.setValue(CONFIG_VILLAIN_NAME, "Villain deck", INFO_VILLAIN_NAME);
