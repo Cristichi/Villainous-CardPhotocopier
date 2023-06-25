@@ -14,18 +14,16 @@ If you have **ANY** doubt regarding how to install it or how to configure it or 
 
 1. You need to be using the **Villainous Card Generator** (https://drive.google.com/drive/u/0/folders/1wNyGRrege46Kob-1tvYbb8eixMeOFf81). If you are not, **I highly doubt my tool will be useful to you** because it reads the .ods file that it provides to read information about each card (number of copies and the deck it belongs to). If for some reason you are not, you need to create a .ods file where you put the number of copies in the A column, the exact name of the card in column B and "**Villain**"/"**0**" or "**Fate**"/"**1**" on the column K and you are good to go.
 2. You need **Java** installed. If you are not sure if you have it installed, just keep following the instructions and at the end if you can't open the .jar with a double click, you need to install Java. After you install Java it should work.
-3. Click here to **download the executable .jar file**: [https://github.com/Cristichi/Villainous-CardPhotocopier/releases/tag/main-release-v2.2](https://github.com/Cristichi/Villainous-CardPhotocopier/releases/tag/main-release-v2.2)
-<br>You may download the source code if you are a Java nerd so you can modify it in any way. Feel free to modify it or ask me if you have any specific needs.
+3. Click here to **download the executable .jar file**: [https://github.com/Cristichi/Villainous-CardPhotocopier/releases/tag/main-release-v2.4](https://github.com/Cristichi/Villainous-CardPhotocopier/releases/tag/main-release-v2.4)
+<br>You may download the source code if you are a Java nerd so you can modify it in any way. Feel free to modify it or ask me if you have any specific needs. I am always happy to help with Villains with specific features.
 4. Place it in the folder where you are managing one of your villains. I recommend to copy this .jar file into a new folder dedicated to my tool for each of your villains. Organize it the way you desire, tho.
 5. **Double click it so it generates the config.yml file**. Please don't move that file or rename it or it will be generated again if my tool can't find it.
-6. Now close the window and open the config.yml file. Edit it. You may use the absolute path to the files and folders or a reltive path from where you will use my tool.
+6. Now close the window and open the config.yml file. **Edit it**. You may use the absolute path to the files and folders or a relative path from where the .jar file is.
 7. **You are done!** Test it with one of your Villains that are already finished and doing their evil schemes.
 
 ## Usage
 
-You may not use this program to generate a 3rd deck that is neither the Villain nor Fate deck. But **you still may use my tool for that Villain's Fate and Villain deck normally**, to do so just make sure that the value in the A column of the .ods (Card count) for the cards that are neither in the Fate nor Villain decks is "**0**".
-
-If you followed the instructions, **just make sure your .ods file is saved** and **it has the A column filled with the number of copies for each card**, as well as the information of each card, **and double click in the .jar file** you downloaded and it will open a window telling you what it's currently doing. Also note that everything must be in teh first page of the .ods file. If you need support for other pages, just tell me. It hasn't been done yet because I think everyone would be using the first page only.
+If you followed the instructions, **just make sure your .ods file is saved** and **it has the A column filled with the number of copies for each card**, as well as the other information of each card. Then, **double click in the .jar file** you downloaded and it will open a window telling you what it's currently doing. If you need support for other pages, just tell me. It hasn't been done yet because I think everyone would be using the first page only.
 
 1. To start you need to make sure all cards of your Villain, both Villain an Fate cards, are in the -Exports folder (or whatever folder you configured in the 2nd line of the configuration) and in the .ods file you specified in the 4th line of the configuration.
 2. Then, make sure that no cards from other villains are present in both the folder and the .ods file as well, because them my tool will think they are all the same.
@@ -41,12 +39,12 @@ There is also a special usage for it. If you are using a special Fate deck that 
 
 I won't do an automatic updater, but you can always check this page again for an update. To update is quite easy:
 
-1. **Download the lastest release** on this same GitHub project or here: https://github.com/Cristichi/Villainous-CardPhotocopier/releases/tag/main-release-v2.2
+1. **Download the lastest release** on this same GitHub project or here: https://github.com/Cristichi/Villainous-CardPhotocopier/releases/tag/main-release-v2.4
 2. **Substitute the outdated .jar** file with the new one you just downloaded.
 3. Done!
 
 ## The future
 
-I want to add support for extra decks, which might be represented by higher numbers than 0 and 1.
+I want to keep addng support for any more features that Villains might need.
 
 Also, please contact me if you have any request.
