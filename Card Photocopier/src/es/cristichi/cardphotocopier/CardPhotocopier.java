@@ -128,7 +128,8 @@ public class CardPhotocopier {
 					+ "Useful if during gameplay it is convenient to be able to search by type.",
 			INFO_JSON_NUM_COPIES = "With this option, to every description a new line will be added that informs about the number of copies of that card in the deck. "
 					+ "Values: \"true\", \"Villain\", \"Fate\", \"false\"",
-			INFO_EXTRA_DECKS = "Create additional decks with this option. Just write here the list of extra decks, separated by comma if there is more than one. Use those values on the \"O\" column in the document to get them sorted into the appropriate extra deck.";
+			INFO_EXTRA_DECKS = "Create additional decks with this option. Just write here the list of extra decks, separated by comma if there is more than one. "
+					+ "Use those values on the \"O\" column in the document to get them sorted into the appropriate extra deck.";
 
 	private static ArrayList<String> warnings;
 
