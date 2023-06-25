@@ -189,7 +189,7 @@ public class CardPhotocopier {
 		label.setText("Reading config file.");
 
 		Configuration config = new Configuration(CONFIG_TXT,
-				NAME + " configuration.\n For help, contact Cristichi#5193 on discord.");
+				NAME + " configuration.\n For help, contact Cristichi#5193 on Discord.");
 		if (!config.exists()) {
 			config.setValue(CONFIG_CARD_IMAGES,
 					"./Villainous Card Generator V35/Villainous Card Generator_Data/-Exports", INFO_CARD_IMAGES);
