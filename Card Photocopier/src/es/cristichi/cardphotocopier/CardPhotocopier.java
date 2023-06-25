@@ -113,7 +113,9 @@ public class CardPhotocopier {
 					+ " Recommended is \"0.9\" so keep it that way unless you need the file to be even smaller.",
 			INFO_GENERATE_JSON = "If true, apart from generating the images, it will take the N column of the "
 					+ ".ods document of each card and create a JSON that the Card Descriptions Loader can read "
-					+ "in TTS in order to apply each name and description to each card.",
+					+ "in TTS in order to apply each name and description to each card. To use this JSON file, "
+					+ "you need my Card Descriptions Loader, that you can find in this link "
+					+ "https://steamcommunity.com/sharedfiles/filedetails/?id=2899195933",
 			INFO_COPY_JSON = "If true, and if the JSON file is generated, it will be copied to the clipboard as well.",
 			INFO_TYPE_IN_JSON = "If true, and if the JSON file is generated, the name of the cards will include the type of the card like CARD NAME [Ally]. "
 					+ "Useful if during gameplay it is convenient to be able to search by type.",
@@ -211,7 +213,7 @@ public class CardPhotocopier {
 
 			config.saveConfig();
 
-			System.out.println(config.getAbsolutePath());
+			//System.out.println(config.getAbsolutePath());
 
 			window.setMinimumSize(new Dimension(800, 200));
 			// window.pack();
@@ -301,7 +303,7 @@ public class CardPhotocopier {
 					cardFile.getName().length() - (cardFile.getName().endsWith(".jpeg") ? 5 : 4));
 			if (!name.isEmpty()) {
 				label.setText("Loading " + name + "'s image data from it's file.");
-				System.out.println("Loading " + name + "'s image data from it's file.");
+				//System.out.println("Loading " + name + "'s image data from it's file.");
 				CardInfo info = new CardInfo(load(cardFile));
 				if (info.imageData == null) {
 					System.err.println("Image " + cardFile + " could not be loaded.");
@@ -395,7 +397,7 @@ public class CardPhotocopier {
 							ci.type = F.getTextValue();
 							ci.copies = Integer.parseInt(A.getTextValue());
 							ci.desc = N.getTextValue();
-							System.out.println("Loading .ods data for " + ci.name + ": x" + ci.copies + ".");
+							//System.out.println("Loading .ods data for " + ci.name + ": x" + ci.copies + ".");
 
 							if (!O.getTextValue().trim().equals("")) {
 								for (int i = 0; i < extraDecks.length; i++) {
@@ -419,7 +421,7 @@ public class CardPhotocopier {
 									copiesToF += ci.copies;
 									usefulCards.add(ci);
 								} else {
-									System.out.println("Card " + cardName + " is from another deck.");
+									//System.out.println("Card " + cardName + " is from another deck.");
 								}
 							}
 						}
@@ -430,8 +432,8 @@ public class CardPhotocopier {
 			} catch (IllegalArgumentException e) {
 				// This probably means that some columns are combined, so we know it's not a
 				// card anyway.
-				System.err.println(e.getLocalizedMessage());
-				System.err.println("Line: " + A.getTextValue());
+				//System.err.println(e.getLocalizedMessage());
+				//System.err.println("Line: " + A.getTextValue());
 
 				// If the column A contains "- Fate -" and there are combined cells somewhere
 				// here, it's Fate forcing time. This allows villains that need to generate Fate
@@ -439,10 +441,10 @@ public class CardPhotocopier {
 				// cards are Fate. Read the Usage guide to know how.
 				if (A.getTextValue().contains("- Fate -")) {
 					forceFate = true;
-					System.out.println("Detected \"- Fate -\". Forcing fate from now on");
+					//System.out.println("Detected \"- Fate -\". Forcing fate from now on");
 				} else if (forceFate) {
 					forceFate = false;
-					System.out.println("Interpreted as end of force Fate. No longer forcing fate");
+					//System.out.println("Interpreted as end of force Fate. No longer forcing fate");
 				}
 			}
 		}
@@ -509,7 +511,7 @@ public class CardPhotocopier {
 
 				@Override
 				public void run() {
-					System.out.println("   (Thread) Generating JSON file.");
+					//System.out.println("   (Thread) Generating JSON file.");
 
 					if (!config.contains(CONFIG_TYPE_IN_JSON)) {
 						config.setInfo(CONFIG_TYPE_IN_JSON, INFO_TYPE_IN_JSON);
@@ -573,7 +575,7 @@ public class CardPhotocopier {
 									+ (ci.deck.equals("0") ? "deck" : (ci.deck.equals("1") ? "Fate deck" : ci.deck+" deck") ) + ".").trim();
 						}
 						name = name.trim().toUpperCase().concat((includeType ? " [" + ci.type + "]" : ""));
-						System.out.println("   (Thread) Writing " + name + ":  x" + ci.copies + " times");
+						//System.out.println("   (Thread) Writing " + name + ":  x" + ci.copies + " times");
 						int extraDeckIndex = -1;
 						for (int i = 0; extraDeckIndex == -1 && i < extraDecks.length; i++) {
 							if (extraDecks[i].equalsIgnoreCase(ci.deck)) {
@@ -644,7 +646,7 @@ public class CardPhotocopier {
 		// It's time to print the images of every card!
 		// But not to a file. First we draw only in the RAM.
 		for (CardInfo ci : usefulCards) {
-			System.out.println("Photocopying card " + ci.name + ": " + ci.copies + " copies in deck " + ci.deck);
+			//System.out.println("Photocopying card " + ci.name + ": " + ci.copies + " copies in deck " + ci.deck);
 			label.setText("Photocopying card " + ci.name + ": " + ci.copies + " copies in "
 					+ (ci.deck.equals("0") ? "Villain" : (ci.deck.equals("1") ? "Fate" : ci.deck)) + " deck.");
 
@@ -767,7 +769,7 @@ public class CardPhotocopier {
 		// We check if the user wants to autoclose and we do it after 500ms if there are
 		// no warnings whatsoever. Forget the 500ms I want it to close asap.
 		if (autoclose && warnings.isEmpty()) {
-			System.out.println("Autoclose goes brr");
+			//System.out.println("Autoclose goes brr");
 			label.setText("Done. Autoclosing.");
 			// Thread.sleep(500);
 			window.dispose();
@@ -817,10 +819,11 @@ public class CardPhotocopier {
 		}
 
 		// If the number of cards is quite wild, then
-		// it tries its best to calculate a good one.
-		// It probably will be wacky.
-		// If the dimensions of your deck is weird
-		// (maybe it's like so long or tall) tell me!
+		// this algorithm I found on the Internet
+		// tries its best to calculate a good one.
+		// It is a little bit wacky though.
+		// If the dimensions of your deck is weird,
+		// either it's like so long or tall, tell me!
 		warnings.add("The number of cards \"" + quantity
 				+ "\" was a little bit too high so the result might be unexpected. The result might be too tall or too wide.");
 		warnings.add("Please tell Cristichi#5193 to add support for " + quantity + " cards! He'll be happy to add it.");
@@ -835,8 +838,8 @@ public class CardPhotocopier {
 		} else {
 			sol = findKClosestElements(divisors, 2, ((int) Math.round(sqrt)));
 		}
-		System.out.println("Grid for " + quantity + ": " + sol);
-		System.out.println("Divisors: " + divisors + " sqrt: " + sqrt);
+		//System.out.println("Grid for " + quantity + ": " + sol);
+		//System.out.println("Divisors: " + divisors + " sqrt: " + sqrt);
 		return new Dimension(sol.get(1), sol.get(0));
 	}
 
