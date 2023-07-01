@@ -99,7 +99,7 @@ public class CardPhotocopier {
 			CONFIG_JSON_NUM_COPIES = "jsonNumberOfCopiesInDesc", CONFIG_EXTRA_DECKS = "extraDecks";
 	public static String INFO_GENERATOR_VERSION = "The version of FailureFactory's Villainous Card Generator, as a number. "
 			+ "For example, if you are running V33.2 you have to put here \"33.2\". "
-			+ "This is improtant because the columns of the .ods file are differnt for version V35 onwards.",
+			+ "This is improtant because the columns of the .ods file are different for version V35 onwards.",
 			INFO_DOC = "The path to the .ods file where you have your cards' info.",
 			INFO_CARD_IMAGES = "Folder where all the generated images of your Villain's cards are. It must not contain other Villains' cards",
 			INFO_RESULTS = "Where you want the Villain/Fate deck images to be created. I also recommend just setting it to \".\" so that they are generated in the same folder as the .jar file.",
@@ -229,14 +229,14 @@ public class CardPhotocopier {
 			window.setLocationRelativeTo(null);
 			window.addWindowListener(new WindowAdapter() {
 				@Override
-				public void windowClosing(WindowEvent e) {
-					super.windowClosing(e);
+				public void windowClosing(WindowEvent windowEvent) {
+					super.windowClosing(windowEvent);
 					if (Desktop.isDesktopSupported()) {
 						Desktop desktop = Desktop.getDesktop();
 						try {
 							desktop.open(config.getParentFile());
-						} catch (Exception e1) {
-							e1.printStackTrace();
+						} catch (Exception exception) {
+							exception.printStackTrace();
 						}
 					}
 				}
