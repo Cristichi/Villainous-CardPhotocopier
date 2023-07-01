@@ -14,7 +14,7 @@ If you have **ANY** doubt regarding how to install it or how to configure it or 
 
 1. You need to be using the **Villainous Card Generator** (https://drive.google.com/drive/u/0/folders/1wNyGRrege46Kob-1tvYbb8eixMeOFf81). If you are not, **I highly doubt my tool will be useful to you** because it reads the .ods file that it provides to read information about each card (number of copies and the deck it belongs to). If for some reason you are not, you need to create a .ods file where you put the number of copies in the A column, the exact name of the card in column B and "**Villain**"/"**0**" or "**Fate**"/"**1**" on the column K and you are good to go.
 2. You need **Java** installed. If you are not sure if you have it installed, just keep following the instructions and at the end if you can't open the .jar with a double click, you need to install Java. After you install Java it should work.
-3. Click here to **download the executable .jar file**: [https://github.com/Cristichi/Villainous-CardPhotocopier/releases/tag/main-release-v2.4](https://github.com/Cristichi/Villainous-CardPhotocopier/releases/tag/main-release-v2.4)
+3. Click here to **download the executable .jar file**. Choose the latest release: https://github.com/Cristichi/Villainous-CardPhotocopier/releases
 <br>You may download the source code if you are a Java nerd so you can modify it in any way. Feel free to modify it or ask me if you have any specific needs. I am always happy to help with Villains with specific features.
 4. Place it in the folder where you are managing one of your villains. I recommend to copy this .jar file into a new folder dedicated to my tool for each of your villains. Organize it the way you desire, tho.
 5. **Double click it so it generates the config.yml file**. Please don't move that file or rename it or it will be generated again if my tool can't find it.
@@ -39,7 +39,7 @@ There is also a special usage for it. If you are using a special Fate deck that 
 
 I won't do an automatic updater, but you can always check this page again for an update. To update is quite easy:
 
-1. **Download the lastest release** on this same GitHub project or here: https://github.com/Cristichi/Villainous-CardPhotocopier/releases/tag/main-release-v2.4
+1. **Download the lastest release** on this same GitHub repository: https://github.com/Cristichi/Villainous-CardPhotocopier/releases
 2. **Substitute the outdated .jar** file with the new one you just downloaded.
 3. Done!
 
