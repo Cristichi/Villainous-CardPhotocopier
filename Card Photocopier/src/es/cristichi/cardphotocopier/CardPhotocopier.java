@@ -44,10 +44,11 @@ import org.json.simple.JSONObject;
 import es.cristichi.cardphotocopier.excep.ConfigValueNotFound;
 import es.cristichi.cardphotocopier.obj.CardComparator;
 import es.cristichi.cardphotocopier.obj.CardInfo;
-import es.cristichi.cardphotocopier.obj.Configuration;
 import es.cristichi.cardphotocopier.obj.Range;
 import es.cristichi.cardphotocopier.obj.ODS.Column;
 import es.cristichi.cardphotocopier.obj.ODS.Structure;
+import es.cristichi.cardphotocopier.obj.config.ConfigValue;
+import es.cristichi.cardphotocopier.obj.config.Configuration;
 
 /**
  * Feel free to modify the code for yourself and/or propose modifications and
@@ -56,7 +57,7 @@ import es.cristichi.cardphotocopier.obj.ODS.Structure;
  * @author Cristichi#5193
  */
 public class CardPhotocopier {
-	private static String VERSION = "v2.5.0";
+	private static String VERSION = "v2.5.1 BETA";
 	private static String NAME = "Villainous Card Photocopier " + VERSION;
 
 	private static String CONFIG_TXT = "config.yml";
@@ -88,49 +89,7 @@ public class CardPhotocopier {
 		DECK_SIZES.put(new Range(43, 48), new Dimension(7, 6));
 		DECK_SIZES.put(new Range(0, 0), new Dimension(2, 2));
 	}
-
-	public static String CONFIG_GENERATOR_VERSION = "cardGeneratorVersion", CONFIG_DOC = "cardsInfoOds",
-			CONFIG_CARD_IMAGES = "generatedCardsFolder", CONFIG_RESULTS = "resultsFolder",
-			CONFIG_AUTOCLOSE = "autoclose", CONFIG_FATE_NAME = "fateDeckName", CONFIG_VILLAIN_NAME = "villainDeckName",
-			CONFIG_FATE_QUANTITY = "fateDeckQuantity", CONFIG_VILLAIN_QUANTITY = "villainDeckQuantity",
-			CONFIG_EMPTY_ROWS_TO_END = "maxEmptyRowsToEnd", CONFIG_TYPE_ORDER = "cardTypeOrder",
-			CONFIG_IMAGE_QUALITY = "imageQuality", CONFIG_GENERATE_JSON = "generateJsonDescriptions",
-			CONFIG_COPY_JSON = "copyJsonToClipboard", CONFIG_TYPE_IN_JSON = "addTypeToNameInJson",
-			CONFIG_JSON_NUM_COPIES = "jsonNumberOfCopiesInDesc", CONFIG_EXTRA_DECKS = "extraDecks";
-	public static String INFO_GENERATOR_VERSION = "The version of FailureFactory's Villainous Card Generator, as a number. "
-			+ "For example, if you are running V33.2 you have to put here \"33.2\". "
-			+ "This is improtant because the columns of the .ods file are different for version V35 onwards.",
-			INFO_DOC = "The path to the .ods file where you have your cards' info.",
-			INFO_CARD_IMAGES = "Folder where all the generated images of your Villain's cards are. It must not contain other Villains' cards",
-			INFO_RESULTS = "Where you want the Villain/Fate deck images to be created. I also recommend just setting it to \".\" so that they are generated in the same folder as the .jar file.",
-			INFO_AUTOCLOSE = "True if you want the info window to be automatically closed if everything was ok and expected. If anything weird happens, it won't autoclose.",
-			INFO_FATE_NAME = "The name of the Fate deck's image file to be generated.",
-			INFO_VILLAIN_NAME = "The name of the main deck's image file to be generated.",
-			INFO_FATE_QUANTITY = "The number of cards that should be expected for this Villain to have in their Fate deck. Useful in case you didn't count the cards well.",
-			INFO_VILLAIN_QUANTITY = "The number of cards that should be expected for this Villain to have in their main deck. Useful in case you didn't count the cards well.",
-			INFO_EMPTY_ROWS_TO_END = "So the way this tool knows when to stop reading the .ods document is when it encounters enough empty lines. This controls the number of empty lines. "
-					+ "Setting it lower will make the tool finish considerably faster. I recommend testing it with your .ods document to see the lowest you can set it. "
-					+ "If set too low, it finds no cards.",
-			INFO_TYPE_ORDER = "Here you can alter the order depending the types. Cards of the same type will be ordered by name respective to each other, and cards of an unlisted "
-					+ "type will be last by name. To make use of the default order recommended by me, write something like "
-					+ "\"" + CONFIG_TYPE_ORDER
-					+ ": Hero, Condition, Effect, Ally, Item\" (without quotation marks). To make it order by name, remove this value entirely.",
-			INFO_IMAGE_QUALITY = "The quality of the resulting images. Put \"1\" for the best quality but large image, "
-					+ "\"0\" for the poorest quality (horrible trust me) and smallest image possible."
-					+ " Recommended is \"0.9\" so keep it that way unless you need the file to be even smaller.",
-			INFO_GENERATE_JSON = "If true, apart from generating the images, it will take the N column of the "
-					+ ".ods document of each card and create a JSON that the Card Descriptions Loader can read "
-					+ "in TTS in order to apply each name and description to each card. To use this JSON file, "
-					+ "you need my Card Descriptions Loader, that you can find in this link "
-					+ "https://steamcommunity.com/sharedfiles/filedetails/?id=2899195933",
-			INFO_COPY_JSON = "If true, and if the JSON file is generated, it will be copied to the clipboard as well.",
-			INFO_TYPE_IN_JSON = "If true, and if the JSON file is generated, the name of the cards will include the type of the card like CARD NAME [Ally]. "
-					+ "Useful if during gameplay it is convenient to be able to search by type.",
-			INFO_JSON_NUM_COPIES = "With this option, to every description a new line will be added that informs about the number of copies of that card in the deck. "
-					+ "Values: \"true\", \"Villain\", \"Fate\", \"false\"",
-			INFO_EXTRA_DECKS = "Create additional decks with this option. Just write here the list of extra decks, separated by comma if there is more than one. "
-					+ "Use those values on the \"O\" column in the document to get them sorted into the appropriate extra deck.";
-
+	
 	private static ArrayList<String> warnings;
 
 	private static JFrame window;
@@ -199,28 +158,11 @@ public class CardPhotocopier {
 		Configuration config = new Configuration(CONFIG_TXT,
 				NAME + " configuration.\n For help, contact Cristichi#5193 on Discord.");
 		if (!config.exists()) {
-			config.setValue(CONFIG_GENERATOR_VERSION, "33.2", INFO_GENERATOR_VERSION);
-			config.setValue(CONFIG_CARD_IMAGES,
-					"./Villainous Card Generator V35/Villainous Card Generator_Data/-Exports", INFO_CARD_IMAGES);
-			config.setValue(CONFIG_DOC,
-					"./Villainous Card Generator V35/Villainous Card Generator_Data/-TextFiles/Villainous Template.ods",
-					INFO_DOC);
-			config.setValue(CONFIG_RESULTS, "Results", INFO_RESULTS);
-			config.setValue(CONFIG_AUTOCLOSE, true, INFO_AUTOCLOSE);
-			config.setValue(CONFIG_VILLAIN_NAME, "Villain deck", INFO_VILLAIN_NAME);
-			config.setValue(CONFIG_FATE_NAME, "Fate deck", INFO_FATE_NAME);
-			config.setValue(CONFIG_VILLAIN_QUANTITY, 30, INFO_VILLAIN_QUANTITY);
-			config.setValue(CONFIG_FATE_QUANTITY, 15, INFO_FATE_QUANTITY);
-			config.setValue(CONFIG_EMPTY_ROWS_TO_END, 20, INFO_EMPTY_ROWS_TO_END);
-			config.setValue(CONFIG_TYPE_ORDER, "Hero, Condition, Effect, Ally, Item", INFO_TYPE_ORDER);
-			config.setValue(CONFIG_IMAGE_QUALITY, "0.9", INFO_IMAGE_QUALITY);
-			config.setValue(CONFIG_GENERATE_JSON, "false", INFO_GENERATE_JSON);
-			config.setValue(CONFIG_COPY_JSON, "true", INFO_COPY_JSON);
-			config.setValue(CONFIG_TYPE_IN_JSON, "false", INFO_TYPE_IN_JSON);
-			config.setValue(CONFIG_JSON_NUM_COPIES, "false", INFO_JSON_NUM_COPIES);
-			config.setValue(CONFIG_EXTRA_DECKS, "", INFO_EXTRA_DECKS);
+			for (ConfigValue cValue : ConfigValue.values()) {
+				config.setValue(cValue.getKey(), cValue.getDefaultValue(), cValue.getInfo());
+			}
 
-			config.saveConfig();
+			config.saveToFile();
 
 			// System.out.println(config.getAbsolutePath());
 
@@ -245,32 +187,57 @@ public class CardPhotocopier {
 					+ ") not found. We generated one for you, please close this window and edit it accordingly.");
 			throw new FileNotFoundException("Configuration file (" + CONFIG_TXT
 					+ ") not found. We generated one for you, please close this window and edit it accordingly.");
+		} else {
+			Exception configError = null;
+			
+			config.readFromFile();
+
+			if (!config.contains(ConfigValue.CONFIG_EMPTY_ROWS_TO_END)) {
+				config.setValue(ConfigValue.CONFIG_EMPTY_ROWS_TO_END, 20);
+			}
+			if (!config.contains(ConfigValue.CONFIG_EXTRA_DECKS)) {
+				config.setValue(ConfigValue.CONFIG_EXTRA_DECKS, "");
+			}
+
+			if (!config.contains(ConfigValue.CONFIG_TYPE_ORDER)) {
+				config.setValue(ConfigValue.CONFIG_TYPE_ORDER, "ignore_type");
+			}
+
+			if (!config.contains(ConfigValue.CONFIG_TYPE_IN_JSON)) {
+				config.setValue(ConfigValue.CONFIG_TYPE_IN_JSON, false);
+			}
+
+			if (!config.contains(ConfigValue.CONFIG_JSON_NUM_COPIES)) {
+				config.setValue(ConfigValue.CONFIG_JSON_NUM_COPIES, "false");
+			}
+
+			if (!config.contains(ConfigValue.CONFIG_COPY_JSON)) {
+				config.setValue(ConfigValue.CONFIG_COPY_JSON, "false");
+			}
+
+			if (!config.contains(ConfigValue.CONFIG_IMAGE_QUALITY)) {
+				config.setValue(ConfigValue.CONFIG_IMAGE_QUALITY, "0.9");
+			}
+
+			if (!config.contains(ConfigValue.CONFIG_GENERATOR_VERSION)) {
+				config.setValue(ConfigValue.CONFIG_GENERATOR_VERSION, "");
+				configError = new ConfigValueNotFound(
+						"You need to specify the version of the Card Generator that you are using in order to determine the layout of the .ods file.");
+			}
+
+			for (ConfigValue cValue : ConfigValue.values()) {
+				config.setInfo(cValue.getKey(), cValue.getInfo());
+			}
+			config.saveToFile();
+			
+			if (configError != null) {
+				throw configError;
+			}
 		}
 
-		config.reloadConfigFromFile();
-		config.setInfo(CONFIG_GENERATOR_VERSION, INFO_GENERATOR_VERSION);
-		config.setInfo(CONFIG_CARD_IMAGES, INFO_CARD_IMAGES);
-		config.setInfo(CONFIG_DOC, INFO_DOC);
-		config.setInfo(CONFIG_RESULTS, INFO_RESULTS);
-		config.setInfo(CONFIG_AUTOCLOSE, INFO_AUTOCLOSE);
-		config.setInfo(CONFIG_VILLAIN_NAME, INFO_VILLAIN_NAME);
-		config.setInfo(CONFIG_FATE_NAME, INFO_FATE_NAME);
-		config.setInfo(CONFIG_VILLAIN_QUANTITY, INFO_VILLAIN_QUANTITY);
-		config.setInfo(CONFIG_FATE_QUANTITY, INFO_FATE_QUANTITY);
-		config.setInfo(CONFIG_EMPTY_ROWS_TO_END, INFO_EMPTY_ROWS_TO_END);
-		config.setInfo(CONFIG_TYPE_ORDER, INFO_TYPE_ORDER);
-		config.setInfo(CONFIG_IMAGE_QUALITY, INFO_IMAGE_QUALITY);
-		config.setInfo(CONFIG_GENERATE_JSON, INFO_GENERATE_JSON);
-		config.setInfo(CONFIG_COPY_JSON, INFO_COPY_JSON);
-		config.setInfo(CONFIG_TYPE_IN_JSON, INFO_TYPE_IN_JSON);
-		config.setInfo(CONFIG_JSON_NUM_COPIES, INFO_JSON_NUM_COPIES);
-		config.saveConfig();
-
-		boolean autoclose = config.getBoolean(CONFIG_AUTOCLOSE);
-
-		File imagesFolder = new File(config.getString(CONFIG_CARD_IMAGES));
-		File resultsFolder = new File(config.getString(CONFIG_RESULTS));
-		File documentFile = new File(config.getString(CONFIG_DOC));
+		File imagesFolder = new File(config.getString(ConfigValue.CONFIG_CARD_IMAGES));
+		File resultsFolder = new File(config.getString(ConfigValue.CONFIG_RESULTS));
+		File documentFile = new File(config.getString(ConfigValue.CONFIG_DOC));
 
 		if (!imagesFolder.exists()) {
 			window.setMinimumSize(new Dimension(800, 200));
@@ -291,15 +258,8 @@ public class CardPhotocopier {
 			throw new FileNotFoundException("The .ods document with the information for each card ("
 					+ documentFile.getAbsolutePath() + ") was not found. Please edit the config file.");
 		}
-		
-		if (!config.contains(CONFIG_GENERATOR_VERSION)) {
-			config.setValue(CONFIG_GENERATOR_VERSION, "", INFO_GENERATOR_VERSION);
-			config.saveConfig();
-			throw new ConfigValueNotFound(
-					"You need to specify the version of the Card Generator that you are using in order to determine the layout of the .ods file.");
-		}
 
-		Structure odsStructure = new Structure(config.getDouble(CONFIG_GENERATOR_VERSION));
+		Structure odsStructure = new Structure(config.getDouble(ConfigValue.CONFIG_GENERATOR_VERSION));
 
 		label.setText("Reading card data from " + documentFile.getName() + ".");
 
@@ -333,7 +293,7 @@ public class CardPhotocopier {
 			}
 		}
 
-		String extraDecksStr = config.getString(CONFIG_EXTRA_DECKS, "");
+		String extraDecksStr = config.getString(ConfigValue.CONFIG_EXTRA_DECKS, "");
 		final String[] extraDecks = extraDecksStr.length() == 0 ? new String[0] : extraDecksStr.split(",");
 		for (int i = 0; i < extraDecks.length; i++) {
 			extraDecks[i] = extraDecks[i].trim();
@@ -341,7 +301,7 @@ public class CardPhotocopier {
 		int[] extraDecksCount = new int[extraDecks.length];
 
 		ArrayList<CardInfo> usefulCards = new ArrayList<>(
-				config.getInt(CONFIG_VILLAIN_QUANTITY) + config.getInt(CONFIG_FATE_QUANTITY));
+				config.getInt(ConfigValue.CONFIG_VILLAIN_QUANTITY) + config.getInt(ConfigValue.CONFIG_FATE_QUANTITY));
 
 		int copiesToV = 0, copiesToF = 0;
 		int xV = 0, yV = 0;
@@ -351,14 +311,8 @@ public class CardPhotocopier {
 
 		boolean forceFate = false;
 		int done = 0;
-		if (!config.contains(CONFIG_EMPTY_ROWS_TO_END)) {
-			config.setValue(CONFIG_EMPTY_ROWS_TO_END, 20, INFO_EMPTY_ROWS_TO_END);
-		}
-		if (!config.contains(CONFIG_EXTRA_DECKS)) {
-			config.setValue(CONFIG_EXTRA_DECKS, "", INFO_EXTRA_DECKS);
-		}
 		Arrays.fill(extraDecksCount, 0);
-		int doneLimit = config.getInt(CONFIG_EMPTY_ROWS_TO_END, 20);
+		int doneLimit = config.getInt(ConfigValue.CONFIG_EMPTY_ROWS_TO_END, 20);
 
 		// We are going to look into each row in the .ods and check if it's a card that
 		// exists withing the images folder and draw it into it's corresponding deck.
@@ -407,15 +361,15 @@ public class CardPhotocopier {
 							// filled.
 							warnings.add("Detected error in a possible card \"" + cardName + "\"."
 									+ (cellCopiesCount.getTextValue().trim().isEmpty()
-											? " Number of copies (Column "+odsStructure.get(Column.COPIES_COUNT)+") is not filled."
+											? " Number of copies (Column " + odsStructure.get(Column.COPIES_COUNT)
+													+ ") is not filled."
 											: "")
 									+ (cellType.getTextValue().trim().isEmpty()
-											? " Type (Column "+odsStructure.get(Column.TYPE)+") is not filled."
+											? " Type (Column " + odsStructure.get(Column.TYPE) + ") is not filled."
 											: "")
 									+ (cellDeck.getTextValue().trim().isEmpty()
-											? " Deck (Column "+odsStructure.get(Column.DECK)+") is not filled."
-											: "")
-									);
+											? " Deck (Column " + odsStructure.get(Column.DECK) + ") is not filled."
+											: ""));
 							System.err.println("Error reading: " + row + " (Card " + cardName + " not proper)");
 						} else {
 							// We add the information found about this card
@@ -476,13 +430,13 @@ public class CardPhotocopier {
 			}
 		}
 
-		int villainExpectedSize = config.getInt(CONFIG_VILLAIN_QUANTITY);
-		int fateExpectedSize = config.getInt(CONFIG_FATE_QUANTITY);
+		int villainExpectedSize = config.getInt(ConfigValue.CONFIG_VILLAIN_QUANTITY);
+		int fateExpectedSize = config.getInt(ConfigValue.CONFIG_FATE_QUANTITY);
 
 		if (copiesToV == 0 && copiesToV != villainExpectedSize && copiesToF == 0 && copiesToF != fateExpectedSize) {
 			throw new IllegalArgumentException(
-					"Both your Villain and Fate decks have 0 cards! Check it please." + (doneLimit < 20
-							? " You might have to increase the " + CONFIG_EMPTY_ROWS_TO_END + " (its current value is "
+					"Both your Villain and Fate decks have 0 cards! Check it please." + (doneLimit < Integer.parseInt(ConfigValue.CONFIG_EMPTY_ROWS_TO_END.getDefaultValue())
+							? " You might have to increase the " + ConfigValue.CONFIG_EMPTY_ROWS_TO_END.getKey() + " (its current value is "
 									+ doneLimit + ")"
 							: ""));
 		} else if (copiesToV == 0 && copiesToV != villainExpectedSize) {
@@ -516,11 +470,7 @@ public class CardPhotocopier {
 		cardsInfo.clear();
 
 		// We are going to read the order the user wants and sort the cards by that order.
-		if (!config.contains(CONFIG_TYPE_ORDER)) {
-			config.setInfo(CONFIG_TYPE_ORDER, INFO_TYPE_ORDER);
-			config.setValue(CONFIG_TYPE_ORDER, "ignore_type", INFO_TYPE_ORDER);
-		}
-		String order = config.getString(CONFIG_TYPE_ORDER, "ignore type");
+		String order = config.getString(ConfigValue.CONFIG_TYPE_ORDER, "ignore type");
 		String[] orderSplit = order.split(",");
 		for (int i = 0; i < orderSplit.length; i++) {
 			orderSplit[i] = orderSplit[i].trim();
@@ -530,25 +480,20 @@ public class CardPhotocopier {
 		// This whole hocus pocus is for the descriptions feature to later use
 		// with the TTS Descrpton Loader (tool by me, not public right now).
 		Semaphore semDesc = new Semaphore(0);
-		if (config.getBoolean(CONFIG_GENERATE_JSON, false)) {
+		if (config.getBoolean(ConfigValue.CONFIG_GENERATE_JSON, false)) {
 			new Thread(new Runnable() {
 
 				@Override
 				public void run() {
 					// System.out.println(" (Thread) Generating JSON file.");
-
-					if (!config.contains(CONFIG_TYPE_IN_JSON)) {
-						config.setInfo(CONFIG_TYPE_IN_JSON, INFO_TYPE_IN_JSON);
-						config.setValue(CONFIG_TYPE_IN_JSON, false, INFO_TYPE_IN_JSON);
-					}
-					boolean includeType = config.getBoolean(CONFIG_TYPE_IN_JSON, false);
+					boolean includeType = config.getBoolean(ConfigValue.CONFIG_TYPE_IN_JSON, false);
 
 					JSONObject jsonV = new JSONObject();
-					jsonV.put("name", config.getString(CONFIG_VILLAIN_NAME, "Villain Deck"));
+					jsonV.put("name", config.getString(ConfigValue.CONFIG_VILLAIN_NAME, "Villain Deck"));
 					JSONArray cardsV = new JSONArray();
 
 					JSONObject jsonF = new JSONObject();
-					jsonF.put("name", config.getString(CONFIG_FATE_NAME, "Fate Deck"));
+					jsonF.put("name", config.getString(ConfigValue.CONFIG_FATE_NAME, "Fate Deck"));
 					JSONArray cardsF = new JSONArray();
 
 					JSONObject[] jsonExtras = new JSONObject[extraDecks.length];
@@ -586,11 +531,7 @@ public class CardPhotocopier {
 						String desc = ci.desc.replace("   ", "\n").replace("$THIS_NAME", name)
 								.replace("$this_name", name).replace("$THIS_CARD", name).replace("$this_card", name)
 								.trim();
-						String jsonNumCopies = config.getString(CONFIG_JSON_NUM_COPIES, "").toLowerCase();
-						if (jsonNumCopies.equals("")) {
-							config.setInfo(CONFIG_JSON_NUM_COPIES, INFO_JSON_NUM_COPIES);
-							config.setValue(CONFIG_JSON_NUM_COPIES, "false", INFO_JSON_NUM_COPIES);
-						}
+						String jsonNumCopies = config.getString(ConfigValue.CONFIG_JSON_NUM_COPIES, "").toLowerCase();
 						if (jsonNumCopies.equals("true") || jsonNumCopies.equals("villain") && ci.deck.equals("0")
 								|| jsonNumCopies.equals("fate") && ci.deck.equals("1")) {
 							boolean sing = ci.copies == 1;
@@ -645,12 +586,7 @@ public class CardPhotocopier {
 					try (PrintWriter out = new PrintWriter(jsonTFile)) {
 						out.println(jsonT.toString());
 
-						if (!config.contains(CONFIG_COPY_JSON)) {
-							config.setInfo(CONFIG_COPY_JSON, INFO_COPY_JSON);
-							config.setValue(CONFIG_COPY_JSON, "false", INFO_COPY_JSON);
-							config.saveConfig();
-						}
-						if (config.getBoolean(CONFIG_COPY_JSON, false)) {
+						if (config.getBoolean(ConfigValue.CONFIG_COPY_JSON, false)) {
 							Clipboard clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
 							clipboard.setContents(new StringSelection(jsonT.toString()), null);
 						}
@@ -727,19 +663,13 @@ public class CardPhotocopier {
 		}
 
 		// We save the image data into .jpgs files.
-		File fileVillainDeck = new File(resultsFolder, config.getString(CONFIG_VILLAIN_NAME) + ".jpg");
-		File fileFateDeck = new File(resultsFolder, config.getString(CONFIG_FATE_NAME) + ".jpg");
+		File fileVillainDeck = new File(resultsFolder, config.getString(ConfigValue.CONFIG_VILLAIN_NAME) + ".jpg");
+		File fileFateDeck = new File(resultsFolder, config.getString(ConfigValue.CONFIG_FATE_NAME) + ".jpg");
 		File[] filesExtraDecks = new File[extraDecks.length];
 		for (int i = 0; i < filesExtraDecks.length; i++) {
 			filesExtraDecks[i] = new File(resultsFolder, extraDecks[i] + " deck.jpg");
 		}
-
-		if (!config.contains(CONFIG_IMAGE_QUALITY)) {
-			config.setInfo(CONFIG_IMAGE_QUALITY, INFO_IMAGE_QUALITY);
-			config.setValue(CONFIG_IMAGE_QUALITY, "0.9", INFO_IMAGE_QUALITY);
-			config.saveConfig();
-		}
-		float quality = config.getFloat(CONFIG_IMAGE_QUALITY);
+		float quality = config.getFloat(ConfigValue.CONFIG_IMAGE_QUALITY, 0.9f);
 
 		label.setText("Writing the images for TTS decks.");
 
@@ -784,18 +714,12 @@ public class CardPhotocopier {
 			}).start();
 		}
 
-		try {
-			config.saveConfig();
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
-
 		semWrite.acquire();
 		semDesc.acquire();
 
 		// We check if the user wants to autoclose and we do it after 500ms if there are
 		// no warnings whatsoever. Forget the 500ms I want it to close asap.
-		if (autoclose && warnings.isEmpty()) {
+		if (warnings.isEmpty()) {
 			// System.out.println("Autoclose goes brr");
 			label.setText("Done. Autoclosing.");
 			// Thread.sleep(500);
