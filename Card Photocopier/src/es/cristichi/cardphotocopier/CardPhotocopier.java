@@ -57,7 +57,7 @@ import es.cristichi.cardphotocopier.obj.config.Configuration;
  * @author Cristichi#5193
  */
 public class CardPhotocopier {
-	private static String VERSION = "v2.5.2";
+	private static String VERSION = "v2.5.3";
 	private static String NAME = "Villainous Card Photocopier " + VERSION;
 
 	private static String CONFIG_TXT = "config.yml";
@@ -193,34 +193,34 @@ public class CardPhotocopier {
 			config.readFromFile();
 
 			if (!config.contains(ConfigValue.CONFIG_EMPTY_ROWS_TO_END)) {
-				config.setValue(ConfigValue.CONFIG_EMPTY_ROWS_TO_END, 20);
+				config.setValue(ConfigValue.CONFIG_EMPTY_ROWS_TO_END, ConfigValue.CONFIG_EMPTY_ROWS_TO_END.getDefaultValue());
 			}
 			if (!config.contains(ConfigValue.CONFIG_EXTRA_DECKS)) {
-				config.setValue(ConfigValue.CONFIG_EXTRA_DECKS, "");
+				config.setValue(ConfigValue.CONFIG_EXTRA_DECKS, ConfigValue.CONFIG_EXTRA_DECKS.getDefaultValue());
 			}
 
 			if (!config.contains(ConfigValue.CONFIG_TYPE_ORDER)) {
-				config.setValue(ConfigValue.CONFIG_TYPE_ORDER, "ignore_type");
+				config.setValue(ConfigValue.CONFIG_TYPE_ORDER, ConfigValue.CONFIG_TYPE_ORDER.getDefaultValue());
 			}
 
 			if (!config.contains(ConfigValue.CONFIG_TYPE_IN_JSON)) {
-				config.setValue(ConfigValue.CONFIG_TYPE_IN_JSON, false);
+				config.setValue(ConfigValue.CONFIG_TYPE_IN_JSON, ConfigValue.CONFIG_TYPE_IN_JSON.getDefaultValue());
 			}
 
 			if (!config.contains(ConfigValue.CONFIG_JSON_NUM_COPIES)) {
-				config.setValue(ConfigValue.CONFIG_JSON_NUM_COPIES, "false");
+				config.setValue(ConfigValue.CONFIG_JSON_NUM_COPIES, ConfigValue.CONFIG_JSON_NUM_COPIES.getDefaultValue());
 			}
 
 			if (!config.contains(ConfigValue.CONFIG_COPY_JSON)) {
-				config.setValue(ConfigValue.CONFIG_COPY_JSON, "false");
+				config.setValue(ConfigValue.CONFIG_COPY_JSON, ConfigValue.CONFIG_COPY_JSON.getDefaultValue());
 			}
 
 			if (!config.contains(ConfigValue.CONFIG_IMAGE_QUALITY)) {
-				config.setValue(ConfigValue.CONFIG_IMAGE_QUALITY, "0.9");
+				config.setValue(ConfigValue.CONFIG_IMAGE_QUALITY, ConfigValue.CONFIG_IMAGE_QUALITY.getDefaultValue());
 			}
 
 			if (!config.contains(ConfigValue.CONFIG_GENERATOR_VERSION)) {
-				config.setValue(ConfigValue.CONFIG_GENERATOR_VERSION, "");
+				config.setValue(ConfigValue.CONFIG_GENERATOR_VERSION, ConfigValue.CONFIG_GENERATOR_VERSION.getDefaultValue());
 				configError = new ConfigValueNotFound(
 						"You need to specify the version of the Card Generator that you are using in order to determine the layout of the .ods file.");
 			}
@@ -310,13 +310,13 @@ public class CardPhotocopier {
 		int[] yExtras = new int[extraDecks.length];
 
 		boolean forceFate = false;
-		int done = 0;
+		int consecutiveEmptyLines = 0;
 		Arrays.fill(extraDecksCount, 0);
 		int doneLimit = config.getInt(ConfigValue.CONFIG_EMPTY_ROWS_TO_END, 20);
 
 		// We are going to look into each row in the .ods and check if it's a card that
 		// exists withing the images folder and draw it into it's corresponding deck.
-		for (int row = 1; done <= doneLimit; row++) {
+		for (int row = 1; consecutiveEmptyLines <= doneLimit; row++) {
 			// Cell<SpreadSheet> cellName = sheet.getCellAt("A" + row);
 			Cell<SpreadSheet> cellCopiesCount = sheet.getCellAt(odsStructure.get(Column.COPIES_COUNT) + row);
 
@@ -324,7 +324,7 @@ public class CardPhotocopier {
 				break;
 			}
 			try {
-				// We get all the data. The unused one commented in case I want to do something with it one day.
+				// We get all the data. The unused ones commented in case I want to do something with it one day.
 
 				Cell<SpreadSheet> cellName = sheet.getCellAt(odsStructure.get(Column.NAME) + row);
 				// Cell<SpreadSheet> cellCost = sheet.getCellAt(odsStructure.get(Column.COST) + row);
@@ -347,11 +347,9 @@ public class CardPhotocopier {
 				// Well, not neccesarily empty lines, but if there is nothing in column B then
 				// those are not cards anyway.
 				if (cellName.isEmpty()) {
-					done++;
+					consecutiveEmptyLines++;
 				} else {
-					// We want "done" to count the CONSECUTIVE empty lines, so if we find a proper
-					// card we are going to reset it why not.
-					done = 0;
+					consecutiveEmptyLines = 0;
 					String cardName = cellName.getTextValue().replaceAll("[\\\\/:*?\"<>|]", "");
 					if (cardsInfo.containsKey(cardName)) {
 						// So this card in the ODS document is also in the exports folder. Great!
