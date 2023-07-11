@@ -139,7 +139,7 @@ public class CardPhotocopier {
 		if (warnings.size() > 0) {
 			window.remove(label);
 			window.setLayout(new GridLayout(warnings.size() + 1, 1));
-			JLabel warningTitle = new JLabel("Process completed without errors but with some weird notes:");
+			JLabel warningTitle = new JLabel("Process completed without errors but with some notes:");
 			warningTitle.setBorder(new EmptyBorder(2, 5, 2, 5));
 			window.add(warningTitle);
 			for (String warning : warnings) {
@@ -281,7 +281,7 @@ public class CardPhotocopier {
 			String name = cardFile.getName().substring(0,
 					cardFile.getName().length() - (cardFile.getName().endsWith(".jpeg") ? 5 : 4));
 			if (!name.isEmpty()) {
-				label.setText("Loading " + name + "'s image data from it's file.");
+				label.setText("Loading " + name + "'s image data from the images folder.");
 				// System.out.println("Loading " + name + "'s image data from it's file.");
 				CardInfo info = new CardInfo(load(cardFile));
 				if (info.imageData == null) {
@@ -376,6 +376,7 @@ public class CardPhotocopier {
 							ci.type = cellType.getTextValue();
 							ci.copies = Integer.parseInt(cellCopiesCount.getTextValue());
 							ci.desc = cellDescription.getTextValue();
+							label.setText("Saving " + ci.name + "'s image data and card information.");
 							// System.out.println("Loading .ods data for " + ci.name + ": x" + ci.copies + ".");
 
 							if (!cellExtraDeck.getTextValue().trim().equals("")) {
@@ -428,6 +429,10 @@ public class CardPhotocopier {
 			}
 		}
 
+		cardsInfo.clear();
+		
+		label.setText("Checking deck sizes.");
+
 		int villainExpectedSize = config.getInt(ConfigValue.CONFIG_VILLAIN_QUANTITY);
 		int fateExpectedSize = config.getInt(ConfigValue.CONFIG_FATE_QUANTITY);
 
@@ -442,6 +447,8 @@ public class CardPhotocopier {
 		} else if (copiesToF == 0 && copiesToF != fateExpectedSize) {
 			throw new IllegalArgumentException("Your Fate deck has 0 cards! Check it please.");
 		}
+		
+		label.setText("Calculating final images' dimensions.");
 
 		// We get the proper dimensions for the final image, depending on the number of cards.
 		Dimension gridV = getGrid(copiesToV);
@@ -465,8 +472,8 @@ public class CardPhotocopier {
 			gExtras[i] = resultImageExtras[i].getGraphics();
 		}
 
-		cardsInfo.clear();
-
+		label.setText("Reordering cards");
+		
 		// We are going to read the order the user wants and sort the cards by that order.
 		String order = config.getString(ConfigValue.CONFIG_TYPE_ORDER, "ignore type");
 		String[] orderSplit = order.split(",");
@@ -609,8 +616,7 @@ public class CardPhotocopier {
 		// But not to a file. First we draw only in the RAM.
 		for (CardInfo ci : usefulCards) {
 			// System.out.println("Photocopying card " + ci.name + ": " + ci.copies + " copies in deck " + ci.deck);
-			label.setText("Photocopying card " + ci.name + ": " + ci.copies + " copies in "
-					+ (ci.deck.equals("0") ? "Villain" : (ci.deck.equals("1") ? "Fate" : ci.deck)) + " deck.");
+			label.setText("Photocopying " + ci.name + ".");
 
 			for (int i = 0; i < ci.copies; i++) {
 				if (ci.deck.equals("0")) {
@@ -719,7 +725,7 @@ public class CardPhotocopier {
 		// no warnings whatsoever. Forget the 500ms I want it to close asap.
 		if (warnings.isEmpty()) {
 			// System.out.println("Autoclose goes brr");
-			label.setText("Done. Autoclosing.");
+			//label.setText("Done. Autoclosing.");
 			// Thread.sleep(500);
 			window.dispose();
 		}
