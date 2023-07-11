@@ -184,7 +184,7 @@ public class Configuration extends File implements Cloneable {
 		try {
 			BufferedReader reader = new BufferedReader(new FileReader(this));
 			String line = null;
-			System.out.println("line: "+(line==null?"null":line));
+//			System.out.println("line: "+(line==null?"null":line));
 			while ((line = reader.readLine()) != null) {
 				cont++;
 				line = line.trim();
@@ -194,8 +194,7 @@ public class Configuration extends File implements Cloneable {
 					String value;
 
 					if (st.countTokens() < 1) {
-						reader.close();
-						throw new ConfigValueNotParsed("Value for line "+cont+" \""+line+"\" in configuration could not be parsed.");
+						value = "";
 					} else {
 						value = st.nextToken();
 					}
@@ -203,8 +202,10 @@ public class Configuration extends File implements Cloneable {
 						value+=":".concat(st.nextToken());
 					}
 					ConfigValue cv = ConfigValue.getValueOfKey(key);
-					if (cv !=null)
+					if (cv !=null) {
+//						System.out.println(cv.toString());
 						setValue(cv, value.trim());
+					}
 				}
 			}
 			reader.close();

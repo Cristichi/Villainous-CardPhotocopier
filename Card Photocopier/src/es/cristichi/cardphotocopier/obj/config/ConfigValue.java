@@ -31,7 +31,7 @@ public enum ConfigValue {
 	public static ConfigValue getValueOfKey(String key) {
 		for (ConfigValue cv : ConfigValue.values()) {
 			if (cv.getKey().equals(key)) {
-				System.out.println("Ordinal "+cv.ordinal()+": "+cv.getKey());
+//				System.out.println("Ordinal "+cv.ordinal()+": "+cv.getKey());
 				return cv;
 			}
 		}
@@ -56,5 +56,9 @@ public enum ConfigValue {
 
 	public String getDefaultValue() {
 		return defaultValue;
+	}
+	
+	public String toString() {
+		return key+": "+defaultValue;
 	}
 }
