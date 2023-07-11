@@ -1,5 +1,7 @@
 package es.cristichi.cardphotocopier.obj.config;
 
+import jdk.internal.jline.internal.Nullable;
+
 public enum ConfigValue {
 	CONFIG_GENERATOR_VERSION("cardGeneratorVersion", "33.2", "The version of FailureFactory's Villainous Card Generator, as a number. "
 			+ "For example, if you are running V33.2 you have to put here \"33.2\". "
@@ -21,9 +23,14 @@ public enum ConfigValue {
 	CONFIG_JSON_NUM_COPIES("jsonNumberOfCopiesInDesc", "false", "If true, and if the JSON file is generated, to every description a new line will be added that informs about the number of copies of that card in the deck. Values: \"true\" (add on all cards of all decks), \"Villain\" (only for the Villain deck), \"Fate\" (only for the Fate deck), \"false\" (disabled). If \"true\", it also affects all extra decks, but you cannot configure this for specific extra decks."),
 	;
 	
-	public static ConfigValue getValueOfKey(String str) {
+	/**
+	 * @param key
+	 * @return The ConfigValue representing this key or null if it doesn't exist.
+	 */
+	@Nullable
+	public static ConfigValue getValueOfKey(String key) {
 		for (ConfigValue cv : ConfigValue.values()) {
-			if (cv.getKey().equals(str)) {
+			if (cv.getKey().equals(key)) {
 				System.out.println("Ordinal "+cv.ordinal()+": "+cv.getKey());
 				return cv;
 			}

@@ -42,21 +42,13 @@ public class Configuration extends File implements Cloneable {
 		settings.put(key.getKey(), value.toString());
 	}
 
-	public void setValue(String key, Object value) {
-		settings.put(key, value.toString());
-	}
-
-	public void setValue(String key, Object value, String info) {
-		settings.put(key, value.toString());
-		this.info.put(key, info);
+	public void setValueAndInfo(ConfigValue key, Object value) {
+		settings.put(key.getKey(), value.toString());
+		this.info.put(key.getKey(), key.getInfo());
 	}
 
 	public String getString(ConfigValue key, String defaultValue) {
 		return settings.getOrDefault(key.getKey(), defaultValue).toString();
-	}
-
-	public String getString(String key, String defaultValue) {
-		return settings.getOrDefault(key, defaultValue).toString();
 	}
 
 	public String getString(ConfigValue key) throws ConfigValueNotFound {
@@ -69,35 +61,8 @@ public class Configuration extends File implements Cloneable {
 		return sol;
 	}
 
-	public String getString(String key) throws ConfigValueNotFound {
-		if (key == null)
-			throw new ConfigValueNotFound("The key is null.");
-		Object obj = settings.get(key);
-		if (obj == null)
-			throw new ConfigValueNotFound("The key \"" + key + "\" is nto properly set in the config file. Check the config file.");
-		String sol = obj.toString();
-		return sol;
-	}
-
 	public int getInt(ConfigValue key, int defaultValue) {
 		String str = settings.getOrDefault(key.getKey(), defaultValue + "").toString();
-		try {
-			Double num = null;
-			try {
-				num = Double.parseDouble(str);
-				return num.intValue();
-			} catch (NumberFormatException e) {
-				return Integer.parseInt(str);
-			}
-		} catch (NumberFormatException e) {
-			System.err.println("Error trying to get integer value from config file");
-			System.err.println("(Value \"" + str + "\" could not be parsed to integer)");
-			return defaultValue;
-		}
-	}
-
-	public int getInt(String key, int defaultValue) {
-		String str = settings.getOrDefault(key, defaultValue + "").toString();
 		try {
 			Double num = null;
 			try {
@@ -130,50 +95,9 @@ public class Configuration extends File implements Cloneable {
 					+ "\" could not be parsed to integer)");
 		}
 	}
-
-	public int getInt(String key) throws ConfigValueNotFound, ConfigValueNotParsed {
-		String str = settings.get(key).toString();
-		if (str == null)
-			throw new ConfigValueNotFound("The key \"" + key + "\" is not set in the config file.");
-		try {
-			Double num = null;
-			try {
-				num = Double.parseDouble(str);
-				return num.intValue();
-			} catch (NumberFormatException e) {
-				return Integer.parseInt(str);
-			}
-		} catch (NumberFormatException e) {
-			throw new ConfigValueNotParsed("Error trying to get integer value from config file (Value \"" + str
-					+ "\" could not be parsed to integer)");
-		}
-	}
-	
-	public double getDouble(String key, double defaultValue) {
-		String str = settings.getOrDefault(key, defaultValue + "").toString();
-		try {
-			return Double.parseDouble(str.replace(",", "."));
-		} catch (NumberFormatException e) {
-			System.err.println("Error trying to get double value from config file");
-			System.err.println("(Value \"" + str + "\" could not be parsed to double)");
-			return defaultValue;
-		}
-	}
 	
 	public double getDouble(ConfigValue key) throws ConfigValueNotParsed, ConfigValueNotFound {
 		String str = settings.get(key.getKey()).toString();
-		if (str == null)
-			throw new ConfigValueNotFound("The key \"" + key + "\" was never set in the config file.");
-		try {
-			return Double.parseDouble(str.replace(",", "."));
-		} catch (NumberFormatException e) {
-			throw new ConfigValueNotParsed("Error trying to get double value from config file (Value \"" + str
-					+ "\" could not be parsed to double)");
-		}
-	}
-	
-	public double getDouble(String key) throws ConfigValueNotParsed, ConfigValueNotFound {
-		String str = settings.get(key).toString();
 		if (str == null)
 			throw new ConfigValueNotFound("The key \"" + key + "\" was never set in the config file.");
 		try {
@@ -195,29 +119,6 @@ public class Configuration extends File implements Cloneable {
 		}
 	}
 
-	public float getFloat(String key, float defaultValue) {
-		String str = settings.getOrDefault(key, defaultValue + "").toString();
-		try {
-			return Float.parseFloat(str.replace(",", "."));
-		} catch (NumberFormatException e) {
-			System.err.println("Error trying to get double value from config file");
-			System.err.println("(Value \"" + str + "\" could not be parsed to double)");
-			return defaultValue;
-		}
-	}
-
-	public float getFloat(String key) throws ConfigValueNotParsed, ConfigValueNotFound {
-		String str = settings.get(key).toString();
-		if (str == null)
-			throw new ConfigValueNotFound("The key \"" + key + "\" was never set in the config file.");
-		try {
-			return Float.parseFloat(str.replace(",", "."));
-		} catch (NumberFormatException e) {
-			throw new ConfigValueNotParsed("Error trying to get double value from config file (Value \"" + str
-					+ "\" could not be parsed to double)");
-		}
-	}
-
 	public boolean getBoolean(ConfigValue key, boolean defaultValue) {
 		String str = settings.getOrDefault(key.getKey(), defaultValue + "").toString();
 		switch (str) {
@@ -235,46 +136,8 @@ public class Configuration extends File implements Cloneable {
 		}
 	}
 
-	public boolean getBoolean(String key, boolean defaultValue) {
-		String str = settings.getOrDefault(key, defaultValue + "").toString();
-		switch (str) {
-		case "true":
-		case "yes":
-			return true;
-		case "false":
-		case "no":
-			return false;
-
-		default:
-			System.err.println("Error trying to get boolean value from config file");
-			System.err.println("(Value \"" + str + "\" could not be parsed to boolean)");
-			return defaultValue;
-		}
-	}
-
-	public boolean getBoolean(String key) throws ConfigValueNotFound, ConfigValueNotParsed {
-		Object obj = settings.get(key);
-		if (obj == null)
-			throw new ConfigValueNotFound("The field \"" + key + "\" is missing in the config file.");
-		String str = settings.get(key).toString();
-		if (str == null)
-			throw new ConfigValueNotFound("The field \"" + key + "\" is missing in the config file.");
-		switch (str) {
-		case "true":
-		case "yes":
-			return true;
-		case "false":
-		case "no":
-			return false;
-
-		default:
-			throw new ConfigValueNotParsed("Error trying to get boolean value from config file (Value \"" + str
-					+ "\" is not a valid boolean, like \"true\", \"false\", \"yes\" or \"no\")");
-		}
-	}
-
-	public void setInfo(String key, String info) {
-		this.info.put(key, info);
+	public void setInfo(ConfigValue cv) {
+		this.info.put(cv.getKey(), cv.getInfo());
 	}
 
 	/**
@@ -335,7 +198,9 @@ public class Configuration extends File implements Cloneable {
 					while (st.hasMoreElements()) {
 						value+=":".concat(st.nextToken());
 					}
-					setValue(key, value.trim());
+					ConfigValue cv = ConfigValue.getValueOfKey(key);
+					if (cv !=null)
+						setValue(cv, value.trim());
 				}
 			}
 			reader.close();

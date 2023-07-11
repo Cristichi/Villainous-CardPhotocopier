@@ -21,9 +21,7 @@ import java.io.PrintWriter;
 import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.HashMap;
-import java.util.List;
 import java.util.concurrent.Semaphore;
 
 import javax.imageio.IIOImage;
@@ -42,6 +40,7 @@ import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 
 import es.cristichi.cardphotocopier.excep.ConfigValueNotFound;
+import es.cristichi.cardphotocopier.excep.ConfigurationException;
 import es.cristichi.cardphotocopier.obj.CardComparator;
 import es.cristichi.cardphotocopier.obj.CardInfo;
 import es.cristichi.cardphotocopier.obj.Range;
@@ -70,26 +69,26 @@ public class CardPhotocopier {
 	private static HashMap<Range, Dimension> DECK_SIZES;
 	static {
 		DECK_SIZES = new HashMap<>(18);
-		DECK_SIZES.put(new Range(13, 15), new Dimension(5, 3));
-		DECK_SIZES.put(new Range(26, 30), new Dimension(6, 5));
-		DECK_SIZES.put(new Range(1, 1), new Dimension(2, 2));
-		DECK_SIZES.put(new Range(2, 2), new Dimension(2, 2));
-		DECK_SIZES.put(new Range(3, 3), new Dimension(2, 2));
-		DECK_SIZES.put(new Range(4, 4), new Dimension(2, 2));
-		DECK_SIZES.put(new Range(5, 6), new Dimension(3, 2));
-		DECK_SIZES.put(new Range(7, 8), new Dimension(4, 2));
-		DECK_SIZES.put(new Range(9, 9), new Dimension(3, 3));
-		DECK_SIZES.put(new Range(10, 12), new Dimension(4, 3));
-		DECK_SIZES.put(new Range(16, 20), new Dimension(5, 4));
-		DECK_SIZES.put(new Range(21, 24), new Dimension(6, 4));
-		DECK_SIZES.put(new Range(25, 25), new Dimension(5, 5));
-		DECK_SIZES.put(new Range(31, 35), new Dimension(7, 5));
-		DECK_SIZES.put(new Range(36, 36), new Dimension(6, 6));
-		DECK_SIZES.put(new Range(37, 42), new Dimension(7, 6));
-		DECK_SIZES.put(new Range(43, 48), new Dimension(7, 6));
-		DECK_SIZES.put(new Range(0, 0), new Dimension(2, 2));
+		// DECK_SIZES.put(new Range(13, 15), new Dimension(5, 3));
+		// DECK_SIZES.put(new Range(26, 30), new Dimension(6, 5));
+		// DECK_SIZES.put(new Range(1, 1), new Dimension(2, 2));
+		// DECK_SIZES.put(new Range(2, 2), new Dimension(2, 2));
+		// DECK_SIZES.put(new Range(3, 3), new Dimension(2, 2));
+		// DECK_SIZES.put(new Range(4, 4), new Dimension(2, 2));
+		// DECK_SIZES.put(new Range(5, 6), new Dimension(3, 2));
+		// DECK_SIZES.put(new Range(7, 8), new Dimension(4, 2));
+		// DECK_SIZES.put(new Range(9, 9), new Dimension(3, 3));
+		// DECK_SIZES.put(new Range(10, 12), new Dimension(4, 3));
+		// DECK_SIZES.put(new Range(16, 20), new Dimension(5, 4));
+		// DECK_SIZES.put(new Range(21, 24), new Dimension(6, 4));
+		// DECK_SIZES.put(new Range(25, 25), new Dimension(5, 5));
+		// DECK_SIZES.put(new Range(31, 35), new Dimension(7, 5));
+		// DECK_SIZES.put(new Range(36, 36), new Dimension(6, 6));
+		// DECK_SIZES.put(new Range(37, 42), new Dimension(7, 6));
+		// DECK_SIZES.put(new Range(43, 48), new Dimension(7, 6));
+		// DECK_SIZES.put(new Range(0, 0), new Dimension(2, 2));
 	}
-	
+
 	private static ArrayList<String> warnings;
 
 	private static JFrame window;
@@ -159,7 +158,7 @@ public class CardPhotocopier {
 				NAME + " configuration.\n For help, contact Cristichi#5193 on Discord.");
 		if (!config.exists()) {
 			for (ConfigValue cValue : ConfigValue.values()) {
-				config.setValue(cValue.getKey(), cValue.getDefaultValue(), cValue.getInfo());
+				config.setValueAndInfo(cValue, cValue.getDefaultValue());
 			}
 
 			config.saveToFile();
@@ -189,11 +188,12 @@ public class CardPhotocopier {
 					+ ") not found. We generated one for you, please close this window and edit it accordingly.");
 		} else {
 			Exception configError = null;
-			
+
 			config.readFromFile();
 
 			if (!config.contains(ConfigValue.CONFIG_EMPTY_ROWS_TO_END)) {
-				config.setValue(ConfigValue.CONFIG_EMPTY_ROWS_TO_END, ConfigValue.CONFIG_EMPTY_ROWS_TO_END.getDefaultValue());
+				config.setValue(ConfigValue.CONFIG_EMPTY_ROWS_TO_END,
+						ConfigValue.CONFIG_EMPTY_ROWS_TO_END.getDefaultValue());
 			}
 			if (!config.contains(ConfigValue.CONFIG_EXTRA_DECKS)) {
 				config.setValue(ConfigValue.CONFIG_EXTRA_DECKS, ConfigValue.CONFIG_EXTRA_DECKS.getDefaultValue());
@@ -208,7 +208,8 @@ public class CardPhotocopier {
 			}
 
 			if (!config.contains(ConfigValue.CONFIG_JSON_NUM_COPIES)) {
-				config.setValue(ConfigValue.CONFIG_JSON_NUM_COPIES, ConfigValue.CONFIG_JSON_NUM_COPIES.getDefaultValue());
+				config.setValue(ConfigValue.CONFIG_JSON_NUM_COPIES,
+						ConfigValue.CONFIG_JSON_NUM_COPIES.getDefaultValue());
 			}
 
 			if (!config.contains(ConfigValue.CONFIG_COPY_JSON)) {
@@ -220,16 +221,17 @@ public class CardPhotocopier {
 			}
 
 			if (!config.contains(ConfigValue.CONFIG_GENERATOR_VERSION)) {
-				config.setValue(ConfigValue.CONFIG_GENERATOR_VERSION, ConfigValue.CONFIG_GENERATOR_VERSION.getDefaultValue());
+				config.setValue(ConfigValue.CONFIG_GENERATOR_VERSION,
+						ConfigValue.CONFIG_GENERATOR_VERSION.getDefaultValue());
 				configError = new ConfigValueNotFound(
 						"You need to specify the version of the Card Generator that you are using in order to determine the layout of the .ods file.");
 			}
 
 			for (ConfigValue cValue : ConfigValue.values()) {
-				config.setInfo(cValue.getKey(), cValue.getInfo());
+				config.setInfo(cValue);
 			}
 			config.saveToFile();
-			
+
 			if (configError != null) {
 				throw configError;
 			}
@@ -430,24 +432,24 @@ public class CardPhotocopier {
 		}
 
 		cardsInfo.clear();
-		
+
 		label.setText("Checking deck sizes.");
 
 		int villainExpectedSize = config.getInt(ConfigValue.CONFIG_VILLAIN_QUANTITY);
 		int fateExpectedSize = config.getInt(ConfigValue.CONFIG_FATE_QUANTITY);
 
 		if (copiesToV == 0 && copiesToV != villainExpectedSize && copiesToF == 0 && copiesToF != fateExpectedSize) {
-			throw new IllegalArgumentException(
-					"Both your Villain and Fate decks have 0 cards! Check it please." + (doneLimit < Integer.parseInt(ConfigValue.CONFIG_EMPTY_ROWS_TO_END.getDefaultValue())
-							? " You might have to increase the " + ConfigValue.CONFIG_EMPTY_ROWS_TO_END.getKey() + " (its current value is "
-									+ doneLimit + ")"
+			throw new IllegalArgumentException("Both your Villain and Fate decks have 0 cards! Check it please."
+					+ (doneLimit < Integer.parseInt(ConfigValue.CONFIG_EMPTY_ROWS_TO_END.getDefaultValue())
+							? " You might have to increase the " + ConfigValue.CONFIG_EMPTY_ROWS_TO_END.getKey()
+									+ " (its current value is " + doneLimit + ")"
 							: ""));
 		} else if (copiesToV == 0 && copiesToV != villainExpectedSize) {
 			throw new IllegalArgumentException("Your Villain deck has 0 cards! Check it please.");
 		} else if (copiesToF == 0 && copiesToF != fateExpectedSize) {
 			throw new IllegalArgumentException("Your Fate deck has 0 cards! Check it please.");
 		}
-		
+
 		label.setText("Calculating final images' dimensions.");
 
 		// We get the proper dimensions for the final image, depending on the number of cards.
@@ -473,7 +475,7 @@ public class CardPhotocopier {
 		}
 
 		label.setText("Reordering cards");
-		
+
 		// We are going to read the order the user wants and sort the cards by that order.
 		String order = config.getString(ConfigValue.CONFIG_TYPE_ORDER, "ignore type");
 		String[] orderSplit = order.split(",");
@@ -725,7 +727,7 @@ public class CardPhotocopier {
 		// no warnings whatsoever. Forget the 500ms I want it to close asap.
 		if (warnings.isEmpty()) {
 			// System.out.println("Autoclose goes brr");
-			//label.setText("Done. Autoclosing.");
+			// label.setText("Done. Autoclosing.");
 			// Thread.sleep(500);
 			window.dispose();
 		}
@@ -763,70 +765,20 @@ public class CardPhotocopier {
 
 	// It calculates the optimal dimensions of the file, measured in number of cards
 	// wide and number of cards high.
-	private static Dimension getGrid(int quantity) {
-		// Because it was quite hard to calculate it I just guessed case by case which
-		// dimensions would be the most appropriate for each number of cards, including
-		// the common 30 and 15, so it first sees if I already did the work manually.
+	private static Dimension getGrid(int quantity) throws ConfigurationException {
+		// Because it was quite hard to calculate it, I just guessed case by case which
+		// dimensions would be the most appropriate for each number of cards, returning
+		// first the common 30 and 15, so it first sees if I already did the work manually.
 		for (Range index : DECK_SIZES.keySet()) {
 			if (index.inRange(quantity)) {
 				return DECK_SIZES.get(index);
 			}
 		}
 
-		// If the number of cards is quite wild, then
-		// this algorithm I found on the Internet
-		// tries its best to calculate a good one.
-		// It is a little bit wacky though.
-		// If the dimensions of your deck is weird,
-		// either it's like so long or tall, tell me!
-		warnings.add("The number of cards \"" + quantity
-				+ "\" was a little bit too high so the result might be unexpected. The result might be too tall or too wide.");
-		warnings.add("Please tell Cristichi#5193 to add support for " + quantity + " cards! He'll be happy to add it.");
-		List<Integer> divisors = getDivisors(quantity);
-		divisors.add(1);
-		divisors.add(quantity);
-		Collections.sort(divisors);
-		double sqrt = Math.sqrt(quantity);
-		List<Integer> sol;
-		if (divisors.size() == 2) {
-			sol = divisors;
-		} else {
-			sol = findKClosestElements(divisors, 2, ((int) Math.round(sqrt)));
-		}
-		// System.out.println("Grid for " + quantity + ": " + sol);
-		// System.out.println("Divisors: " + divisors + " sqrt: " + sqrt);
-		return new Dimension(sol.get(1), sol.get(0));
-	}
-
-	private static ArrayList<Integer> getDivisors(int n) {
-		ArrayList<Integer> divisors = new ArrayList<>();
-		for (int i = 2; i * i <= n; ++i)
-			if (n % i == 0) {
-				divisors.add(i);
-				if (i != n / i)
-					divisors.add(n / i);
-			}
-		return divisors;
-	}
-
-	private static List<Integer> findKClosestElements(List<Integer> input, int k, int target) {
-		int i = Collections.binarySearch(input, target);
-		if (i < 0) {
-			i = -(i + 1);
-		}
-
-		int left = i - 1;
-		int right = i;
-
-		while (k-- > 0) {
-			if (left < 0 || (right < input.size()
-					&& Math.abs(input.get(left) - target) > Math.abs(input.get(right) - target))) {
-				right++;
-			} else {
-				left--;
-			}
-		}
-
-		return input.subList(left + 1, right);
+		// If the number of cards is quite wild, then I found an algorithm on the Internet
+		// that might have been able to sort this problem out and calculate the optimal
+		// dimensions, but it didn't work. So It just throws an error now. Sorry!
+		throw new ConfigurationException(
+				"The number of copies (" + quantity + ") is not supported. Ask Cristichi to add support to it.");
 	}
 }
