@@ -53,10 +53,10 @@ import es.cristichi.cardphotocopier.obj.config.Configuration;
  * Feel free to modify the code for yourself and/or propose modifications and
  * improvements. Have an evil day!
  * 
- * @author Cristichi#5193
+ * @author Cristichi
  */
 public class CardPhotocopier {
-	private static String VERSION = "v2.5.3";
+	private static String VERSION = "v2.5.4";
 	private static String NAME = "Villainous Card Photocopier " + VERSION;
 
 	private static String CONFIG_TXT = "config.yml";
@@ -189,6 +189,10 @@ public class CardPhotocopier {
 		} else {
 			Exception configError = null;
 
+			for (ConfigValue cValue : ConfigValue.values()) {
+				config.setValueAndInfo(cValue, cValue.getDefaultValue());
+			}
+
 			config.readFromFile();
 
 			if (!config.contains(ConfigValue.CONFIG_EMPTY_ROWS_TO_END)) {
@@ -226,10 +230,7 @@ public class CardPhotocopier {
 				configError = new ConfigValueNotFound(
 						"You need to specify the version of the Card Generator that you are using in order to determine the layout of the .ods file.");
 			}
-
-			for (ConfigValue cValue : ConfigValue.values()) {
-				config.setInfo(cValue);
-			}
+			
 			config.saveToFile();
 
 			if (configError != null) {

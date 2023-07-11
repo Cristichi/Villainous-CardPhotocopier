@@ -175,26 +175,30 @@ public class Configuration extends File implements Cloneable {
 	}
 
 	/**
+	 * @throws ConfigValueNotParsed 
 	 * @throws IOException
 	 * 
 	 */
-	public void readFromFile() {
+	public void readFromFile() throws ConfigValueNotParsed {
+		int cont = 0;
 		try {
 			BufferedReader reader = new BufferedReader(new FileReader(this));
-			String line;
-			int cont = 0;
+			String line = null;
+			System.out.println("line: "+(line==null?"null":line));
 			while ((line = reader.readLine()) != null) {
 				cont++;
 				line = line.trim();
 				if (!line.startsWith("#") && !line.trim().isEmpty()) {
 					StringTokenizer st = new StringTokenizer(line, ":");
-					if (st.countTokens() < 2) {
-						reader.close();
-						throw new IOException("Looks like the file content is not correct. Broken line " + cont + " ("
-								+ st.countTokens() + " tokens, should be 2)");
-					}
 					String key = st.nextToken().trim();
-					String value = st.nextToken();
+					String value;
+
+					if (st.countTokens() < 1) {
+						reader.close();
+						throw new ConfigValueNotParsed("Value for line "+cont+" \""+line+"\" in configuration could not be parsed.");
+					} else {
+						value = st.nextToken();
+					}
 					while (st.hasMoreElements()) {
 						value+=":".concat(st.nextToken());
 					}
