@@ -69,24 +69,24 @@ public class CardPhotocopier {
 	private static HashMap<Range, Dimension> DECK_SIZES;
 	static {
 		DECK_SIZES = new HashMap<>(18);
-		// DECK_SIZES.put(new Range(13, 15), new Dimension(5, 3));
-		// DECK_SIZES.put(new Range(26, 30), new Dimension(6, 5));
-		// DECK_SIZES.put(new Range(1, 1), new Dimension(2, 2));
-		// DECK_SIZES.put(new Range(2, 2), new Dimension(2, 2));
-		// DECK_SIZES.put(new Range(3, 3), new Dimension(2, 2));
-		// DECK_SIZES.put(new Range(4, 4), new Dimension(2, 2));
-		// DECK_SIZES.put(new Range(5, 6), new Dimension(3, 2));
-		// DECK_SIZES.put(new Range(7, 8), new Dimension(4, 2));
-		// DECK_SIZES.put(new Range(9, 9), new Dimension(3, 3));
-		// DECK_SIZES.put(new Range(10, 12), new Dimension(4, 3));
-		// DECK_SIZES.put(new Range(16, 20), new Dimension(5, 4));
-		// DECK_SIZES.put(new Range(21, 24), new Dimension(6, 4));
-		// DECK_SIZES.put(new Range(25, 25), new Dimension(5, 5));
-		// DECK_SIZES.put(new Range(31, 35), new Dimension(7, 5));
-		// DECK_SIZES.put(new Range(36, 36), new Dimension(6, 6));
-		// DECK_SIZES.put(new Range(37, 42), new Dimension(7, 6));
-		// DECK_SIZES.put(new Range(43, 48), new Dimension(7, 6));
-		// DECK_SIZES.put(new Range(0, 0), new Dimension(2, 2));
+		DECK_SIZES.put(new Range(13, 15), new Dimension(5, 3));
+		DECK_SIZES.put(new Range(26, 30), new Dimension(6, 5));
+		DECK_SIZES.put(new Range(1, 1), new Dimension(2, 2));
+		DECK_SIZES.put(new Range(2, 2), new Dimension(2, 2));
+		DECK_SIZES.put(new Range(3, 3), new Dimension(2, 2));
+		DECK_SIZES.put(new Range(4, 4), new Dimension(2, 2));
+		DECK_SIZES.put(new Range(5, 6), new Dimension(3, 2));
+		DECK_SIZES.put(new Range(7, 8), new Dimension(4, 2));
+		DECK_SIZES.put(new Range(9, 9), new Dimension(3, 3));
+		DECK_SIZES.put(new Range(10, 12), new Dimension(4, 3));
+		DECK_SIZES.put(new Range(16, 20), new Dimension(5, 4));
+		DECK_SIZES.put(new Range(21, 24), new Dimension(6, 4));
+		DECK_SIZES.put(new Range(25, 25), new Dimension(5, 5));
+		DECK_SIZES.put(new Range(31, 35), new Dimension(7, 5));
+		DECK_SIZES.put(new Range(36, 36), new Dimension(6, 6));
+		DECK_SIZES.put(new Range(37, 42), new Dimension(7, 6));
+		DECK_SIZES.put(new Range(43, 48), new Dimension(7, 6));
+		DECK_SIZES.put(new Range(0, 0), new Dimension(2, 2));
 	}
 
 	private static ArrayList<String> warnings;
