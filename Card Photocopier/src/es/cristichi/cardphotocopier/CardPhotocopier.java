@@ -294,7 +294,7 @@ public class CardPhotocopier {
 						"The configured pattern for the .ods document found no files. Pattern: \"" + patternName
 								+ "\"");
 			}
-			if (old.toInstant().plus(20, ChronoUnit.HOURS).isAfter(Instant.now())) {
+			if (old.toInstant().plus(20, ChronoUnit.HOURS).isBefore(Instant.now())) {
 				warnings.add("Document chosen from pattern: \"" + documentFile.getName() + "\". Last Modified: "
 						+ old.toString());
 			}
