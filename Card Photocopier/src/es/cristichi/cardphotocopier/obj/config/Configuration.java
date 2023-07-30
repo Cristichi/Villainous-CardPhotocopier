@@ -180,13 +180,13 @@ public class Configuration extends File implements Cloneable {
 	 * 
 	 */
 	public void readFromFile() throws ConfigValueNotParsed {
-		int cont = 0;
+//		int cont = 0;
 		try {
 			BufferedReader reader = new BufferedReader(new FileReader(this));
 			String line = null;
 //			System.out.println("line: "+(line==null?"null":line));
 			while ((line = reader.readLine()) != null) {
-				cont++;
+//				cont++;
 				line = line.trim();
 				if (!line.startsWith("#") && !line.trim().isEmpty()) {
 					StringTokenizer st = new StringTokenizer(line, ":");
