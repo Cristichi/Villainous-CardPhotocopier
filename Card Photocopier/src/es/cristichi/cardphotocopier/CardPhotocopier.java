@@ -21,6 +21,8 @@ import java.io.PrintWriter;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.attribute.FileTime;
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -292,8 +294,11 @@ public class CardPhotocopier {
 						"The configured pattern for the .ods document found no files. Pattern: \"" + patternName
 								+ "\"");
 			}
-			warnings.add("Document chosen from pattern: \"" + documentFile.getName() + "\". Last Modified: "
-					+ old.toString());
+			if (old.toInstant().plus(20, ChronoUnit.HOURS).isAfter(Instant.now())) {
+				warnings.add("Document chosen from pattern: \"" + documentFile.getName() + "\". Last Modified: "
+						+ old.toString());
+			}
+
 		} else {
 			documentFile = new File(config.getString(ConfigValue.CONFIG_DOC));
 		}
