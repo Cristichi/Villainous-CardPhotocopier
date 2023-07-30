@@ -19,10 +19,14 @@ import java.io.InputStream;
 import java.io.PrintStream;
 import java.io.PrintWriter;
 import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.attribute.FileTime;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.concurrent.Semaphore;
+import java.util.stream.Stream;
 
 import javax.imageio.IIOImage;
 import javax.imageio.ImageIO;
@@ -56,13 +60,15 @@ import es.cristichi.cardphotocopier.obj.config.Configuration;
  * @author Cristichi
  */
 public class CardPhotocopier {
-	private static String VERSION = "v2.5.5";
+	private static String VERSION = "v2.5.7";
 	private static String NAME = "Villainous Card Photocopier " + VERSION;
 
 	private static String CONFIG_TXT = "config.yml";
 	private static String DESCRIPTIONS_JSON = "CardPhotocopier descriptions.json";
 	private static String ERROR_LOG = "CardPhotocopier error.log";
 	private static String ERROR_DESC_LOG = "CardPhotocopier descriptions error.log";
+
+	private static String DOC_USE_PATTERN = "$";
 
 	// TODO: Making this configurable
 	private static Dimension CARD_SIZE = new Dimension(620, 880);
@@ -141,8 +147,9 @@ public class CardPhotocopier {
 			JLabel warningTitle = new JLabel("Process completed without errors but with some notes:");
 			warningTitle.setBorder(new EmptyBorder(2, 5, 2, 5));
 			window.add(warningTitle);
+			int index = 0;
 			for (String warning : warnings) {
-				JLabel lbl = new JLabel("<html>" + warning + "</html>");
+				JLabel lbl = new JLabel("<html>" + (++index) + ": " + warning + "</html>");
 				lbl.setBorder(new EmptyBorder(1, 5, 1, 5));
 				window.add(lbl);
 			}
@@ -230,7 +237,7 @@ public class CardPhotocopier {
 				configError = new ConfigValueNotFound(
 						"You need to specify the version of the Card Generator that you are using in order to determine the layout of the .ods file.");
 			}
-			
+
 			config.saveToFile();
 
 			if (configError != null) {
@@ -240,7 +247,56 @@ public class CardPhotocopier {
 
 		File imagesFolder = new File(config.getString(ConfigValue.CONFIG_CARD_IMAGES));
 		File resultsFolder = new File(config.getString(ConfigValue.CONFIG_RESULTS));
-		File documentFile = new File(config.getString(ConfigValue.CONFIG_DOC));
+
+		File documentFile = null;
+		String configDoc = config.getString(ConfigValue.CONFIG_DOC);
+		if (configDoc.startsWith(DOC_USE_PATTERN)) {
+			label.setText("Reading .ods document pattern.");
+			// Example of pattern:
+			// cardsInfoOds: >C:/Users/crist/Pictures/Cartas Custom/Villainous/Pirate/Gangplank/^Gangplank( \(\d+\))?.ods$
+
+			configDoc = configDoc.substring(DOC_USE_PATTERN.length());
+
+			String patternName = null;
+			File configParent = null;
+			if (configDoc.contains("/")) {
+				patternName = configDoc.substring(configDoc.lastIndexOf('/') + 1);
+				configParent = new File(configDoc.substring(0, configDoc.lastIndexOf('/')));
+			} else if (configDoc.contains("\\")) {
+				patternName = configDoc.substring(configDoc.lastIndexOf('\\') + 1);
+				configParent = new File(configDoc.substring(0, configDoc.lastIndexOf('\\')));
+			} else {
+				patternName = configDoc;
+				configParent = new File(".");
+			}
+			label.setText("Looking for .ods documents with the given pattern.");
+
+			FileTime old = null;
+			Stream<Path> list = Files.list(configParent.toPath());
+			for (Iterator<Path> iterator = list.iterator(); iterator.hasNext();) {
+				Path path = iterator.next();
+				File file = path.toFile();
+
+				if (file.getName().toString().matches(patternName)) {
+					FileTime newTime = Files.getLastModifiedTime(path);
+					if (old == null || old.compareTo(newTime) < 0) {
+						old = newTime;
+						documentFile = file;
+					}
+				}
+			}
+			list.close();
+
+			if (documentFile == null) {
+				throw new ConfigurationException(
+						"The configured pattern for the .ods document found no files. Pattern: \"" + patternName
+								+ "\"");
+			}
+			warnings.add("Document chosen from pattern: \"" + documentFile.getName() + "\". Last Modified: "
+					+ old.toString());
+		} else {
+			documentFile = new File(config.getString(ConfigValue.CONFIG_DOC));
+		}
 
 		if (!imagesFolder.exists()) {
 			window.setMinimumSize(new Dimension(800, 200));
