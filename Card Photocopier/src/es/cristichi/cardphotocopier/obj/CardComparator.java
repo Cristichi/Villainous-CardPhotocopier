@@ -25,7 +25,8 @@ public class CardComparator implements Comparator<CardInfo> {
 			return 1;
 		}
 
-		return o1.name.compareTo(o2.name);
+//		return o1.name.compareTo(o2.name);
+		return Integer.compare(o1.row, o2.row);
 	}
 
 }

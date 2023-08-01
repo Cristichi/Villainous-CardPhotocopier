@@ -62,7 +62,7 @@ import es.cristichi.cardphotocopier.obj.config.Configuration;
  * @author Cristichi
  */
 public class CardPhotocopier {
-	private static String VERSION = "v2.5.7";
+	private static String VERSION = "v2.6.0";
 	private static String NAME = "Villainous Card Photocopier " + VERSION;
 
 	private static String CONFIG_TXT = "config.yml";
@@ -440,6 +440,7 @@ public class CardPhotocopier {
 							ci.type = cellType.getTextValue();
 							ci.copies = Integer.parseInt(cellCopiesCount.getTextValue());
 							ci.desc = cellDescription.getTextValue();
+							ci.row = row;
 							label.setText("Saving " + ci.name + "'s image data and card information.");
 							// System.out.println("Loading .ods data for " + ci.name + ": x" + ci.copies + ".");
 
@@ -483,13 +484,14 @@ public class CardPhotocopier {
 				// here, it's Fate forcing time. This allows villains that need to generate Fate
 				// cards as Villain cards with a different layout to still tell my tool which
 				// cards are Fate. Read the Usage guide to know how.
-				if (cellCopiesCount.getTextValue().contains("- Fate -")) {
-					forceFate = true;
-					// System.out.println("Detected \"- Fate -\". Forcing fate from now on");
-				} else if (forceFate) {
-					forceFate = false;
-					// System.out.println("Interpreted as end of force Fate. No longer forcing fate");
-				}
+				// DEPRECATED
+//				if (cellCopiesCount.getTextValue().contains("- Fate -")) {
+//					forceFate = true;
+//					// System.out.println("Detected \"- Fate -\". Forcing fate from now on");
+//				} else if (forceFate) {
+//					forceFate = false;
+//					// System.out.println("Interpreted as end of force Fate. No longer forcing fate");
+//				}
 			}
 		}
 

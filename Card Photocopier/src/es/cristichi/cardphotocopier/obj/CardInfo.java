@@ -7,7 +7,10 @@ public class CardInfo {
 	public int copies;
 	public String name, type, desc, deck;
 	public BufferedImage imageData;
-	
+	/**
+	 * The row in the .ods file. Used to sort by .ods order.
+	 */
+	public int row;
 	
 	public CardInfo(BufferedImage imageData) {
 		this.imageData = imageData;
