@@ -1,4 +1,4 @@
-package es.cristichi.cardphotocopier.obj;
+package es.cristichi.cardphotocopier.obj.cards;
 
 import java.awt.image.BufferedImage;
 

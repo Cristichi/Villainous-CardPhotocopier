@@ -1,4 +1,4 @@
-package es.cristichi.cardphotocopier.obj;
+package es.cristichi.cardphotocopier.obj.cards;
 
 import java.util.Arrays;
 import java.util.Comparator;
@@ -10,7 +10,7 @@ public class CardComparator implements Comparator<CardInfo> {
 
 	public CardComparator(String... order) {
 		this.order = Arrays.asList(order);
-		System.out.println("Order chosen for the cards: "+this.order.toString());
+//		System.out.println("Order chosen for the cards: "+this.order.toString());
 	}
 
 	@Override
