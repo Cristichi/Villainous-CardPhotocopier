@@ -427,7 +427,7 @@ public class CardPhotocopier {
 							if (!cellExtraDeck.getTextValue().trim().equals("")) {
 								ci.deck = cellExtraDeck.getTextValue().trim();
 								if (extraDecks.containsKey(ci.deck)) {
-									extraDecks.get(ci.deck).addCount(1);
+									extraDecks.get(ci.deck).addCount(ci.copies);
 								} else {
 									extraDecks.put(ci.deck, new ExtraDeckInfo());
 								}
