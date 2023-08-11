@@ -8,7 +8,9 @@ import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 
 public class ExtraDeckInfo {
+	public static String EXTRA_DECK_NAME_LIMITER = "=";
 
+	private String deckFileName; 
 	private int count;
 	private Dimension grid;
 	private BufferedImage image;
@@ -19,6 +21,14 @@ public class ExtraDeckInfo {
 
 	public ExtraDeckInfo() {
 		count = 1;
+	}
+
+	public String getDeckFileName() {
+		return deckFileName;
+	}
+
+	public void setDeckFileName(String deckFileName) {
+		this.deckFileName = deckFileName;
 	}
 
 	public int getCount() {
