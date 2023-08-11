@@ -62,7 +62,7 @@ import es.cristichi.cardphotocopier.obj.config.Configuration;
  * @author Cristichi
  */
 public class CardPhotocopier {
-	private static String VERSION = "v2.7.2";
+	private static String VERSION = "v2.7.0";
 	private static String NAME = "Villainous Card Photocopier " + VERSION;
 
 	private static String CONFIG_TXT = "config.yml";
@@ -426,19 +426,10 @@ public class CardPhotocopier {
 							// We first check if the Extra Deck column is filled.
 							if (!cellExtraDeck.getTextValue().trim().equals("")) {
 								ci.deck = cellExtraDeck.getTextValue().trim();
-								String[] deckConfigTokens = ci.deck.split(ExtraDeckInfo.EXTRA_DECK_NAME_LIMITER);
-								if (deckConfigTokens.length==2) {
-									ci.deck = deckConfigTokens[0].trim();
-								}
 								if (extraDecks.containsKey(ci.deck)) {
 									extraDecks.get(ci.deck).addCount(ci.copies);
 								} else {
-									ExtraDeckInfo eDeck = new ExtraDeckInfo();
-									eDeck.setDeckFileName(ci.deck+" deck");
-									if (deckConfigTokens.length==2) {
-										eDeck.setDeckFileName(deckConfigTokens[1].trim());
-									}
-									extraDecks.put(ci.deck, eDeck);
+									extraDecks.put(ci.deck, new ExtraDeckInfo());
 								}
 								usefulCards.add(ci);
 							}
@@ -734,8 +725,7 @@ public class CardPhotocopier {
 				@Override
 				public void run() {
 					try {
-//						writeJpgImage(eDeck.getImage(), new File(resultsFolder, extraName + " deck.jpg"), quality);
-						writeJpgImage(eDeck.getImage(), new File(resultsFolder, eDeck.getDeckFileName()+".jpg"), quality);
+						writeJpgImage(eDeck.getImage(), new File(resultsFolder, extraName + " deck.jpg"), quality);
 					} catch (IOException e) {
 						e.printStackTrace();
 					}
