@@ -46,6 +46,7 @@ import org.json.simple.JSONObject;
 
 import es.cristichi.cardphotocopier.excep.ConfigValueNotFound;
 import es.cristichi.cardphotocopier.excep.ConfigurationException;
+import es.cristichi.cardphotocopier.excep.IllegalConfigValue;
 import es.cristichi.cardphotocopier.obj.Range;
 import es.cristichi.cardphotocopier.obj.ODS.Column;
 import es.cristichi.cardphotocopier.obj.ODS.Structure;
@@ -232,6 +233,16 @@ public class CardPhotocopier {
 						"You need to specify the version of the Card Generator that you are using in order to determine the layout of the .ods file.");
 			}
 
+			if (config.contains(ConfigValue.CONFIG_IMAGE_QUALITY)) {
+				float quality = config.getFloat(ConfigValue.CONFIG_IMAGE_QUALITY, .9f);
+				if (quality < 0 || quality > 1) {
+					configError = new IllegalConfigValue(
+							"The quality of the images must be between 0 (poorest quality) to 1 (best quality).");
+				}
+			} else {
+				config.setValue(ConfigValue.CONFIG_IMAGE_QUALITY, ConfigValue.CONFIG_IMAGE_QUALITY.getDefaultValue());
+			}
+
 			config.saveToFile();
 
 			if (configError != null) {
@@ -351,7 +362,7 @@ public class CardPhotocopier {
 				config.getInt(ConfigValue.CONFIG_VILLAIN_QUANTITY) + config.getInt(ConfigValue.CONFIG_FATE_QUANTITY));
 
 		HashMap<String, ExtraDeckInfo> extraDecks = new HashMap<>(6);
-		
+
 		int copiesToV = 0, copiesToF = 0;
 		int xV = 0, yV = 0;
 		int xF = 0, yF = 0;
@@ -433,13 +444,15 @@ public class CardPhotocopier {
 								}
 								usefulCards.add(ci);
 							}
-							//If it's not filled, we use the regular Deck column
+							// If it's not filled, we use the regular Deck column
 							if (ci.deck == null) {
-								if ((cellDeck.getTextValue().equals("Villain") || cellDeck.getTextValue().equals("0"))) {
+								if ((cellDeck.getTextValue().equals("Villain")
+										|| cellDeck.getTextValue().equals("0"))) {
 									ci.deck = "0";
 									copiesToV += ci.copies;
 									usefulCards.add(ci);
-								} else if (cellDeck.getTextValue().equals("Fate") || cellDeck.getTextValue().equals("1")) {
+								} else if (cellDeck.getTextValue().equals("Fate")
+										|| cellDeck.getTextValue().equals("1")) {
 									ci.deck = "1";
 									copiesToF += ci.copies;
 									usefulCards.add(ci);
@@ -604,7 +617,7 @@ public class CardPhotocopier {
 						eDeck.getJsonObject().put("cards", eDeck.getJsonArrayCards());
 						eDeck.getJsonObject().put("count", eDeck.getCount());
 						extraDecks.put(extraDeckName, eDeck);
-						
+
 						jsonT.put(extraDeckName, eDeck.getJsonObject());
 					}
 
@@ -655,7 +668,7 @@ public class CardPhotocopier {
 						xF = 0;
 						yF += CARD_SIZE.height;
 					}
-				} else if (extraDecks.containsKey(ci.deck)){
+				} else if (extraDecks.containsKey(ci.deck)) {
 					ExtraDeckInfo eDeck = extraDecks.get(ci.deck);
 					eDeck.getGraphics().drawImage(ci.imageData, eDeck.getX(), eDeck.getY(), null);
 					eDeck.addX(CARD_SIZE.width);
@@ -700,8 +713,9 @@ public class CardPhotocopier {
 			public void run() {
 				try {
 					writeJpgImage(resultImageV, fileVillainDeck, quality);
-				} catch (IOException e) {
+				} catch (Exception e) {
 					e.printStackTrace();
+					warnings.add("Error when writing file " + fileVillainDeck.getName() + ": " + e.getMessage());
 				}
 				semWrite.release();
 			}
@@ -712,8 +726,9 @@ public class CardPhotocopier {
 			public void run() {
 				try {
 					writeJpgImage(resultImageF, fileFateDeck, quality);
-				} catch (IOException e) {
+				} catch (Exception e) {
 					e.printStackTrace();
+					warnings.add("Error when writing file " + fileFateDeck.getName() + ": " + e.getMessage());
 				}
 				semWrite.release();
 			}
@@ -726,8 +741,9 @@ public class CardPhotocopier {
 				public void run() {
 					try {
 						writeJpgImage(eDeck.getImage(), new File(resultsFolder, extraName + ".jpg"), quality);
-					} catch (IOException e) {
+					} catch (Exception e) {
 						e.printStackTrace();
+						warnings.add("Error when writing file " + extraName + ".jpg: " + e.getMessage());
 					}
 					semWrite.release();
 				}
@@ -750,7 +766,8 @@ public class CardPhotocopier {
 	 *                    any value in between.
 	 * @throws IOException
 	 */
-	private static void writeJpgImage(BufferedImage resultImage, File deckFile, float quality) throws IOException {
+	private static void writeJpgImage(BufferedImage resultImage, File deckFile, float quality)
+			throws IOException, IllegalArgumentException {
 		try (ImageOutputStream ios = ImageIO.createImageOutputStream(deckFile)) {
 			ImageWriter jpgWriter = ImageIO.getImageWritersByFormatName("JPEG").next();
 
@@ -762,6 +779,8 @@ public class CardPhotocopier {
 
 			jpgWriter.write(null, new IIOImage(resultImage, null, null), jpgWriteParam);
 			jpgWriter.dispose();
+		} catch (IllegalArgumentException exception) {
+			throw exception;
 		}
 	}
 
@@ -787,7 +806,7 @@ public class CardPhotocopier {
 		// If the number of cards is quite wild, then I found an algorithm on the Internet
 		// that might have been able to sort this problem out and calculate the optimal
 		// dimensions, but it didn't work. So It just throws an error now. Sorry!
-		throw new ConfigurationException(
-				"The number of copies (" + quantity + ") is not supported. Ask Cristichi to add support to it, pronto!");
+		throw new ConfigurationException("The number of copies (" + quantity
+				+ ") is not supported. Ask Cristichi to add support to it, pronto!");
 	}
 }
