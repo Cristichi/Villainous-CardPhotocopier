@@ -62,7 +62,7 @@ import es.cristichi.cardphotocopier.obj.config.Configuration;
  * @author Cristichi
  */
 public class CardPhotocopier {
-	private static String VERSION = "v2.7.0";
+	private static String VERSION = "v2.7.3";
 	private static String NAME = "Villainous Card Photocopier " + VERSION;
 
 	private static String CONFIG_TXT = "config.yml";
@@ -725,7 +725,7 @@ public class CardPhotocopier {
 				@Override
 				public void run() {
 					try {
-						writeJpgImage(eDeck.getImage(), new File(resultsFolder, extraName + " deck.jpg"), quality);
+						writeJpgImage(eDeck.getImage(), new File(resultsFolder, extraName + ".jpg"), quality);
 					} catch (IOException e) {
 						e.printStackTrace();
 					}
