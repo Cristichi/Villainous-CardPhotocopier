@@ -1,8 +1,12 @@
 package es.cristichi;
 
 import java.awt.Dimension;
+import java.awt.Font;
+import java.awt.FontFormatException;
+import java.awt.GraphicsEnvironment;
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.io.PrintStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -44,7 +48,19 @@ public class CristichiVillainousMain {
 	public static Dimension CARD_SIZE = new Dimension(1440, 2044);
 
 	public static void main(String[] args) {
+
+		try {
+		     GraphicsEnvironment ge = 
+		         GraphicsEnvironment.getLocalGraphicsEnvironment();
+		     ge.registerFont(Font.createFont(Font.TRUETYPE_FONT, new File("lib/Esteban.ttf")));
+		     ge.registerFont(Font.createFont(Font.TRUETYPE_FONT, new File("lib/Cabin.ttf")));
+		} catch (IOException|FontFormatException e) {
+		     //Handle exception
+			e.printStackTrace();
+		}
+		
 		CristichiVillainousMain cvm = new CristichiVillainousMain();
+		
 		try {
 			cvm.start();
 		} catch (Exception e) {

@@ -3,8 +3,10 @@ package es.cristichi.card_generator;
 import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Font;
+import java.awt.FontFormatException;
 import java.awt.FontMetrics;
 import java.awt.Graphics2D;
+import java.awt.GraphicsEnvironment;
 import java.awt.Rectangle;
 import java.awt.font.TextAttribute;
 import java.awt.image.BufferedImage;
@@ -43,19 +45,15 @@ public class CardGenerator {
 
 	static {
 		Map<TextAttribute, Object> fontTextAtts = new HashMap<>();
-
 		fontTextAtts.put(TextAttribute.FAMILY, "Cabin");
 		fontTextAtts.put(TextAttribute.WEIGHT, TextAttribute.WEIGHT_MEDIUM);
 		fontTextAtts.put(TextAttribute.SIZE, 85);
-
 		CARD_TEXT_MAX = new Font(fontTextAtts);
 
 		Map<TextAttribute, Object> fontCornerAtts = new HashMap<>();
-
 		fontCornerAtts.put(TextAttribute.FAMILY, "Cabin");
 		fontCornerAtts.put(TextAttribute.WEIGHT, TextAttribute.WEIGHT_SEMIBOLD);
 		fontCornerAtts.put(TextAttribute.SIZE, 120);
-
 		CARD_CORNER_VALUES = new Font(fontCornerAtts);
 	}
 	
@@ -125,15 +123,20 @@ public class CardGenerator {
 		try {
 			BufferedImage art = DeckTemplate.getArtFile(artFolder, card.name);
 			baseG.drawImage(art, 0, 0, ART_SIZE.width, ART_SIZE.height, null);
-		} catch (Exception e) {
+		} catch (FileNotFoundException e) {
 			e.printStackTrace();
 			warnings.add("Error finding the art for "+card.name);
+		} catch (Exception e) {
+			e.printStackTrace();
+			warnings.add("Error reading the art for "+card.name);
 		}
 
 		BufferedImage deck = DeckTemplate.getTemplateFile(templatesFolder, TemplateType.DECK, card.deck);
 		baseG.drawImage(deck, 0, 0, base.getWidth(), base.getHeight(), null);
 		
 		drawCenteredString(baseG, card.name, NAME_COORDS, CARD_NAME_FONT);
+		
+		drawCenteredString(baseG, card.ability, TEXT_COORDS, CARD_TEXT_MAX);
 
 		baseG.dispose();
 
