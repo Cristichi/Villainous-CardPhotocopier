@@ -1,11 +1,11 @@
-package es.cristichi.obj;
+package es.cristichi.cardphotocopier.obj.cards;
 
 import java.awt.image.BufferedImage;
 
 public class CardInfo {
 	
 	public int copies;
-	public String name, type, desc, deck, cost, strength, ability, activateAbility, activateCost, topRight, bottomLeft, action, credits;
+	public String name, type, desc, deck;
 	public BufferedImage imageData;
 	/**
 	 * The row in the .ods file. Used to sort by .ods order.

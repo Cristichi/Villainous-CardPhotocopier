@@ -1,4 +1,4 @@
-package es.cristichi.obj;
+package es.cristichi.cardphotocopier.obj.cards;
 
 import java.util.Arrays;
 import java.util.Comparator;

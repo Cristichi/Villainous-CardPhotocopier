@@ -1,4 +1,4 @@
-package es.cristichi.obj.config;
+package es.cristichi.cardphotocopier.obj.config;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
@@ -13,8 +13,8 @@ import java.util.LinkedHashMap;
 import java.util.Set;
 import java.util.StringTokenizer;
 
-import es.cristichi.exceptions.ConfigValueNotFound;
-import es.cristichi.exceptions.ConfigValueNotParsed;
+import es.cristichi.cardphotocopier.excep.ConfigValueNotFound;
+import es.cristichi.cardphotocopier.excep.ConfigValueNotParsed;
 
 public class Configuration extends File implements Cloneable {
 	private static final long serialVersionUID = 115L;

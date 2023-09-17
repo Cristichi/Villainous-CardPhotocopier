@@ -1,4 +1,4 @@
-package es.cristichi.obj.config;
+package es.cristichi.cardphotocopier.obj.config;
 
 import java.util.Comparator;
 

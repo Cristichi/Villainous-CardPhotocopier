@@ -1,20 +1,42 @@
-package es.cristichi.card_photocopier;
+package es.cristichi.cardphotocopier;
 
+import java.awt.Desktop;
 import java.awt.Dimension;
 import java.awt.Graphics;
+import java.awt.GridLayout;
 import java.awt.Toolkit;
 import java.awt.datatransfer.Clipboard;
 import java.awt.datatransfer.StringSelection;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
 import java.awt.image.BufferedImage;
+import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FilenameFilter;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.PrintStream;
 import java.io.PrintWriter;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.attribute.FileTime;
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.concurrent.Semaphore;
+import java.util.stream.Stream;
+
+import javax.imageio.IIOImage;
+import javax.imageio.ImageIO;
+import javax.imageio.ImageWriteParam;
+import javax.imageio.ImageWriter;
+import javax.imageio.stream.ImageOutputStream;
+import javax.swing.JFrame;
+import javax.swing.JLabel;
+import javax.swing.border.EmptyBorder;
 
 import org.jopendocument.dom.spreadsheet.Cell;
 import org.jopendocument.dom.spreadsheet.Sheet;
@@ -22,17 +44,17 @@ import org.jopendocument.dom.spreadsheet.SpreadSheet;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 
-import es.cristichi.MainInfoFrame;
-import es.cristichi.card_photocopier.obj.Range;
-import es.cristichi.card_photocopier.obj.ODS.Column;
-import es.cristichi.card_photocopier.obj.ODS.OdsStructure;
-import es.cristichi.exceptions.ConfigurationException;
-import es.cristichi.obj.CardComparator;
-import es.cristichi.obj.CardInfo;
-import es.cristichi.obj.ExtraDeckInfo;
-import es.cristichi.obj.Util;
-import es.cristichi.obj.config.ConfigValue;
-import es.cristichi.obj.config.Configuration;
+import es.cristichi.cardphotocopier.excep.ConfigValueNotFound;
+import es.cristichi.cardphotocopier.excep.ConfigurationException;
+import es.cristichi.cardphotocopier.excep.IllegalConfigValue;
+import es.cristichi.cardphotocopier.obj.Range;
+import es.cristichi.cardphotocopier.obj.ODS.Column;
+import es.cristichi.cardphotocopier.obj.ODS.Structure;
+import es.cristichi.cardphotocopier.obj.cards.CardComparator;
+import es.cristichi.cardphotocopier.obj.cards.CardInfo;
+import es.cristichi.cardphotocopier.obj.cards.ExtraDeckInfo;
+import es.cristichi.cardphotocopier.obj.config.ConfigValue;
+import es.cristichi.cardphotocopier.obj.config.Configuration;
 
 /**
  * Feel free to modify the code for yourself and/or propose modifications and
@@ -41,8 +63,16 @@ import es.cristichi.obj.config.Configuration;
  * @author Cristichi
  */
 public class CardPhotocopier {
+	private static String VERSION = "v2.7.3";
+	private static String NAME = "Villainous Card Photocopier " + VERSION;
+
+	private static String CONFIG_TXT = "config.yml";
 	private static String DESCRIPTIONS_JSON = "CardPhotocopier descriptions.json";
+	private static String ERROR_LOG = "CardPhotocopier error.log";
 	private static String ERROR_DESC_LOG = "CardPhotocopier descriptions error.log";
+
+	private static String DOC_USE_PATTERN = "$";
+
 	// TODO: Making this configurable
 	private static Dimension CARD_SIZE = new Dimension(620, 880);
 	private static HashMap<Range, Dimension> DECK_SIZES;
@@ -68,12 +98,239 @@ public class CardPhotocopier {
 		DECK_SIZES.put(new Range(0, 0), new Dimension(2, 2));
 	}
 
-	public CardPhotocopier() {
+	private static ArrayList<String> warnings;
+
+	private static JFrame window;
+	private static JLabel label;
+
+	public static void main(String[] args) {
+		warnings = new ArrayList<>(10);
+		try {
+			// We first create a new window so we can tell the user how things are going.
+			window = new JFrame(NAME);
+			window.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+			label = new JLabel("Starting");
+			label.setHorizontalAlignment(JLabel.CENTER);
+			label.setBorder(new EmptyBorder(1, 5, 1, 5));
+			window.add(label);
+			window.setMinimumSize(new Dimension(500, 200));
+			window.setMaximumSize(new Dimension(800, 500));
+			window.setPreferredSize(new Dimension(500, 200));
+			window.setLocationRelativeTo(null);
+			window.setAlwaysOnTop(true);
+			window.setVisible(true);
+			generate();
+			label.setText("Done. Close this window to finish.");
+		} catch (Exception e) {
+			// If anything happens that makes the proccess unable to continue (things are
+			// missing, wrong values in the .ods file, etc) then we just stop and tell
+			// the user what happened. We also print in the console and a file just in case.
+			System.err.println("Ended badly with error. Sadge.");
+			e.printStackTrace();
+			label.setText("<html>" + e.getLocalizedMessage() + "</html>");
+			window.setLocationRelativeTo(null);
+			try {
+				PrintStream ps = new PrintStream(ERROR_LOG);
+				ps.println("Error in version " + VERSION);
+				e.printStackTrace(ps);
+			} catch (FileNotFoundException e1) {
+				e1.printStackTrace();
+				label.setText("<html><div>" + e.getLocalizedMessage()
+						+ "</div><div style=\"margin-top: 5px;\">An error occurred that prevented the error log to be created to a log file. "
+						+ "Please screenshot the error now and save it if you need further assistance from Cristichi#5193.</div></html>");
+			}
+		}
+		// After we are done, no matter if there was an error or not, we are going to
+		// show any item in "warnings" so the user can fix whatever weird thing we found
+		// (cards missing information, too many copies or not enough, etc)
+		if (warnings.size() > 0) {
+			window.remove(label);
+			window.setLayout(new GridLayout(warnings.size() + 1, 1));
+			JLabel warningTitle = new JLabel("Process completed without errors but with some notes:");
+			warningTitle.setBorder(new EmptyBorder(2, 5, 2, 5));
+			window.add(warningTitle);
+			int index = 0;
+			for (String warning : warnings) {
+				JLabel lbl = new JLabel("<html>" + (++index) + ": " + warning + "</html>");
+				lbl.setBorder(new EmptyBorder(1, 5, 1, 5));
+				window.add(lbl);
+			}
+			window.setLocationRelativeTo(null);
+		}
 	}
 
-	public ArrayList<String> generate(Configuration config, MainInfoFrame frame, File openDocumentFile, File imagesFolder, File resultsFolder, OdsStructure odsStructure, Sheet sheet) throws Exception {
-		ArrayList<String> warnings = new ArrayList<>(3);
-		frame.replaceText("Reading card data from " + openDocumentFile.getName() + ".");
+	public static void generate() throws Exception {
+		label.setText("Reading config file.");
+
+		Configuration config = new Configuration(CONFIG_TXT,
+				NAME + " configuration.\n For help, contact Cristichi#5193 on Discord.");
+		if (!config.exists()) {
+			for (ConfigValue cValue : ConfigValue.values()) {
+				config.setValueAndInfo(cValue, cValue.getDefaultValue());
+			}
+
+			config.saveToFile();
+
+			window.setMinimumSize(new Dimension(800, 200));
+			window.setLocationRelativeTo(null);
+			window.addWindowListener(new WindowAdapter() {
+				@Override
+				public void windowClosing(WindowEvent windowEvent) {
+					super.windowClosing(windowEvent);
+					if (Desktop.isDesktopSupported()) {
+						Desktop desktop = Desktop.getDesktop();
+						try {
+							desktop.open(config.getParentFile());
+						} catch (Exception exception) {
+							exception.printStackTrace();
+						}
+					}
+				}
+			});
+			label.setText("Configuration file (" + CONFIG_TXT
+					+ ") not found. We generated one for you, please close this window and edit it accordingly.");
+			throw new FileNotFoundException("Configuration file (" + CONFIG_TXT
+					+ ") not found. We generated one for you, please close this window and edit it accordingly.");
+		} else {
+			Exception configError = null;
+
+			for (ConfigValue cValue : ConfigValue.values()) {
+				config.setValueAndInfo(cValue, cValue.getDefaultValue());
+			}
+
+			config.readFromFile();
+
+			if (!config.contains(ConfigValue.CONFIG_EMPTY_ROWS_TO_END)) {
+				config.setValue(ConfigValue.CONFIG_EMPTY_ROWS_TO_END,
+						ConfigValue.CONFIG_EMPTY_ROWS_TO_END.getDefaultValue());
+			}
+
+			if (!config.contains(ConfigValue.CONFIG_TYPE_ORDER)) {
+				config.setValue(ConfigValue.CONFIG_TYPE_ORDER, ConfigValue.CONFIG_TYPE_ORDER.getDefaultValue());
+			}
+
+			if (!config.contains(ConfigValue.CONFIG_TYPE_IN_JSON)) {
+				config.setValue(ConfigValue.CONFIG_TYPE_IN_JSON, ConfigValue.CONFIG_TYPE_IN_JSON.getDefaultValue());
+			}
+
+			if (!config.contains(ConfigValue.CONFIG_JSON_NUM_COPIES)) {
+				config.setValue(ConfigValue.CONFIG_JSON_NUM_COPIES,
+						ConfigValue.CONFIG_JSON_NUM_COPIES.getDefaultValue());
+			}
+
+			if (!config.contains(ConfigValue.CONFIG_COPY_JSON)) {
+				config.setValue(ConfigValue.CONFIG_COPY_JSON, ConfigValue.CONFIG_COPY_JSON.getDefaultValue());
+			}
+
+			if (!config.contains(ConfigValue.CONFIG_IMAGE_QUALITY)) {
+				config.setValue(ConfigValue.CONFIG_IMAGE_QUALITY, ConfigValue.CONFIG_IMAGE_QUALITY.getDefaultValue());
+			}
+
+			if (!config.contains(ConfigValue.CONFIG_GENERATOR_VERSION)) {
+				config.setValue(ConfigValue.CONFIG_GENERATOR_VERSION,
+						ConfigValue.CONFIG_GENERATOR_VERSION.getDefaultValue());
+				configError = new ConfigValueNotFound(
+						"You need to specify the version of the Card Generator that you are using in order to determine the layout of the .ods file.");
+			}
+
+			if (config.contains(ConfigValue.CONFIG_IMAGE_QUALITY)) {
+				float quality = config.getFloat(ConfigValue.CONFIG_IMAGE_QUALITY, .9f);
+				if (quality < 0 || quality > 1) {
+					configError = new IllegalConfigValue(
+							"The quality of the images must be between 0 (poorest quality) to 1 (best quality).");
+				}
+			} else {
+				config.setValue(ConfigValue.CONFIG_IMAGE_QUALITY, ConfigValue.CONFIG_IMAGE_QUALITY.getDefaultValue());
+			}
+
+			config.saveToFile();
+
+			if (configError != null) {
+				throw configError;
+			}
+		}
+
+		File imagesFolder = new File(config.getString(ConfigValue.CONFIG_CARD_IMAGES));
+		File resultsFolder = new File(config.getString(ConfigValue.CONFIG_RESULTS));
+
+		File documentFile = null;
+		String configDoc = config.getString(ConfigValue.CONFIG_DOC);
+		if (configDoc.startsWith(DOC_USE_PATTERN)) {
+			label.setText("Reading .ods document pattern.");
+			// Example of pattern:
+			// cardsInfoOds: >C:/Users/(Windows User)/Villainous/Villain/^Villain( \(\d+\))?.ods$
+			// This takes files like "Villain.ods"m "Villain (1).ods", "Villain (516).ods", etc
+
+			configDoc = configDoc.substring(DOC_USE_PATTERN.length());
+
+			String patternName = null;
+			File configParent = null;
+			if (configDoc.contains("/")) {
+				patternName = configDoc.substring(configDoc.lastIndexOf('/') + 1);
+				configParent = new File(configDoc.substring(0, configDoc.lastIndexOf('/')));
+			} else if (configDoc.contains("\\")) {
+				patternName = configDoc.substring(configDoc.lastIndexOf('\\') + 1);
+				configParent = new File(configDoc.substring(0, configDoc.lastIndexOf('\\')));
+			} else {
+				patternName = configDoc;
+				configParent = new File(".");
+			}
+			label.setText("Looking for .ods documents with the given pattern.");
+
+			FileTime old = null;
+			Stream<Path> list = Files.list(configParent.toPath());
+			for (Iterator<Path> iterator = list.iterator(); iterator.hasNext();) {
+				Path path = iterator.next();
+				File file = path.toFile();
+
+				if (file.getName().toString().matches(patternName)) {
+					FileTime newTime = Files.getLastModifiedTime(path);
+					if (old == null || old.compareTo(newTime) < 0) {
+						old = newTime;
+						documentFile = file;
+					}
+				}
+			}
+			list.close();
+
+			if (documentFile == null) {
+				throw new ConfigurationException(
+						"The configured pattern for the .ods document found no files. Pattern: \"" + patternName
+								+ "\"");
+			}
+			if (old.toInstant().plus(20, ChronoUnit.HOURS).isBefore(Instant.now())) {
+				warnings.add("Document chosen from pattern: \"" + documentFile.getName() + "\". Last Modified: "
+						+ old.toString());
+			}
+
+		} else {
+			documentFile = new File(config.getString(ConfigValue.CONFIG_DOC));
+		}
+
+		if (!imagesFolder.exists()) {
+			window.setMinimumSize(new Dimension(800, 200));
+			window.setLocationRelativeTo(null);
+			label.setText("The folder where the already existing images for the cards are supposed to be ("
+					+ imagesFolder.getAbsolutePath() + ") was not found. We need that one.");
+			throw new FileNotFoundException(
+					"The folder where the already existing images for the cards are supposed to be ("
+							+ imagesFolder.getAbsolutePath() + ") was not found. Please edit the config file.");
+		}
+		if (!documentFile.exists()) {
+			window.setMinimumSize(new Dimension(800, 200));
+			window.setLocationRelativeTo(null);
+			label.setText("The .ods document with the information for each card (" + documentFile.getAbsolutePath()
+					+ ") was not found. We need that one.");
+			throw new FileNotFoundException("The .ods document with the information for each card ("
+					+ documentFile.getAbsolutePath() + ") was not found. Please edit the config file.");
+		}
+
+		Structure odsStructure = new Structure(config.getDouble(ConfigValue.CONFIG_GENERATOR_VERSION));
+
+		label.setText("Reading card data from " + documentFile.getName() + ".");
+
+		SpreadSheet sheetDoc = SpreadSheet.createFromFile(documentFile);
+		Sheet sheet = sheetDoc.getFirstSheet();
 
 		// First we read every .png, .jpg and .jpeg file.
 		HashMap<String, CardInfo> cardsInfo = new HashMap<>(60);
@@ -90,8 +347,8 @@ public class CardPhotocopier {
 			String name = cardFile.getName().substring(0,
 					cardFile.getName().length() - (cardFile.getName().endsWith(".jpeg") ? 5 : 4));
 			if (!name.isEmpty()) {
-				frame.replaceText("Loading " + name + "'s image data from the images folder.");
-				CardInfo info = new CardInfo(Util.load(cardFile));
+				label.setText("Loading " + name + "'s image data from the images folder.");
+				CardInfo info = new CardInfo(load(cardFile));
 				if (info.imageData == null) {
 					System.err.println("Image " + cardFile + " could not be loaded.");
 					warnings.add("Image \"" + cardFile.getName() + "\" could not be loaded.");
@@ -175,7 +432,7 @@ public class CardPhotocopier {
 							ci.copies = Integer.parseInt(cellCopiesCount.getTextValue());
 							ci.desc = cellDescription.getTextValue();
 							ci.row = row;
-							frame.replaceText("Saving " + ci.name + "'s image data and card information.");
+							label.setText("Saving " + ci.name + "'s image data and card information.");
 
 							// We first check if the Extra Deck column is filled.
 							if (!cellExtraDeck.getTextValue().trim().equals("")) {
@@ -215,7 +472,7 @@ public class CardPhotocopier {
 
 		cardsInfo.clear();
 
-		frame.replaceText("Checking deck sizes.");
+		label.setText("Checking deck sizes.");
 
 		int villainExpectedSize = config.getInt(ConfigValue.CONFIG_VILLAIN_QUANTITY);
 		int fateExpectedSize = config.getInt(ConfigValue.CONFIG_FATE_QUANTITY);
@@ -232,7 +489,7 @@ public class CardPhotocopier {
 			throw new IllegalArgumentException("Your Fate deck has 0 cards! Check it please.");
 		}
 
-		frame.replaceText("Calculating final images' dimensions.");
+		label.setText("Calculating final images' dimensions.");
 
 		// We get the proper dimensions for the final image, depending on the number of cards.
 		Dimension gridV = getGrid(copiesToV);
@@ -254,7 +511,7 @@ public class CardPhotocopier {
 			extraDecks.put(extraDeckName, eDeck);
 		}
 
-		frame.replaceText("Reordering cards");
+		label.setText("Reordering cards");
 
 		// We are going to read the order the user wants and sort the cards by that order.
 		String order = config.getString(ConfigValue.CONFIG_TYPE_ORDER, "ignore type");
@@ -394,7 +651,7 @@ public class CardPhotocopier {
 		// It's time to print the images of every card!
 		// But not to a file. First we draw only in the RAM.
 		for (CardInfo ci : usefulCards) {
-			frame.replaceText("Photocopying " + ci.name + ".");
+			label.setText("Photocopying " + ci.name + ".");
 
 			for (int i = 0; i < ci.copies; i++) {
 				if (ci.deck.equals("0")) {
@@ -424,7 +681,7 @@ public class CardPhotocopier {
 			}
 		}
 
-		frame.replaceText("Removing Herobrine.");
+		label.setText("Removing Herobrine.");
 
 		// If the number of copies is not the expected, we notify the user in case they forgot to save their .ods after some changes.
 		if (copiesToV != villainExpectedSize) {
@@ -445,9 +702,9 @@ public class CardPhotocopier {
 		File fileVillainDeck = new File(resultsFolder, config.getString(ConfigValue.CONFIG_VILLAIN_NAME) + ".jpg");
 		File fileFateDeck = new File(resultsFolder, config.getString(ConfigValue.CONFIG_FATE_NAME) + ".jpg");
 
-		float quality = config.getFloat(ConfigValue.CONFIG_RESULTS_QUALITY, 0.9f);
+		float quality = config.getFloat(ConfigValue.CONFIG_IMAGE_QUALITY, 0.9f);
 
-		frame.replaceText("Writing the images for TTS decks.");
+		label.setText("Writing the images for TTS decks.");
 
 		// Big chad compressed writing to file.
 		Semaphore semWrite = new Semaphore(-1 - extraDecks.size());
@@ -455,7 +712,7 @@ public class CardPhotocopier {
 			@Override
 			public void run() {
 				try {
-					Util.writeJpgImage(resultImageV, fileVillainDeck, quality);
+					writeJpgImage(resultImageV, fileVillainDeck, quality);
 				} catch (Exception e) {
 					e.printStackTrace();
 					warnings.add("Error when writing file " + fileVillainDeck.getName() + ": " + e.getMessage());
@@ -468,7 +725,7 @@ public class CardPhotocopier {
 			@Override
 			public void run() {
 				try {
-					Util.writeJpgImage(resultImageF, fileFateDeck, quality);
+					writeJpgImage(resultImageF, fileFateDeck, quality);
 				} catch (Exception e) {
 					e.printStackTrace();
 					warnings.add("Error when writing file " + fileFateDeck.getName() + ": " + e.getMessage());
@@ -483,7 +740,7 @@ public class CardPhotocopier {
 				@Override
 				public void run() {
 					try {
-						Util.writeJpgImage(eDeck.getImage(), new File(resultsFolder, extraName + ".jpg"), quality);
+						writeJpgImage(eDeck.getImage(), new File(resultsFolder, extraName + ".jpg"), quality);
 					} catch (Exception e) {
 						e.printStackTrace();
 						warnings.add("Error when writing file " + extraName + ".jpg: " + e.getMessage());
@@ -496,7 +753,42 @@ public class CardPhotocopier {
 		semWrite.acquire();
 		semDesc.acquire();
 
-		return warnings;
+		if (warnings.isEmpty()) {
+			window.dispose();
+		}
+	}
+
+	/**
+	 * 
+	 * @param resultImage A BufferedImage containing the image data.
+	 * @param deckFile    A File, existing or not, to save the data to.
+	 * @param quality     0 for priorizing compression, 1 for priorizing quality, or
+	 *                    any value in between.
+	 * @throws IOException
+	 */
+	private static void writeJpgImage(BufferedImage resultImage, File deckFile, float quality)
+			throws IOException, IllegalArgumentException {
+		try (ImageOutputStream ios = ImageIO.createImageOutputStream(deckFile)) {
+			ImageWriter jpgWriter = ImageIO.getImageWritersByFormatName("JPEG").next();
+
+			ImageWriteParam jpgWriteParam = jpgWriter.getDefaultWriteParam();
+			jpgWriteParam.setCompressionMode(ImageWriteParam.MODE_EXPLICIT);
+			jpgWriteParam.setCompressionQuality(quality);
+
+			jpgWriter.setOutput(ios);
+
+			jpgWriter.write(null, new IIOImage(resultImage, null, null), jpgWriteParam);
+			jpgWriter.dispose();
+		} catch (IllegalArgumentException exception) {
+			throw exception;
+		}
+	}
+
+	private static BufferedImage load(File f) throws IOException {
+		byte[] bytes = Files.readAllBytes(f.toPath());
+		try (InputStream is = new ByteArrayInputStream(bytes)) {
+			return ImageIO.read(is);
+		}
 	}
 
 	// It calculates the optimal dimensions of the file, measured in number of cards

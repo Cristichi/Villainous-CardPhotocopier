@@ -1,4 +1,4 @@
-package es.cristichi.exceptions;
+package es.cristichi.cardphotocopier.excep;
 
 public class ConfigurationException extends Exception{
 	private static final long serialVersionUID = 1L;
