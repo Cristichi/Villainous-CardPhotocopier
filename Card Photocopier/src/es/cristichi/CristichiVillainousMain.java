@@ -37,7 +37,7 @@ import es.cristichi.obj.config.Configuration;
 
 public class CristichiVillainousMain {
 
-	private static String VERSION = "v3 BETA 1.2.0";
+	private static String VERSION = "v3 BETA 1.3.0";
 	private static String NAME = "Villainous Card Photocopier " + VERSION;
 
 	private static String CONFIG_FILE = "config.yml";

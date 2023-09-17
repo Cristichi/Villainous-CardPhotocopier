@@ -161,12 +161,12 @@ public class CardGenerator {
 	    int lineHeight = metrics.getHeight();
 	    for (String line : text.split("\n")) {
 		    // Determine the X coordinate for the text
-		    int x = textBox.x + (textBox.width - metrics.stringWidth(text)) / 2;
+		    int x = textBox.x + (textBox.width - metrics.stringWidth(line)) / 2;
 		    // Determine the Y coordinate for the text (note we add the ascent, as in java 2d 0 is top of the screen)
 		    int y = textBox.y + ((textBox.height - metrics.getHeight()) / 2) + metrics.getAscent();
 		    // Set the font
 		    // Draw the String
-		    g.drawString(text, x, y);
+		    g.drawString(line, x, y);
 		    
 		    y += lineHeight;
 	    }
