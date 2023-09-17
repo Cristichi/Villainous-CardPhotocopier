@@ -1,4 +1,4 @@
-package es.cristichi.cardphotocopier.obj;
+package es.cristichi.card_photocopier.obj;
 
 public class Range {
 	public int low, high;

@@ -1,21 +1,21 @@
-package es.cristichi.cardphotocopier.obj.ODS;
+package es.cristichi.card_photocopier.obj.ODS;
 
 import java.util.HashMap;
 
-public class Structure extends HashMap<Column, String> {
+public class OdsStructure extends HashMap<Column, String> {
 
 	private static final long serialVersionUID = -1675080188225802319L;
 
-	public Structure(double version) {
+	public OdsStructure(double version) {
 		if (version < 35) {
 			// Old .ods format
 			super.put(Column.COPIES_COUNT, "A");
 			super.put(Column.NAME, "B");
 			super.put(Column.COST, "C");
 			super.put(Column.STRENGTH, "D");
-			super.put(Column.EFFECT, "E");
+			super.put(Column.ABILITY, "E");
 			super.put(Column.TYPE, "F");
-			super.put(Column.ACTIVATE_EFFECT, "G");
+			super.put(Column.ACTIVATE_ABILITY, "G");
 			super.put(Column.ACTIVATE_COST, "H");
 			super.put(Column.TOP_RIGHT, "I");
 			super.put(Column.BOTTOM_RIGHT, "J");
@@ -31,9 +31,9 @@ public class Structure extends HashMap<Column, String> {
 			super.put(Column.NAME, "B");
 			super.put(Column.COST, "C");
 			super.put(Column.STRENGTH, "D");
-			super.put(Column.EFFECT, "E");
+			super.put(Column.ABILITY, "E");
 			super.put(Column.TYPE, "F");
-			super.put(Column.ACTIVATE_EFFECT, "G");
+			super.put(Column.ACTIVATE_ABILITY, "G");
 			super.put(Column.ACTIVATE_COST, "H");
 			super.put(Column.TOP_RIGHT, "I");
 			super.put(Column.BOTTOM_RIGHT, "J");

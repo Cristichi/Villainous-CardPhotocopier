@@ -1,4 +1,4 @@
-package es.cristichi.cardphotocopier.obj.cards;
+package es.cristichi.obj;
 
 import java.awt.Dimension;
 import java.awt.Graphics;
@@ -7,6 +7,8 @@ import java.awt.image.BufferedImage;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 
+import es.cristichi.card_generator.obj.DeckTemplate;
+
 public class ExtraDeckInfo {
 
 	private int count;
@@ -14,6 +16,7 @@ public class ExtraDeckInfo {
 	private BufferedImage image;
 	private JSONObject jsonObject;
 	private JSONArray jsonArrayCards;
+	private DeckTemplate deckTemplate;
 	private int x = 0;
 	private int y = 0;
 
@@ -91,6 +94,14 @@ public class ExtraDeckInfo {
 
 	public void addY(int quantity) {
 		this.y += quantity;
+	}
+
+	public DeckTemplate getDeckTemplate() {
+		return deckTemplate;
+	}
+
+	public void setDeckTemplate(DeckTemplate deckTemplate) {
+		this.deckTemplate = deckTemplate;
 	}
 
 }

@@ -1,4 +1,4 @@
-package es.cristichi.cardphotocopier.excep;
+package es.cristichi.exceptions;
 
 public class ConfigValueNotFound extends ConfigurationException {
 	private static final long serialVersionUID = 1L;
