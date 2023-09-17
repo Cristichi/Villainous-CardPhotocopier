@@ -3,7 +3,9 @@ package es.cristichi.card_generator;
 import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Font;
+import java.awt.FontMetrics;
 import java.awt.Graphics2D;
+import java.awt.Rectangle;
 import java.awt.font.TextAttribute;
 import java.awt.image.BufferedImage;
 import java.io.File;
@@ -29,10 +31,13 @@ import es.cristichi.obj.config.ConfigValue;
 import es.cristichi.obj.config.Configuration;
 
 public class CardGenerator {
-	private static Font CARD_TITLE = new Font("ESTEBAN", Font.PLAIN, 100);
+	private static Font CARD_NAME_FONT = new Font("Esteban", Font.PLAIN, 100);
 	private static Font CARD_TEXT_MAX;
 	private static Font CARD_TYPE = new Font("Cabin", Font.BOLD, 95);
 	private static Font CARD_CORNER_VALUES;
+
+	private static Rectangle NAME_COORDS = new Rectangle(173, 1090, 1094, 137);
+	private static Rectangle TEXT_COORDS = new Rectangle(140, 1292, 1160, 612);
 
 	private static Dimension ART_SIZE = new Dimension(1440, 970);
 
@@ -127,6 +132,8 @@ public class CardGenerator {
 
 		BufferedImage deck = DeckTemplate.getTemplateFile(templatesFolder, TemplateType.DECK, card.deck);
 		baseG.drawImage(deck, 0, 0, base.getWidth(), base.getHeight(), null);
+		
+		drawCenteredString(baseG, card.name, NAME_COORDS, CARD_NAME_FONT);
 
 		baseG.dispose();
 
@@ -135,5 +142,25 @@ public class CardGenerator {
 		graphics.drawImage(base, 0, 0, Color.WHITE, null);
 		graphics.dispose();
 		return rgbCopy;
+	}
+	
+	/**
+	 * Draw a String centered in the middle of a Rectangle.
+	 *
+	 * @param g The Graphics instance.
+	 * @param text The String to draw.
+	 * @param rect The Rectangle to center the text in.
+	 */
+	public static void drawCenteredString(Graphics2D g, String text, Rectangle rect, Font font) {
+	    // Get the FontMetrics
+	    FontMetrics metrics = g.getFontMetrics(font);
+	    // Determine the X coordinate for the text
+	    int x = rect.x + (rect.width - metrics.stringWidth(text)) / 2;
+	    // Determine the Y coordinate for the text (note we add the ascent, as in java 2d 0 is top of the screen)
+	    int y = rect.y + ((rect.height - metrics.getHeight()) / 2) + metrics.getAscent();
+	    // Set the font
+	    g.setFont(font);
+	    // Draw the String
+	    g.drawString(text, x, y);
 	}
 }
