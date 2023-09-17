@@ -47,7 +47,7 @@ public class Util {
 	 * @return a BufferedImage object with the content of an image file.
 	 * @throws IOException
 	 */
-	public static BufferedImage load(File file) throws IOException {
+	public synchronized static BufferedImage load(File file) throws IOException {
 		byte[] bytes = Files.readAllBytes(file.toPath());
 		try (InputStream is = new ByteArrayInputStream(bytes)) {
 			return ImageIO.read(is);

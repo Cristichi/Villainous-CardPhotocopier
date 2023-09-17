@@ -14,6 +14,7 @@ public class MainInfoFrame extends JFrame {
 
 	public MainInfoFrame(String windowName) {
 		setName(windowName);
+		setTitle(windowName);
 		setDefaultCloseOperation(EXIT_ON_CLOSE);
 		setLayout(new GridLayout(1, 1));
 

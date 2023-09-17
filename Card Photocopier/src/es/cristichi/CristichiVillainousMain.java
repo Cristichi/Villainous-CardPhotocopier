@@ -37,7 +37,7 @@ import es.cristichi.obj.config.Configuration;
 
 public class CristichiVillainousMain {
 
-	private static String VERSION = "v2.7.3";
+	private static String VERSION = "v3 BETA 1.2.0";
 	private static String NAME = "Villainous Card Photocopier " + VERSION;
 
 	private static String CONFIG_FILE = "config.yml";
@@ -340,7 +340,8 @@ public class CristichiVillainousMain {
 								ci.desc = cellDescription.getTextValue();
 								ci.row = row;
 
-								usefulCards.add(ci);
+								if (ci.copies > 0)
+									usefulCards.add(ci);
 							}
 						}
 					} catch (IllegalArgumentException e) {
