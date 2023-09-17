@@ -53,11 +53,13 @@ public class CardGenerator {
 
 		CARD_CORNER_VALUES = new Font(fontCornerAtts);
 	}
+	
+	private ArrayList<String> warnings;
 
 	public GeneratorReturn generate(Configuration config, MainInfoFrame frame, File openDocumentFile, File imagesFolder,
 			File resultsFolder, OdsStructure odsStructure, Sheet sheet, ArrayList<CardInfo> usefulCards,
 			HashMap<String, ExtraDeckInfo> extraDecks) throws Exception {
-		ArrayList<String> warnings = new ArrayList<>(3);
+		warnings= new ArrayList<>(3);
 
 		if (!config.contains(ConfigValue.CONFIG_TEMPLATES)) {
 			config.setValue(ConfigValue.CONFIG_TEMPLATES, ConfigValue.CONFIG_TEMPLATES.getDefaultValue());
@@ -90,7 +92,7 @@ public class CardGenerator {
 				@Override
 				public void run() {
 					try {
-						BufferedImage bi = CardGenerator.generateImage(templatesFolder, artFolder, card);
+						BufferedImage bi = CardGenerator.this.generateImage(templatesFolder, artFolder, card);
 						Util.writeJpgImage(bi, new File(imagesFolder, card.name + ".jpg"), 1);
 						frame.replaceText("Generated "
 								+ (usefulCards.size() + sem.availablePermits() + "/" + usefulCards.size()));
@@ -110,7 +112,7 @@ public class CardGenerator {
 		return new GeneratorReturn(warnings, usefulCards, extraDecks);
 	}
 
-	private static BufferedImage generateImage(File templatesFolder, File artFolder, CardInfo card) throws IOException {
+	private BufferedImage generateImage(File templatesFolder, File artFolder, CardInfo card) throws IOException {
 		BufferedImage base = new BufferedImage(CristichiVillainousMain.CARD_SIZE.width,
 				CristichiVillainousMain.CARD_SIZE.height, BufferedImage.TYPE_INT_ARGB);
 		Graphics2D baseG = base.createGraphics();
@@ -118,8 +120,9 @@ public class CardGenerator {
 		try {
 			BufferedImage art = DeckTemplate.getArtFile(artFolder, card.name);
 			baseG.drawImage(art, 0, 0, ART_SIZE.width, ART_SIZE.height, null);
-		} catch (FileNotFoundException e) {
+		} catch (Exception e) {
 			e.printStackTrace();
+			warnings.add("Error finding the art for "+card.name);
 		}
 
 		BufferedImage deck = DeckTemplate.getTemplateFile(templatesFolder, TemplateType.DECK, card.deck);

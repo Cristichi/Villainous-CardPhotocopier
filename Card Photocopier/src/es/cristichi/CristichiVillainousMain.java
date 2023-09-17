@@ -19,6 +19,7 @@ import org.jopendocument.dom.spreadsheet.Sheet;
 import org.jopendocument.dom.spreadsheet.SpreadSheet;
 
 import es.cristichi.card_generator.CardGenerator;
+import es.cristichi.card_generator.obj.GeneratorReturn;
 import es.cristichi.card_photocopier.CardPhotocopier;
 import es.cristichi.card_photocopier.obj.ODS.Column;
 import es.cristichi.card_photocopier.obj.ODS.OdsStructure;
@@ -335,8 +336,9 @@ public class CristichiVillainousMain {
 
 				if (steps.contains("generate")) {
 					CardGenerator cardGenerator = new CardGenerator();
-					cardGenerator.generate(config, frame, openDocumentFile, imagesFolder, resultsFolder, odsStructure,
+					GeneratorReturn ret = cardGenerator.generate(config, frame, openDocumentFile, imagesFolder, resultsFolder, odsStructure,
 							sheet, usefulCards, extraDecks);
+					warnings.addAll(ret.warnings);
 				}
 				if (steps.contains("photocopy")) {
 					CardPhotocopier cardPhotocopier = new CardPhotocopier();

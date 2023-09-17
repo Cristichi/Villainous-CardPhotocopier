@@ -8,9 +8,9 @@ import es.cristichi.obj.ExtraDeckInfo;
 
 public class GeneratorReturn {
 	
-	ArrayList<String> warnings;
-	ArrayList<CardInfo> usefulCards;
-	HashMap<String, ExtraDeckInfo> extraDecks;
+	public ArrayList<String> warnings;
+	public ArrayList<CardInfo> usefulCards;
+	public HashMap<String, ExtraDeckInfo> extraDecks;
 	public GeneratorReturn(ArrayList<String> warnings, ArrayList<CardInfo> usefulCards,
 			HashMap<String, ExtraDeckInfo> extraDecks) {
 		this.warnings = warnings;
