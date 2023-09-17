@@ -1,28 +1,3 @@
-/bin/
-/Results/
-/config.yml
-/.classpath
-/.project
-/.gitignore
-/README.md
-/config.txt
-/build.xml
-/error.log
-/CardPhotocopier error.log
-/CardPhotocopier descriptions.json
-/Gangplank's Fate deck.jpg
-/Gangplank's Villain deck.jpg
-/plunder deck.jpg
-/vessel deck.jpg
-/syren deck.jpg
-/dreadway deck.jpg
-/common plunder deck.jpg
-/The Dreadway.jpg
-/The Syren.jpg
-/-Layout/
-/-Images/
-/Duel Cards.jpg
-/Gangplank.ods
 /Attack.jpg
 /Bounty Signs.jpg
 /Citrus Courier.jpg
@@ -56,6 +31,8 @@
 /Ruthless.jpg
 /Salvage.jpg
 /Sermon.jpg
+/The Dreadway.jpg
+/The Syren.jpg
 /Treasure Trove.jpg
 /Twisted Fate.jpg
 /Warning Shot.jpg
