@@ -56,13 +56,13 @@ public class CardGenerator {
 		fontCornerAtts.put(TextAttribute.SIZE, 120);
 		CARD_CORNER_VALUES = new Font(fontCornerAtts);
 	}
-	
+
 	private ArrayList<String> warnings;
 
 	public GeneratorReturn generate(Configuration config, MainInfoFrame frame, File openDocumentFile, File imagesFolder,
 			File resultsFolder, OdsStructure odsStructure, Sheet sheet, ArrayList<CardInfo> usefulCards,
 			HashMap<String, ExtraDeckInfo> extraDecks) throws Exception {
-		warnings= new ArrayList<>(3);
+		warnings = new ArrayList<>(3);
 
 		if (!config.contains(ConfigValue.CONFIG_TEMPLATES)) {
 			config.setValue(ConfigValue.CONFIG_TEMPLATES, ConfigValue.CONFIG_TEMPLATES.getDefaultValue());
@@ -125,18 +125,18 @@ public class CardGenerator {
 			baseG.drawImage(art, 0, 0, ART_SIZE.width, ART_SIZE.height, null);
 		} catch (FileNotFoundException e) {
 			e.printStackTrace();
-			warnings.add("Error finding the art for "+card.name);
+			warnings.add("Error finding the art for " + card.name);
 		} catch (Exception e) {
 			e.printStackTrace();
-			warnings.add("Error reading the art for "+card.name);
+			warnings.add("Error reading the art for " + card.name);
 		}
 
 		BufferedImage deck = DeckTemplate.getTemplateFile(templatesFolder, TemplateType.DECK, card.deck);
 		baseG.drawImage(deck, 0, 0, base.getWidth(), base.getHeight(), null);
-		
-		drawCenteredString(baseG, card.name, NAME_COORDS, CARD_NAME_FONT);
-		
-		drawCenteredString(baseG, card.ability, TEXT_COORDS, CARD_TEXT_MAX);
+
+		drawCenteredMultilineString(baseG, card.name, NAME_COORDS, CARD_NAME_FONT);
+
+		drawCenteredMultilineString(baseG, card.ability, TEXT_COORDS, CARD_TEXT_MAX);
 
 		baseG.dispose();
 
@@ -146,29 +146,33 @@ public class CardGenerator {
 		graphics.dispose();
 		return rgbCopy;
 	}
-	
+
 	/**
-	 * Draw a String centered in the middle of a Rectangle.
+	 * Draw a String centered in the middle of a Rectangle. TODO: Fix for multiple lines
 	 *
-	 * @param g The Graphics instance.
-	 * @param text The String to draw.
-	 * @param textBox The Rectangle to center the text in.
+	 * @param graphics The Graphics instance.
+	 * @param text     The String to draw. It requires to manually set the line jumps.
+	 * @param textBox  The Rectangle to center the text in.
 	 */
-	public static void drawCenteredString(Graphics2D g, String text, Rectangle textBox, Font font) {
-	    // Get the FontMetrics
-	    FontMetrics metrics = g.getFontMetrics(font);
-	    g.setFont(font);
-	    int lineHeight = metrics.getHeight();
-	    for (String line : text.split("\n")) {
-		    // Determine the X coordinate for the text
-		    int x = textBox.x + (textBox.width - metrics.stringWidth(line)) / 2;
-		    // Determine the Y coordinate for the text (note we add the ascent, as in java 2d 0 is top of the screen)
-		    int y = textBox.y + ((textBox.height - metrics.getHeight()) / 2) + metrics.getAscent();
-		    // Set the font
-		    // Draw the String
-		    g.drawString(line, x, y);
-		    
-		    y += lineHeight;
-	    }
+	public static void drawCenteredMultilineString(Graphics2D graphics, String text, Rectangle textBox, Font font) {
+		// Get the FontMetrics
+		FontMetrics metrics = graphics.getFontMetrics(font);
+		graphics.setFont(font);
+		int lineHeight = metrics.getHeight();
+		String[] lines = text.split("\n");
+		int totalHeight = lineHeight * lines.length;
+		int lineIndex = 0;
+		for (String line : lines) {
+			// Determine the X coordinate for the text
+			int x = textBox.x + (textBox.width - metrics.stringWidth(line)) / 2;
+			// Determine the Y coordinate for the text (note we add the ascent, as in java 2d 0 is top of the screen)
+			int y = textBox.y + ((textBox.height - metrics.getHeight()) / 2) + metrics.getAscent()
+					+ (lineIndex - lines.length / 2) * lineHeight + (lines.length==1?0:lineHeight/2);
+			// Set the font
+			// Draw the String
+			graphics.drawString(line, x, y);
+
+			lineIndex++;
+		}
 	}
 }
