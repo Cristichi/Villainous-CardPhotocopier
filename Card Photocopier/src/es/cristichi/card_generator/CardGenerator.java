@@ -37,6 +37,13 @@ public class CardGenerator {
 	private static Font CARD_TEXT_MAX;
 	private static Font CARD_TYPE = new Font("Cabin", Font.BOLD, 95);
 	private static Font CARD_CORNER_VALUES;
+	
+	private static Color TEXT_COLOR = new Color(210, 170, 110);
+	private static Color EFFECT_COLOR = new Color(122, 196, 36);
+	private static Color ALLY_COLOR = new Color(222, 0, 34);
+	private static Color ITEM_COLOR = new Color(69, 175, 230);
+	private static Color CONDIT_COLOR = new Color(211, 86, 141);
+	private static Color HERO_COLOR = new Color(230, 140, 10);
 
 	private static Rectangle NAME_COORDS = new Rectangle(173, 1090, 1094, 137);
 	private static Rectangle TEXT_COORDS = new Rectangle(140, 1292, 1160, 612);
@@ -134,9 +141,9 @@ public class CardGenerator {
 		BufferedImage deck = DeckTemplate.getTemplateFile(templatesFolder, TemplateType.DECK, card.deck);
 		baseG.drawImage(deck, 0, 0, base.getWidth(), base.getHeight(), null);
 
-		drawCenteredMultilineString(baseG, card.name, NAME_COORDS, CARD_NAME_FONT);
+		drawCenteredMultilineString(baseG, card.name.toUpperCase(), NAME_COORDS, CARD_NAME_FONT, TEXT_COLOR);
 
-		drawCenteredMultilineString(baseG, card.ability, TEXT_COORDS, CARD_TEXT_MAX);
+		drawCenteredMultilineString(baseG, card.ability, TEXT_COORDS, CARD_TEXT_MAX, TEXT_COLOR);
 
 		baseG.dispose();
 
@@ -154,12 +161,13 @@ public class CardGenerator {
 	 * @param text     The String to draw. It requires to manually set the line jumps.
 	 * @param textBox  The Rectangle to center the text in.
 	 */
-	public static void drawCenteredMultilineString(Graphics2D graphics, String text, Rectangle textBox, Font font) {
+	public static void drawCenteredMultilineString(Graphics2D graphics, String text, Rectangle textBox, Font font, Color textColor) {
 		// Get the FontMetrics
 		FontMetrics metrics = graphics.getFontMetrics(font);
 		graphics.setFont(font);
+		graphics.setColor(textColor);
 		int lineHeight = metrics.getHeight();
-		String[] lines = text.split("\n");
+		String[] lines = text.replace("   ", "\n").split("\n");
 		int totalHeight = lineHeight * lines.length;
 		int lineIndex = 0;
 		for (String line : lines) {
