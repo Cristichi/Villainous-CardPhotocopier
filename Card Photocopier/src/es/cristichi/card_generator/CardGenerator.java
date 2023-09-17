@@ -1,9 +1,8 @@
 package es.cristichi.card_generator;
 
 import java.awt.Color;
+import java.awt.Desktop;
 import java.awt.Font;
-import java.awt.Graphics;
-import java.awt.Graphics2D;
 import java.awt.Rectangle;
 import java.awt.font.TextAttribute;
 import java.awt.image.BufferedImage;
@@ -16,7 +15,6 @@ import java.util.Map;
 import java.util.concurrent.Semaphore;
 
 import javax.swing.ImageIcon;
-import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.SwingConstants;
@@ -165,7 +163,10 @@ public class CardGenerator {
 		panelCard.add(lblDeckTempl);
 
 		// Name
-		JLabel lblName = new JLabel("<html><body style='text-align: center'>"
+		JLabel lblName = new JLabel("<html><style>"
+				+ "html { height: "+NAME_COORDS.height+"; width: "+NAME_COORDS.width+";}"
+				+ "body { height: 100%; width: 100%; text-align: center; }"
+				+ "</style><body>"
 				+ card.name.trim().toUpperCase().replace("   ", " ") + "</body></html>");
 		lblName.setBounds(NAME_COORDS);
 		lblName.setFont(FONT_CARD_NAME);
@@ -175,24 +176,30 @@ public class CardGenerator {
 		lblName.setBorder(new LineBorder(Color.RED, 1));
 		panelCard.add(lblName);
 
-		// Ability TODO: FIX
-		JLabel lblAbility = new JLabel("<html><body style='text-align: center'><span>"
+		// Ability TODO: Fix vertical align
+		JLabel lblAbility = new JLabel("<html><style>"
+				+ "html { height: "+ABILITY_COORDS.height+"; width: "+ABILITY_COORDS.width+";}"
+				+ "body { height: 100%; width: 100%; text-align: center; }"
+				+ "</style><body><p>"
 				+ card.ability.trim().replace("   ", " ").replace("Effect", "<span style=\"color: #7ac424\">Effect</p")
 						.replace("Ally", "<span style=\"color: #de0022\">Ally</span>")
 						.replace("Item", "<span style=\"color: #45afe6\">Item</span>")
 						.replace("Condition", "<span style=\"color: #d3568d\">Condition</span>")
 						.replace("Hero", "<span style=\"color: #e68c0a\">Hero</span>")
-				+ "</span></body></html>");
+				+ "</p></body></html>");
 		lblAbility.setBounds(ABILITY_COORDS);
+		lblAbility.setPreferredSize(ABILITY_COORDS.getSize());
 		lblAbility.setFont(FONT_TEXT_MAX);
 		lblAbility.setForeground(card.deck == "Fate" ? COLOR_TEXT_FATE : COLOR_TEXT_VILLAIN);
-		lblAbility.setHorizontalAlignment(SwingConstants.CENTER);
-		lblAbility.setVerticalAlignment(SwingConstants.CENTER);
 		lblAbility.setBorder(new LineBorder(Color.RED, 1));
+		lblAbility.setVerticalTextPosition(JLabel.TOP);
 		panelCard.add(lblAbility);
 
 		// Type
-		JLabel lblType = new JLabel("<html><body style='text-align: center'>"
+		JLabel lblType = new JLabel("<html><style>"
+				+ "html { height: "+TYPE_COORDS.height+"; width: "+TYPE_COORDS.width+";}"
+				+ "body { height: 100%; width: 100%; text-align: center; }"
+				+ "</style><body'>"
 				+ card.type.trim().replace("Effect", "<span style=\"color: #7ac424\">Effect</span>")
 						.replace("Ally", "<span style=\"color: #de0022\">Ally</span>")
 						.replace("Item", "<span style=\"color: #45afe6\">Item</span>")
@@ -209,7 +216,10 @@ public class CardGenerator {
 
 		// Cost
 		JLabel lblCostIcon = new JLabel();
-		JLabel lblCostText = new JLabel("<html><body style='text-align: center'>" + card.cost + "</body></html>");
+		JLabel lblCostText = new JLabel("<html><style>"
+				+ "html { height: "+COST_COORDS.height+"; width: "+COST_COORDS.width+";}"
+				+ "body { height: 100%; width: 100%; text-align: center; }"
+				+ "</style><body'>" + card.cost + "</body></html>");
 		if (!card.cost.equals("")) {
 			BufferedImage costTempl = DeckTemplate.getTemplateFile(templatesFolder, TemplateType.COST, card.deck);
 			lblCostIcon.setIcon(new ImageIcon(costTempl));
@@ -227,7 +237,10 @@ public class CardGenerator {
 		// Strength
 		JLabel lblStrengthIcon = new JLabel();
 		JLabel lblStrengthText = new JLabel(
-				"<html><body style='text-align: center'>" + card.strength + "</body></html>");
+				"<html><style>"
+				+ "html { height: "+STRENGTH_COORDS.height+"; width: "+STRENGTH_COORDS.width+";}"
+				+ "body { height: 100%; width: 100%; text-align: center; }"
+				+ "</style><body>" + card.strength + "</body></html>");
 		if (!card.strength.equals("")) {
 			BufferedImage strengthTempl = DeckTemplate.getTemplateFile(templatesFolder, TemplateType.STRENGTH,
 					card.deck);
@@ -245,7 +258,10 @@ public class CardGenerator {
 
 		// Top Right
 		JLabel lblTRIcon = new JLabel();
-		JLabel lblTRText = new JLabel("<html><body style='text-align: center'>" + card.topRight + "</body></html>");
+		JLabel lblTRText = new JLabel("<html><style>"
+				+ "html { height: "+TR_COORDS.height+"; width: "+TR_COORDS.width+";}"
+				+ "body { height: 100%; width: 100%; text-align: center; }"
+				+ "</style><body>" + card.topRight + "</body></html>");
 		if (!card.topRight.equals("")) {
 			BufferedImage topRightTempl = DeckTemplate.getTemplateFile(templatesFolder, TemplateType.TOP_RIGHT,
 					card.deck);
@@ -263,7 +279,10 @@ public class CardGenerator {
 
 		// Bottom Right
 		JLabel lblBRIcon = new JLabel();
-		JLabel lblBRText = new JLabel("<html><body style='text-align: center'>" + card.bottomLeft + "</body></html>");
+		JLabel lblBRText = new JLabel("<html><style>"
+				+ "html { height: "+BR_COORDS.height+"; width: "+BR_COORDS.width+";}"
+				+ "body { height: 100%; width: 100%; text-align: center; }"
+				+ "</style><body>" + card.bottomLeft + "</body></html>");
 		if (!card.bottomLeft.equals("")) {
 			BufferedImage topRightTempl = DeckTemplate.getTemplateFile(templatesFolder, TemplateType.BOTTOM_RIGHT,
 					card.deck);
@@ -321,7 +340,7 @@ public class CardGenerator {
 
 		ci.cost = "3";
 		ci.strength = "3";
-		ci.ability = "Riptide Rex may be used to defeat a Hero at any location if he is at The Dreadway's location. Luego hazte un baile gitano y me cuentas mi lcoo xoxo";
+		ci.ability = "Nada loco.";
 
 		ci.activateAbility = "";
 		ci.activateCost = "";
@@ -339,5 +358,6 @@ public class CardGenerator {
 		BufferedImage bi = cGen.generateImage(new File("-Layout"), new File("-Images"), ci);
 
 		Util.writeJpgImage(bi, new File("test.jpg"), 1);
+		Desktop.getDesktop().open(new File("test.jpg"));
 	}
 }
