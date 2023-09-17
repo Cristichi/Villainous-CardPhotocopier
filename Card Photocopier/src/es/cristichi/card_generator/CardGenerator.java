@@ -35,10 +35,11 @@ import es.cristichi.obj.config.Configuration;
 public class CardGenerator {
 	private static Font CARD_NAME_FONT = new Font("Esteban", Font.PLAIN, 100);
 	private static Font CARD_TEXT_MAX;
-	private static Font CARD_TYPE = new Font("Cabin", Font.BOLD, 95);
+	private static Font FONT_TYPE = new Font("Cabin", Font.BOLD, 95);
 	private static Font CARD_CORNER_VALUES;
 	
-	private static Color TEXT_COLOR = new Color(210, 170, 110);
+	private static Color COLOR_TEXT_VILLAIN = new Color(210, 170, 110);
+	private static Color COLOR_TEXT_FATE = Color.BLACK;
 	private static Color EFFECT_COLOR = new Color(122, 196, 36);
 	private static Color ALLY_COLOR = new Color(222, 0, 34);
 	private static Color ITEM_COLOR = new Color(69, 175, 230);
@@ -46,7 +47,8 @@ public class CardGenerator {
 	private static Color HERO_COLOR = new Color(230, 140, 10);
 
 	private static Rectangle NAME_COORDS = new Rectangle(173, 1090, 1094, 137);
-	private static Rectangle TEXT_COORDS = new Rectangle(140, 1292, 1160, 612);
+	private static Rectangle ABILITY_COORDS = new Rectangle(140, 1292, 1160, 612);
+	private static Rectangle TYPE_COORDS = new Rectangle(0, 1949, 1440, 72);
 
 	private static Dimension ART_SIZE = new Dimension(1440, 970);
 
@@ -141,9 +143,11 @@ public class CardGenerator {
 		BufferedImage deck = DeckTemplate.getTemplateFile(templatesFolder, TemplateType.DECK, card.deck);
 		baseG.drawImage(deck, 0, 0, base.getWidth(), base.getHeight(), null);
 
-		drawCenteredMultilineString(baseG, card.name.toUpperCase(), NAME_COORDS, CARD_NAME_FONT, TEXT_COLOR);
+		drawCenteredMultilineStringWithColors(baseG, card.name.toUpperCase(), NAME_COORDS, CARD_NAME_FONT, card.deck == "Fate"? COLOR_TEXT_FATE : COLOR_TEXT_VILLAIN);
 
-		drawCenteredMultilineString(baseG, card.ability, TEXT_COORDS, CARD_TEXT_MAX, TEXT_COLOR);
+		drawCenteredMultilineStringWithColors(baseG, card.ability, ABILITY_COORDS, CARD_TEXT_MAX, card.deck == "Fate"? COLOR_TEXT_FATE : COLOR_TEXT_VILLAIN);
+
+		drawCenteredMultilineStringWithColors(baseG, card.type, TYPE_COORDS, FONT_TYPE, card.deck == "Fate"? COLOR_TEXT_FATE : COLOR_TEXT_VILLAIN);
 
 		baseG.dispose();
 
@@ -161,11 +165,11 @@ public class CardGenerator {
 	 * @param text     The String to draw. It requires to manually set the line jumps.
 	 * @param textBox  The Rectangle to center the text in.
 	 */
-	public static void drawCenteredMultilineString(Graphics2D graphics, String text, Rectangle textBox, Font font, Color textColor) {
+	public static void drawCenteredMultilineStringWithColors(Graphics2D graphics, String text, Rectangle textBox, Font font, Color baseTextColor) {
 		// Get the FontMetrics
 		FontMetrics metrics = graphics.getFontMetrics(font);
 		graphics.setFont(font);
-		graphics.setColor(textColor);
+		graphics.setColor(baseTextColor);
 		int lineHeight = metrics.getHeight();
 		String[] lines = text.replace("   ", "\n").split("\n");
 		int totalHeight = lineHeight * lines.length;
