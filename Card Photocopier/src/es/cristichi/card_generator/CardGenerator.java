@@ -1,12 +1,9 @@
 package es.cristichi.card_generator;
 
 import java.awt.Color;
-import java.awt.Dimension;
 import java.awt.Font;
-import java.awt.FontFormatException;
-import java.awt.FontMetrics;
+import java.awt.Graphics;
 import java.awt.Graphics2D;
-import java.awt.GraphicsEnvironment;
 import java.awt.Rectangle;
 import java.awt.font.TextAttribute;
 import java.awt.image.BufferedImage;
@@ -17,6 +14,13 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.Semaphore;
+
+import javax.swing.ImageIcon;
+import javax.swing.JFrame;
+import javax.swing.JLabel;
+import javax.swing.JPanel;
+import javax.swing.SwingConstants;
+import javax.swing.border.LineBorder;
 
 import org.jopendocument.dom.spreadsheet.Sheet;
 
@@ -33,37 +37,44 @@ import es.cristichi.obj.config.ConfigValue;
 import es.cristichi.obj.config.Configuration;
 
 public class CardGenerator {
-	private static Font CARD_NAME_FONT = new Font("Esteban", Font.PLAIN, 100);
-	private static Font CARD_TEXT_MAX;
-	private static Font FONT_TYPE = new Font("Cabin", Font.BOLD, 95);
-	private static Font CARD_CORNER_VALUES;
-	
-	private static Color COLOR_TEXT_VILLAIN = new Color(210, 170, 110);
-	private static Color COLOR_TEXT_FATE = Color.BLACK;
-	private static Color EFFECT_COLOR = new Color(122, 196, 36);
-	private static Color ALLY_COLOR = new Color(222, 0, 34);
-	private static Color ITEM_COLOR = new Color(69, 175, 230);
-	private static Color CONDIT_COLOR = new Color(211, 86, 141);
-	private static Color HERO_COLOR = new Color(230, 140, 10);
+	private static Font FONT_CARD_NAME = new Font("Esteban", Font.PLAIN, 100);
+	private static Font FONT_TEXT_MAX;
+	// private static Font FONT_TYPE = new Font("Cabin", Font.BOLD, 95);
+	private static Font FONT_TYPE = new Font("Cabin", Font.BOLD, 85);
+	private static Font FONT_CORNER_VALUES;
+
+	private static Color COLOR_TEXT_VILLAIN = new Color(210, 170, 110); // #D8B47F
+	private static Color COLOR_TEXT_FATE = Color.BLACK; // #000000
+	// private static Color EFFECT_COLOR = new Color(122, 196, 36); // #7ac424
+	// private static Color ALLY_COLOR = new Color(222, 0, 34); // #de0022
+	// private static Color ITEM_COLOR = new Color(69, 175, 230); // #45afe6
+	// private static Color CONDIT_COLOR = new Color(211, 86, 141); // #d3568d
+	// private static Color HERO_COLOR = new Color(230, 140, 10); // #e68c0a
+
+	private static Rectangle CARD_COORDS = new Rectangle(0, 0, 1440, 2044);
 
 	private static Rectangle NAME_COORDS = new Rectangle(173, 1090, 1094, 137);
 	private static Rectangle ABILITY_COORDS = new Rectangle(140, 1292, 1160, 612);
 	private static Rectangle TYPE_COORDS = new Rectangle(0, 1949, 1440, 72);
+	private static Rectangle COST_COORDS = new Rectangle(109, 117, 156, 156);
+	private static Rectangle STRENGTH_COORDS = new Rectangle(61, 1827, 156, 156);
+	private static Rectangle TR_COORDS = new Rectangle(1175, 118, 156, 156);
+	private static Rectangle BR_COORDS = new Rectangle(1223, 1826, 156, 156);
 
-	private static Dimension ART_SIZE = new Dimension(1440, 970);
+	private static Rectangle ART_COORDS = new Rectangle(0, 0, 1440, 970);
 
 	static {
 		Map<TextAttribute, Object> fontTextAtts = new HashMap<>();
 		fontTextAtts.put(TextAttribute.FAMILY, "Cabin");
 		fontTextAtts.put(TextAttribute.WEIGHT, TextAttribute.WEIGHT_MEDIUM);
 		fontTextAtts.put(TextAttribute.SIZE, 85);
-		CARD_TEXT_MAX = new Font(fontTextAtts);
+		FONT_TEXT_MAX = new Font(fontTextAtts);
 
 		Map<TextAttribute, Object> fontCornerAtts = new HashMap<>();
 		fontCornerAtts.put(TextAttribute.FAMILY, "Cabin");
 		fontCornerAtts.put(TextAttribute.WEIGHT, TextAttribute.WEIGHT_SEMIBOLD);
 		fontCornerAtts.put(TextAttribute.SIZE, 120);
-		CARD_CORNER_VALUES = new Font(fontCornerAtts);
+		FONT_CORNER_VALUES = new Font(fontCornerAtts);
 	}
 
 	private ArrayList<String> warnings;
@@ -125,13 +136,21 @@ public class CardGenerator {
 	}
 
 	private BufferedImage generateImage(File templatesFolder, File artFolder, CardInfo card) throws IOException {
-		BufferedImage base = new BufferedImage(CristichiVillainousMain.CARD_SIZE.width,
-				CristichiVillainousMain.CARD_SIZE.height, BufferedImage.TYPE_INT_ARGB);
-		Graphics2D baseG = base.createGraphics();
+		JPanel panelCard = new JPanel();
+		panelCard.setBackground(Color.GREEN);
+		panelCard.setLayout(null);
+		panelCard.setSize(CristichiVillainousMain.CARD_SIZE);
+		panelCard.setPreferredSize(CristichiVillainousMain.CARD_SIZE);
+		panelCard.setMaximumSize(CristichiVillainousMain.CARD_SIZE);
+		panelCard.setMinimumSize(CristichiVillainousMain.CARD_SIZE);
+		panelCard.setVisible(true);
 
+		JLabel lblArt = new JLabel();
+		lblArt.setBounds(ART_COORDS);
+		panelCard.add(lblArt);
 		try {
 			BufferedImage art = DeckTemplate.getArtFile(artFolder, card.name);
-			baseG.drawImage(art, 0, 0, ART_SIZE.width, ART_SIZE.height, null);
+			lblArt.setIcon(new ImageIcon(art));
 		} catch (FileNotFoundException e) {
 			e.printStackTrace();
 			warnings.add("Error finding the art for " + card.name);
@@ -140,51 +159,185 @@ public class CardGenerator {
 			warnings.add("Error reading the art for " + card.name);
 		}
 
-		BufferedImage deck = DeckTemplate.getTemplateFile(templatesFolder, TemplateType.DECK, card.deck);
-		baseG.drawImage(deck, 0, 0, base.getWidth(), base.getHeight(), null);
+		BufferedImage deckTempl = DeckTemplate.getTemplateFile(templatesFolder, TemplateType.DECK, card.deck);
+		JLabel lblDeckTempl = new JLabel(new ImageIcon(deckTempl));
+		lblDeckTempl.setBounds(CARD_COORDS);
+		panelCard.add(lblDeckTempl);
 
-		drawCenteredMultilineStringWithColors(baseG, card.name.toUpperCase(), NAME_COORDS, CARD_NAME_FONT, card.deck == "Fate"? COLOR_TEXT_FATE : COLOR_TEXT_VILLAIN);
+		// Name
+		JLabel lblName = new JLabel("<html><body style='text-align: center'>"
+				+ card.name.trim().toUpperCase().replace("   ", " ") + "</body></html>");
+		lblName.setBounds(NAME_COORDS);
+		lblName.setFont(FONT_CARD_NAME);
+		lblName.setForeground(card.deck == "Fate" ? COLOR_TEXT_FATE : COLOR_TEXT_VILLAIN);
+		lblName.setHorizontalAlignment(SwingConstants.CENTER);
+		lblName.setVerticalAlignment(SwingConstants.CENTER);
+		lblName.setBorder(new LineBorder(Color.RED, 1));
+		panelCard.add(lblName);
 
-		drawCenteredMultilineStringWithColors(baseG, card.ability, ABILITY_COORDS, CARD_TEXT_MAX, card.deck == "Fate"? COLOR_TEXT_FATE : COLOR_TEXT_VILLAIN);
+		// Ability TODO: FIX
+		JLabel lblAbility = new JLabel("<html><body style='text-align: center'><span>"
+				+ card.ability.trim().replace("   ", " ").replace("Effect", "<span style=\"color: #7ac424\">Effect</p")
+						.replace("Ally", "<span style=\"color: #de0022\">Ally</span>")
+						.replace("Item", "<span style=\"color: #45afe6\">Item</span>")
+						.replace("Condition", "<span style=\"color: #d3568d\">Condition</span>")
+						.replace("Hero", "<span style=\"color: #e68c0a\">Hero</span>")
+				+ "</span></body></html>");
+		lblAbility.setBounds(ABILITY_COORDS);
+		lblAbility.setFont(FONT_TEXT_MAX);
+		lblAbility.setForeground(card.deck == "Fate" ? COLOR_TEXT_FATE : COLOR_TEXT_VILLAIN);
+		lblAbility.setHorizontalAlignment(SwingConstants.CENTER);
+		lblAbility.setVerticalAlignment(SwingConstants.CENTER);
+		lblAbility.setBorder(new LineBorder(Color.RED, 1));
+		panelCard.add(lblAbility);
 
-		drawCenteredMultilineStringWithColors(baseG, card.type, TYPE_COORDS, FONT_TYPE, card.deck == "Fate"? COLOR_TEXT_FATE : COLOR_TEXT_VILLAIN);
+		// Type
+		JLabel lblType = new JLabel("<html><body style='text-align: center'>"
+				+ card.type.trim().replace("Effect", "<span style=\"color: #7ac424\">Effect</span>")
+						.replace("Ally", "<span style=\"color: #de0022\">Ally</span>")
+						.replace("Item", "<span style=\"color: #45afe6\">Item</span>")
+						.replace("Condition", "<span style=\"color: #d3568d\">Condition</span>")
+						.replace("Hero", "<span style=\"color: #e68c0a\">Hero</span>")
+				+ "</body></html>");
+		lblType.setBounds(TYPE_COORDS);
+		lblType.setFont(FONT_TYPE);
+		lblType.setForeground(card.deck == "Fate" ? COLOR_TEXT_FATE : COLOR_TEXT_VILLAIN);
+		lblType.setHorizontalAlignment(SwingConstants.CENTER);
+		lblType.setVerticalAlignment(SwingConstants.CENTER);
+		lblType.setBorder(new LineBorder(Color.RED, 1));
+		panelCard.add(lblType);
 
-		baseG.dispose();
+		// Cost
+		JLabel lblCostIcon = new JLabel();
+		JLabel lblCostText = new JLabel("<html><body style='text-align: center'>" + card.cost + "</body></html>");
+		if (!card.cost.equals("")) {
+			BufferedImage costTempl = DeckTemplate.getTemplateFile(templatesFolder, TemplateType.COST, card.deck);
+			lblCostIcon.setIcon(new ImageIcon(costTempl));
+			lblCostIcon.setBounds(CARD_COORDS);
+			panelCard.add(lblCostIcon);
 
-		BufferedImage rgbCopy = new BufferedImage(base.getWidth(), base.getHeight(), BufferedImage.TYPE_INT_RGB);
-		Graphics2D graphics = rgbCopy.createGraphics();
-		graphics.drawImage(base, 0, 0, Color.WHITE, null);
-		graphics.dispose();
-		return rgbCopy;
+			lblCostText.setBounds(COST_COORDS);
+			lblCostText.setFont(FONT_CORNER_VALUES);
+			lblCostText.setForeground(card.deck == "Fate" ? COLOR_TEXT_FATE : COLOR_TEXT_VILLAIN);
+			lblCostText.setHorizontalAlignment(SwingConstants.CENTER);
+			lblCostText.setVerticalAlignment(SwingConstants.CENTER);
+			panelCard.add(lblCostText);
+		}
+
+		// Strength
+		JLabel lblStrengthIcon = new JLabel();
+		JLabel lblStrengthText = new JLabel(
+				"<html><body style='text-align: center'>" + card.strength + "</body></html>");
+		if (!card.strength.equals("")) {
+			BufferedImage strengthTempl = DeckTemplate.getTemplateFile(templatesFolder, TemplateType.STRENGTH,
+					card.deck);
+			lblStrengthIcon.setIcon(new ImageIcon(strengthTempl));
+			lblStrengthIcon.setBounds(CARD_COORDS);
+			panelCard.add(lblStrengthIcon);
+
+			lblStrengthText.setBounds(STRENGTH_COORDS);
+			lblStrengthText.setFont(FONT_CORNER_VALUES);
+			lblStrengthText.setForeground(card.deck == "Fate" ? COLOR_TEXT_FATE : COLOR_TEXT_VILLAIN);
+			lblStrengthText.setHorizontalAlignment(SwingConstants.CENTER);
+			lblStrengthText.setVerticalAlignment(SwingConstants.CENTER);
+			panelCard.add(lblStrengthText);
+		}
+
+		// Top Right
+		JLabel lblTRIcon = new JLabel();
+		JLabel lblTRText = new JLabel("<html><body style='text-align: center'>" + card.topRight + "</body></html>");
+		if (!card.topRight.equals("")) {
+			BufferedImage topRightTempl = DeckTemplate.getTemplateFile(templatesFolder, TemplateType.TOP_RIGHT,
+					card.deck);
+			lblTRIcon.setIcon(new ImageIcon(topRightTempl));
+			lblTRIcon.setBounds(CARD_COORDS);
+			panelCard.add(lblTRIcon);
+
+			lblTRText.setBounds(TR_COORDS);
+			lblTRText.setFont(FONT_CORNER_VALUES);
+			lblTRText.setForeground(card.deck == "Fate" ? COLOR_TEXT_FATE : COLOR_TEXT_VILLAIN);
+			lblTRText.setHorizontalAlignment(SwingConstants.CENTER);
+			lblTRText.setVerticalAlignment(SwingConstants.CENTER);
+			panelCard.add(lblTRText);
+		}
+
+		// Bottom Right
+		JLabel lblBRIcon = new JLabel();
+		JLabel lblBRText = new JLabel("<html><body style='text-align: center'>" + card.bottomLeft + "</body></html>");
+		if (!card.bottomLeft.equals("")) {
+			BufferedImage topRightTempl = DeckTemplate.getTemplateFile(templatesFolder, TemplateType.BOTTOM_RIGHT,
+					card.deck);
+			lblBRIcon.setIcon(new ImageIcon(topRightTempl));
+			lblBRIcon.setBounds(CARD_COORDS);
+			panelCard.add(lblBRIcon);
+
+			lblBRText.setBounds(BR_COORDS);
+			lblBRText.setFont(FONT_CORNER_VALUES);
+			lblBRText.setForeground(card.deck == "Fate" ? COLOR_TEXT_FATE : COLOR_TEXT_VILLAIN);
+			lblBRText.setHorizontalAlignment(SwingConstants.CENTER);
+			lblBRText.setVerticalAlignment(SwingConstants.CENTER);
+			panelCard.add(lblBRText);
+		}
+
+		// Higher value = printed first (behind)
+		// Lower value = printed last (in front)
+		int compCount = panelCard.getComponentCount() - 1;
+		panelCard.setComponentZOrder(lblArt, compCount--);
+		panelCard.setComponentZOrder(lblDeckTempl, compCount--);
+		panelCard.setComponentZOrder(lblName, compCount--);
+		panelCard.setComponentZOrder(lblAbility, compCount--);
+		panelCard.setComponentZOrder(lblType, compCount--);
+		if (!card.cost.equals("")) {
+			panelCard.setComponentZOrder(lblCostIcon, compCount--);
+			panelCard.setComponentZOrder(lblCostText, compCount--);
+		}
+		if (!card.strength.equals("")) {
+			panelCard.setComponentZOrder(lblStrengthIcon, compCount--);
+			panelCard.setComponentZOrder(lblStrengthText, compCount--);
+		}
+		if (!card.topRight.equals("")) {
+			panelCard.setComponentZOrder(lblTRIcon, compCount--);
+			panelCard.setComponentZOrder(lblTRText, compCount--);
+		}
+		if (!card.bottomLeft.equals("")) {
+			panelCard.setComponentZOrder(lblBRIcon, compCount--);
+			panelCard.setComponentZOrder(lblBRText, compCount--);
+		}
+
+		BufferedImage image = new BufferedImage(panelCard.getWidth(), panelCard.getHeight(),
+				BufferedImage.TYPE_INT_RGB);
+		panelCard.printAll(image.getGraphics());
+		return image;
+
 	}
 
-	/**
-	 * Draw a String centered in the middle of a Rectangle. TODO: Fix for multiple lines
-	 *
-	 * @param graphics The Graphics instance.
-	 * @param text     The String to draw. It requires to manually set the line jumps.
-	 * @param textBox  The Rectangle to center the text in.
-	 */
-	public static void drawCenteredMultilineStringWithColors(Graphics2D graphics, String text, Rectangle textBox, Font font, Color baseTextColor) {
-		// Get the FontMetrics
-		FontMetrics metrics = graphics.getFontMetrics(font);
-		graphics.setFont(font);
-		graphics.setColor(baseTextColor);
-		int lineHeight = metrics.getHeight();
-		String[] lines = text.replace("   ", "\n").split("\n");
-		int totalHeight = lineHeight * lines.length;
-		int lineIndex = 0;
-		for (String line : lines) {
-			// Determine the X coordinate for the text
-			int x = textBox.x + (textBox.width - metrics.stringWidth(line)) / 2;
-			// Determine the Y coordinate for the text (note we add the ascent, as in java 2d 0 is top of the screen)
-			int y = textBox.y + ((textBox.height - metrics.getHeight()) / 2) + metrics.getAscent()
-					+ (lineIndex - lines.length / 2) * lineHeight + (lines.length==1?0:lineHeight/2);
-			// Set the font
-			// Draw the String
-			graphics.drawString(line, x, y);
+	public static void main(String[] args) throws Exception {
+		CardGenerator cGen = new CardGenerator();
 
-			lineIndex++;
-		}
+		CardInfo ci = new CardInfo(null);
+		ci.name = "Riptide Rex";
+		ci.deck = "Villain";
+		ci.extraDeck = "";
+
+		ci.cost = "3";
+		ci.strength = "3";
+		ci.ability = "Riptide Rex may be used to defeat a Hero at any location if he is at The Dreadway's location. Luego hazte un baile gitano y me cuentas mi lcoo xoxo";
+
+		ci.activateAbility = "";
+		ci.activateCost = "";
+
+		ci.topRight = "";
+		ci.bottomLeft = "";
+		ci.action = "";
+		ci.credits = "Riot Games";
+
+		ci.type = "Ally";
+		ci.copies = 1;
+		ci.desc = "desc";
+		ci.row = 22;
+
+		BufferedImage bi = cGen.generateImage(new File("-Layout"), new File("-Images"), ci);
+
+		Util.writeJpgImage(bi, new File("test.jpg"), 1);
 	}
 }

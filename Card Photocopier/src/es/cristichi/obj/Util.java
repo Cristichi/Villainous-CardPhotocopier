@@ -18,14 +18,14 @@ public class Util {
 	/**
 	 * 
 	 * @param resultImage A BufferedImage containing the image data.
-	 * @param deckFile    A File, existing or not, to save the data to.
+	 * @param resultFile    A File, existing or not, to save the data to.
 	 * @param quality     0 for higher compression, 1 for higher quality, or
 	 *                    any float value in between.
 	 * @throws IOException
 	 */
-	public static void writeJpgImage(BufferedImage resultImage, File deckFile, float quality)
+	public static void writeJpgImage(BufferedImage resultImage, File resultFile, float quality)
 			throws IOException, IllegalArgumentException {
-		try (ImageOutputStream ios = ImageIO.createImageOutputStream(deckFile)) {
+		try (ImageOutputStream ios = ImageIO.createImageOutputStream(resultFile)) {
 			ImageWriter jpgWriter = ImageIO.getImageWritersByFormatName("JPEG").next();
 
 			ImageWriteParam jpgWriteParam = jpgWriter.getDefaultWriteParam();

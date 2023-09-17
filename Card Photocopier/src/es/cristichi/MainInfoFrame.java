@@ -40,7 +40,6 @@ public class MainInfoFrame extends JFrame {
 			lbl.setBorder(new EmptyBorder(1, 5, 1, 5));
 			add(lbl);
 		}
-		setLocationRelativeTo(null);
 		getContentPane().repaint();
 	}
 
@@ -56,7 +55,6 @@ public class MainInfoFrame extends JFrame {
 			lbl.setBorder(new EmptyBorder(1, 5, 1, 5));
 			add(lbl);
 		}
-		setLocationRelativeTo(null);
 		getContentPane().repaint();
 	}
 }

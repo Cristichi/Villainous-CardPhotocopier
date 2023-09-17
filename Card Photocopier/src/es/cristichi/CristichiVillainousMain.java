@@ -260,7 +260,7 @@ public class CristichiVillainousMain {
 				for (int row = 1; consecutiveEmptyLines <= doneLimit; row++) {
 					Cell<SpreadSheet> cellCopiesCount = sheet.getCellAt(odsStructure.get(Column.COPIES_COUNT) + row);
 
-					if (cellCopiesCount.getTextValue().trim().equalsIgnoreCase("#stop")) {
+					if (sheet.getCellAt("A" + row).getTextValue().trim().equalsIgnoreCase("#stop")) {
 						break;
 					}
 					try {
@@ -342,6 +342,8 @@ public class CristichiVillainousMain {
 
 								if (ci.copies > 0)
 									usefulCards.add(ci);
+								
+								System.out.println(ci);
 							}
 						}
 					} catch (IllegalArgumentException e) {
