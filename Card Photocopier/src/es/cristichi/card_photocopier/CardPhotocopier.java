@@ -43,8 +43,6 @@ import es.cristichi.obj.config.Configuration;
 public class CardPhotocopier {
 	private static String DESCRIPTIONS_JSON = "CardPhotocopier descriptions.json";
 	private static String ERROR_DESC_LOG = "CardPhotocopier descriptions error.log";
-	// TODO: Making this configurable
-	private static Dimension CARD_SIZE = new Dimension(620, 880);
 	private static HashMap<Range, Dimension> DECK_SIZES;
 	static {
 		DECK_SIZES = new HashMap<>(18);

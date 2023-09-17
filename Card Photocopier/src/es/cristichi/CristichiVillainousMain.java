@@ -1,5 +1,6 @@
 package es.cristichi;
 
+import java.awt.Dimension;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.PrintStream;
@@ -18,7 +19,6 @@ import org.jopendocument.dom.spreadsheet.Sheet;
 import org.jopendocument.dom.spreadsheet.SpreadSheet;
 
 import es.cristichi.card_generator.CardGenerator;
-import es.cristichi.card_generator.obj.DeckTemplate;
 import es.cristichi.card_photocopier.CardPhotocopier;
 import es.cristichi.card_photocopier.obj.ODS.Column;
 import es.cristichi.card_photocopier.obj.ODS.OdsStructure;
@@ -39,6 +39,8 @@ public class CristichiVillainousMain {
 	private static String ERROR_LOG_FILE = "CardPhotocopier error.log";
 
 	public static String DOC_FIND_PATTERN_INIT = "$";
+	// TODO: Making this configurable
+	public static Dimension CARD_SIZE = new Dimension(1440, 2044);
 
 	public static void main(String[] args) {
 		CristichiVillainousMain cvm = new CristichiVillainousMain();
@@ -63,7 +65,7 @@ public class CristichiVillainousMain {
 						+ "Please screenshot the error now and save it if you need further assistance from Cristichi.</div>");
 			}
 		}
-		
+
 	}
 
 	public MainInfoFrame frame;
@@ -121,7 +123,8 @@ public class CristichiVillainousMain {
 			}
 
 			if (!config.contains(ConfigValue.CONFIG_RESULTS_QUALITY)) {
-				config.setValue(ConfigValue.CONFIG_RESULTS_QUALITY, ConfigValue.CONFIG_RESULTS_QUALITY.getDefaultValue());
+				config.setValue(ConfigValue.CONFIG_RESULTS_QUALITY,
+						ConfigValue.CONFIG_RESULTS_QUALITY.getDefaultValue());
 			}
 
 			if (!config.contains(ConfigValue.CONFIG_GENERATOR_VERSION)) {
@@ -139,18 +142,19 @@ public class CristichiVillainousMain {
 									+ config.getString(ConfigValue.CONFIG_RESULTS_QUALITY, "???") + "\".");
 				}
 			} else {
-				config.setValue(ConfigValue.CONFIG_RESULTS_QUALITY, ConfigValue.CONFIG_RESULTS_QUALITY.getDefaultValue());
+				config.setValue(ConfigValue.CONFIG_RESULTS_QUALITY,
+						ConfigValue.CONFIG_RESULTS_QUALITY.getDefaultValue());
 			}
 
 			config.saveToFile();
-			
+
 			File imagesFolder = new File(config.getString(ConfigValue.CONFIG_CARD_IMAGES));
 			File resultsFolder = new File(config.getString(ConfigValue.CONFIG_RESULTS));
 
 			File openDocumentFile = null;
 			String configDoc = config.getString(ConfigValue.CONFIG_DOC);
 			if (configDoc.startsWith(CristichiVillainousMain.DOC_FIND_PATTERN_INIT)) {
-				frame.replaceText("Finding most recent .ods document from set pattern: "+configDoc);
+				frame.replaceText("Finding most recent .ods document from set pattern: " + configDoc);
 				// Example of pattern:
 				// cardsInfoOds: >C:/Users/(Windows User)/Villainous/Villain/^Villain( \(\d+\))?.ods$
 				// This takes files like "Villain.ods"m "Villain (1).ods", "Villain (516).ods", etc
@@ -204,7 +208,7 @@ public class CristichiVillainousMain {
 			if (!imagesFolder.exists() && steps.contains("generate")) {
 				imagesFolder.mkdirs();
 			}
-			
+
 			if (!imagesFolder.exists()) {
 				frame.replaceText("The folder where the already existing images for the cards are supposed to be ("
 						+ imagesFolder.getAbsolutePath() + ") was not found. We need that one.");
@@ -213,8 +217,8 @@ public class CristichiVillainousMain {
 								+ imagesFolder.getAbsolutePath() + ") was not found. Please edit the config file.");
 			}
 			if (!openDocumentFile.exists()) {
-				frame.replaceText("The .ods document with the information for each card (" + openDocumentFile.getAbsolutePath()
-						+ ") was not found. We need that one.");
+				frame.replaceText("The .ods document with the information for each card ("
+						+ openDocumentFile.getAbsolutePath() + ") was not found. We need that one.");
 				throw new FileNotFoundException("The .ods document with the information for each card ("
 						+ openDocumentFile.getAbsolutePath() + ") was not found. Please edit the config file.");
 			}
@@ -222,14 +226,12 @@ public class CristichiVillainousMain {
 			OdsStructure odsStructure = new OdsStructure(config.getDouble(ConfigValue.CONFIG_GENERATOR_VERSION));
 			SpreadSheet sheetDoc = SpreadSheet.createFromFile(openDocumentFile);
 			Sheet sheet = sheetDoc.getFirstSheet();
-			
+
 			if (configError != null) {
 				throw configError;
 			} else {
-
-
-				ArrayList<CardInfo> usefulCards = new ArrayList<>(
-						config.getInt(ConfigValue.CONFIG_VILLAIN_QUANTITY) + config.getInt(ConfigValue.CONFIG_FATE_QUANTITY));
+				ArrayList<CardInfo> usefulCards = new ArrayList<>(config.getInt(ConfigValue.CONFIG_VILLAIN_QUANTITY)
+						+ config.getInt(ConfigValue.CONFIG_FATE_QUANTITY));
 
 				HashMap<String, ExtraDeckInfo> extraDecks = new HashMap<>(6);
 
@@ -252,13 +254,14 @@ public class CristichiVillainousMain {
 						Cell<SpreadSheet> cellStrengh = sheet.getCellAt(odsStructure.get(Column.STRENGTH) + row);
 						Cell<SpreadSheet> cellAbility = sheet.getCellAt(odsStructure.get(Column.ABILITY) + row);
 						Cell<SpreadSheet> cellType = sheet.getCellAt(odsStructure.get(Column.TYPE) + row);
-						Cell<SpreadSheet> cellActAbility = sheet.getCellAt(odsStructure.get(Column.ACTIVATE_ABILITY) + row);
+						Cell<SpreadSheet> cellActAbility = sheet
+								.getCellAt(odsStructure.get(Column.ACTIVATE_ABILITY) + row);
 						Cell<SpreadSheet> cellActCost = sheet.getCellAt(odsStructure.get(Column.ACTIVATE_COST) + row);
 						Cell<SpreadSheet> cellTopRight = sheet.getCellAt(odsStructure.get(Column.TOP_RIGHT) + row);
 						Cell<SpreadSheet> cellBotRight = sheet.getCellAt(odsStructure.get(Column.BOTTOM_RIGHT) + row);
 						Cell<SpreadSheet> cellDeck = sheet.getCellAt(odsStructure.get(Column.DECK) + row);
 						Cell<SpreadSheet> cellAction = sheet.getCellAt(odsStructure.get(Column.ACTION_SYMBOL) + row);
-//						Cell<SpreadSheet> cellAutoLayout = sheet.getCellAt(odsStructure.get(Column.AUTO_LAYOUT) + row);
+						// Cell<SpreadSheet> cellAutoLayout = sheet.getCellAt(odsStructure.get(Column.AUTO_LAYOUT) + row);
 						Cell<SpreadSheet> cellDescription = sheet.getCellAt(odsStructure.get(Column.DESCRIPTION) + row);
 						Cell<SpreadSheet> cellExtraDeck = sheet.getCellAt(odsStructure.get(Column.EXTRA_DECK) + row);
 						Cell<SpreadSheet> cellCredits = sheet.getCellAt(odsStructure.get(Column.CREDITS) + row);
@@ -293,44 +296,34 @@ public class CristichiVillainousMain {
 								// We add the information found about this card
 								CardInfo ci = new CardInfo(null);
 								ci.name = cardName;
+								frame.replaceText("Saving " + ci.name + "'s image data and card information.");
+
+								ci.deck = cellDeck.getTextValue();
+								if ((cellDeck.getTextValue().equals("0"))) {
+									ci.deck = "Villain";
+								} else if (cellDeck.getTextValue().equals("1")) {
+									ci.deck = "Fate";
+								}
+								ci.extraDeck = cellExtraDeck.getTextValue();
+
 								ci.cost = cellCost.getTextValue();
 								ci.strength = cellStrengh.getTextValue();
 								ci.ability = cellAbility.getTextValue();
+
 								ci.activateAbility = cellActAbility.getTextValue();
 								ci.activateCost = cellActCost.getTextValue();
+
 								ci.topRight = cellTopRight.getTextValue();
 								ci.bottomLeft = cellBotRight.getTextValue();
 								ci.action = cellAction.getTextValue();
 								ci.credits = cellCredits.getTextValue();
-								
+
 								ci.type = cellType.getTextValue();
 								ci.copies = Integer.parseInt(cellCopiesCount.getTextValue());
 								ci.desc = cellDescription.getTextValue();
 								ci.row = row;
-								frame.replaceText("Saving " + ci.name + "'s image data and card information.");
 
-								// We first check if the Extra Deck column is filled.
-								if (!cellExtraDeck.getTextValue().trim().equals("")) {
-									ci.deck = cellExtraDeck.getTextValue().trim();
-									if (extraDecks.containsKey(ci.deck)) {
-										extraDecks.get(ci.deck).addCount(ci.copies);
-									} else {
-										ExtraDeckInfo info = new ExtraDeckInfo();
-										info.setDeckTemplate(new DeckTemplate(ci.deck));
-										extraDecks.put(ci.deck, info);
-									}
-									usefulCards.add(ci);
-								}
-								// If it's not filled, we use the regular Deck column
-								if (ci.deck == null) {
-									if ((cellDeck.getTextValue().equals("Villain") || cellDeck.getTextValue().equals("0"))) {
-										ci.deck = "0";
-										usefulCards.add(ci);
-									} else if (cellDeck.getTextValue().equals("Fate") || cellDeck.getTextValue().equals("1")) {
-										ci.deck = "1";
-										usefulCards.add(ci);
-									}
-								}
+								usefulCards.add(ci);
 							}
 						}
 					} catch (IllegalArgumentException e) {
@@ -339,14 +332,16 @@ public class CristichiVillainousMain {
 						// System.err.println("Line: " + A.getTextValue());
 					}
 				}
-				
+
 				if (steps.contains("generate")) {
 					CardGenerator cardGenerator = new CardGenerator();
-					cardGenerator.generate(config, frame, openDocumentFile, imagesFolder, odsStructure, sheet);
+					cardGenerator.generate(config, frame, openDocumentFile, imagesFolder, resultsFolder, odsStructure,
+							sheet, usefulCards, extraDecks);
 				}
 				if (steps.contains("photocopy")) {
 					CardPhotocopier cardPhotocopier = new CardPhotocopier();
-					warnings.addAll(cardPhotocopier.generate(config, frame, openDocumentFile, imagesFolder, resultsFolder, odsStructure, sheet));	
+					warnings.addAll(cardPhotocopier.generate(config, frame, openDocumentFile, imagesFolder,
+							resultsFolder, odsStructure, sheet));
 				}
 
 				if (warnings.isEmpty()) {

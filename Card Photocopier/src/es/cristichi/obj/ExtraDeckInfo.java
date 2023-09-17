@@ -16,7 +16,6 @@ public class ExtraDeckInfo {
 	private BufferedImage image;
 	private JSONObject jsonObject;
 	private JSONArray jsonArrayCards;
-	private DeckTemplate deckTemplate;
 	private int x = 0;
 	private int y = 0;
 
@@ -94,14 +93,6 @@ public class ExtraDeckInfo {
 
 	public void addY(int quantity) {
 		this.y += quantity;
-	}
-
-	public DeckTemplate getDeckTemplate() {
-		return deckTemplate;
-	}
-
-	public void setDeckTemplate(DeckTemplate deckTemplate) {
-		this.deckTemplate = deckTemplate;
 	}
 
 }

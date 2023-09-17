@@ -8,6 +8,7 @@ public enum ConfigValue {
 			+ "For example, if you are running V33.2 you have to put here \"33.2\". "
 			+ "This is improtant because the columns of the .ods file are different for version V35 onwards."),
 	CONFIG_TEMPLATES("templatesFolder", "./Villainous Card Generator V35/Villainous Card Generator_Data/-Layout", "Folder with all the templates for cards. It must contain Villain and Fate templates, as well as templates for extra deck cards. Ignore this if you only want to photocopy cards that are already generated."),
+	CONFIG_ART_FOLDER("artFolder", "./Villainous Card Generator V35/Villainous Card Generator_Data/-Images", "Folder where all the arts for the cards are."),
 	CONFIG_CARD_IMAGES("generatedCardsFolder", "./Villainous Card Generator V35/Villainous Card Generator_Data/-Exports", "Folder where all the generated images of your Villain's cards are. It must not contain other Villains' cards. If the step \"generate\" is used, here is where cards will be saved to."),
 	CONFIG_DOC("cardsInfoOds", "./Villainous Card Generator V35/Villainous Card Generator_Data/-TextFiles/Villainous Template.ods", "The path to the .ods file where you have your cards' info."),
 	CONFIG_RESULTS("resultsFolder", "Results", "Where you want the Villain/Fate deck images to be created. I also recommend just setting it to \".\" so that they are generated in the same folder as the .jar file."),
