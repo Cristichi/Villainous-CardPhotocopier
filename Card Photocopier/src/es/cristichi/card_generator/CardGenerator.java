@@ -3,6 +3,7 @@ package es.cristichi.card_generator;
 import java.awt.Color;
 import java.awt.Desktop;
 import java.awt.Font;
+import java.awt.Graphics2D;
 import java.awt.Rectangle;
 import java.awt.font.TextAttribute;
 import java.awt.image.BufferedImage;
@@ -175,23 +176,6 @@ public class CardGenerator {
 		lblName.setBorder(new LineBorder(Color.RED, 1));
 		panelCard.add(lblName);
 
-		// Ability TODO: Fix vertical align
-		System.out.println("xdd");
-		JLabel lblAbility = new JLabel(
-				"<html><p style='text-align: center;'>" + card.ability.trim()
-						.replace("   ", "\n").replace("\n", "<br>")
-						.replace("Effect", "<span style=\"color: #7ac424\">Effect</span>")
-						.replace("Ally", "<span style=\"color: #de0022\">Ally</span>")
-						.replace("Item", "<span style=\"color: #45afe6\">Item</span>")
-						.replace("Condition", "<span style=\"color: #d3568d\">Condition</span>")
-						.replace("Hero", "<span style=\"color: #e68c0a\">Hero</span>") + "</p></html>");
-		lblAbility.setDebugGraphicsOptions(DebugGraphics.LOG_OPTION);
-		lblAbility.setFont(FONT_TEXT_MAX);
-		lblAbility.setForeground(card.deck == "Fate" ? COLOR_TEXT_FATE : COLOR_TEXT_VILLAIN);
-		lblAbility.setBounds(ABILITY_COORDS);
-		lblAbility.setBorder(new LineBorder(Color.WHITE, 10));
-		panelCard.add(lblAbility);
-
 		// Type
 		JLabel lblType = new JLabel(
 				"<html><style>" + "html { height: " + TYPE_COORDS.height + "; width: " + TYPE_COORDS.width + ";}"
@@ -295,7 +279,7 @@ public class CardGenerator {
 		panelCard.setComponentZOrder(lblArt, compCount--);
 		panelCard.setComponentZOrder(lblDeckTempl, compCount--);
 		panelCard.setComponentZOrder(lblName, compCount--);
-		panelCard.setComponentZOrder(lblAbility, compCount--);
+//		panelCard.setComponentZOrder(lblAbility, compCount--);
 		panelCard.setComponentZOrder(lblType, compCount--);
 		if (!card.cost.equals("")) {
 			panelCard.setComponentZOrder(lblCostIcon, compCount--);
@@ -315,7 +299,38 @@ public class CardGenerator {
 		}
 
 		BufferedImage image = new BufferedImage(CARD_COORDS.width, CARD_COORDS.height, BufferedImage.TYPE_INT_RGB);
-		panelCard.printAll(image.getGraphics());
+		Graphics2D imageG = image.createGraphics();
+		panelCard.printAll(imageG);
+		
+		// Ability TODO: Fix vertical align
+//		JLabel lblAbility = new JLabel(
+//				"<html><p style='text-align: center;'>" + card.ability.trim()
+//						.replace("   ", "\n").replace("\n", "<br>")
+//						.replace("Effect", "<span style=\"color: #7ac424\">Effect</span>")
+//						.replace("Ally", "<span style=\"color: #de0022\">Ally</span>")
+//						.replace("Item", "<span style=\"color: #45afe6\">Item</span>")
+//						.replace("Condition", "<span style=\"color: #d3568d\">Condition</span>")
+//						.replace("Hero", "<span style=\"color: #e68c0a\">Hero</span>") + "</p></html>");
+//		lblAbility.setDebugGraphicsOptions(DebugGraphics.LOG_OPTION);
+//		lblAbility.setFont(FONT_TEXT_MAX);
+//		lblAbility.setForeground(card.deck == "Fate" ? COLOR_TEXT_FATE : COLOR_TEXT_VILLAIN);
+//		lblAbility.setBorder(new LineBorder(Color.RED, 2));
+//		lblAbility.setBackground(Color.BLACK);
+//		lblAbility.setPreferredSize(ABILITY_COORDS.getSize());
+//		lblAbility.setSize(ABILITY_COORDS.getSize());
+//		BufferedImage imageLblAbility = new BufferedImage(ABILITY_COORDS.width, ABILITY_COORDS.height, BufferedImage.TYPE_INT_ARGB);
+//		Graphics2D imageAbG = image.createGraphics();
+//		imageAbG.translate(145, 1292);
+//		lblAbility.printAll(imageAbG);
+//		
+//		imageG.drawImage(imageLblAbility, 0, 0, null);
+		
+		BufferedImage imageLblAbility = new BufferedImage(ABILITY_COORDS.width, ABILITY_COORDS.height, BufferedImage.TYPE_INT_ARGB);
+		Graphics2D imageAbG = image.createGraphics();
+		imageAbG.setFont(FONT_TEXT_MAX);
+		imageAbG.setColor(card.deck == "Fate" ? COLOR_TEXT_FATE : COLOR_TEXT_VILLAIN);
+		imageAbG.drawString(card.ability, 145, 1292);
+		
 		return image;
 
 	}
