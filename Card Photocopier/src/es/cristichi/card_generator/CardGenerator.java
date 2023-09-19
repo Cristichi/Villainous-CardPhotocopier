@@ -7,6 +7,7 @@ import java.awt.Graphics2D;
 import java.awt.Rectangle;
 import java.awt.font.TextAttribute;
 import java.awt.image.BufferedImage;
+import java.awt.image.WritableRaster;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -15,7 +16,6 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.Semaphore;
 
-import javax.swing.DebugGraphics;
 import javax.swing.ImageIcon;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
@@ -35,6 +35,7 @@ import es.cristichi.obj.ExtraDeckInfo;
 import es.cristichi.obj.Util;
 import es.cristichi.obj.config.ConfigValue;
 import es.cristichi.obj.config.Configuration;
+import gui.ava.html.image.generator.HtmlImageGenerator;
 
 public class CardGenerator {
 	private static Font FONT_CARD_NAME = new Font("Esteban", Font.PLAIN, 100);
@@ -279,7 +280,7 @@ public class CardGenerator {
 		panelCard.setComponentZOrder(lblArt, compCount--);
 		panelCard.setComponentZOrder(lblDeckTempl, compCount--);
 		panelCard.setComponentZOrder(lblName, compCount--);
-//		panelCard.setComponentZOrder(lblAbility, compCount--);
+		// panelCard.setComponentZOrder(lblAbility, compCount--);
 		panelCard.setComponentZOrder(lblType, compCount--);
 		if (!card.cost.equals("")) {
 			panelCard.setComponentZOrder(lblCostIcon, compCount--);
@@ -299,40 +300,92 @@ public class CardGenerator {
 		}
 
 		BufferedImage image = new BufferedImage(CARD_COORDS.width, CARD_COORDS.height, BufferedImage.TYPE_INT_RGB);
-		Graphics2D imageG = image.createGraphics();
-		panelCard.printAll(imageG);
-		
+		Graphics2D imageResult = image.createGraphics();
+		panelCard.printAll(imageResult);
+
 		// Ability TODO: Fix vertical align
-//		JLabel lblAbility = new JLabel(
-//				"<html><p style='text-align: center;'>" + card.ability.trim()
-//						.replace("   ", "\n").replace("\n", "<br>")
-//						.replace("Effect", "<span style=\"color: #7ac424\">Effect</span>")
-//						.replace("Ally", "<span style=\"color: #de0022\">Ally</span>")
-//						.replace("Item", "<span style=\"color: #45afe6\">Item</span>")
-//						.replace("Condition", "<span style=\"color: #d3568d\">Condition</span>")
-//						.replace("Hero", "<span style=\"color: #e68c0a\">Hero</span>") + "</p></html>");
-//		lblAbility.setDebugGraphicsOptions(DebugGraphics.LOG_OPTION);
-//		lblAbility.setFont(FONT_TEXT_MAX);
-//		lblAbility.setForeground(card.deck == "Fate" ? COLOR_TEXT_FATE : COLOR_TEXT_VILLAIN);
-//		lblAbility.setBorder(new LineBorder(Color.RED, 2));
-//		lblAbility.setBackground(Color.BLACK);
-//		lblAbility.setPreferredSize(ABILITY_COORDS.getSize());
-//		lblAbility.setSize(ABILITY_COORDS.getSize());
-//		BufferedImage imageLblAbility = new BufferedImage(ABILITY_COORDS.width, ABILITY_COORDS.height, BufferedImage.TYPE_INT_ARGB);
-//		Graphics2D imageAbG = image.createGraphics();
-//		imageAbG.translate(145, 1292);
-//		lblAbility.printAll(imageAbG);
-//		
-//		imageG.drawImage(imageLblAbility, 0, 0, null);
-		
-		BufferedImage imageLblAbility = new BufferedImage(ABILITY_COORDS.width, ABILITY_COORDS.height, BufferedImage.TYPE_INT_ARGB);
-		Graphics2D imageAbG = image.createGraphics();
-		imageAbG.setFont(FONT_TEXT_MAX);
-		imageAbG.setColor(card.deck == "Fate" ? COLOR_TEXT_FATE : COLOR_TEXT_VILLAIN);
-		imageAbG.drawString(card.ability, 145, 1292);
-		
+		String htmlAbility = "<html>" + "<head><style>" + "html { width: " + ABILITY_COORDS.width + "; height: "
+				+ ABILITY_COORDS.height + "; }" + "body { background-color: green; font: " + FONT_TEXT_MAX.getSize()
+				+ " " + FONT_TEXT_MAX.getFamily() + ", sans-serif; color: "
+				+ (card.deck == "Fate" ? COLOR_TEXT_FATE : COLOR_TEXT_VILLAIN) + "}" + "p {}"
+				+ "</style></head><body><p style='text-align: center;'>"
+				+ card.ability.trim().replace("   ", "\n").replace("\n", "<br>")
+						.replace("Effect", "<span style=\"color: #7ac424\">Effect</span>")
+						.replace("Ally", "<span style=\"color: #de0022\">Ally</span>")
+						.replace("Item", "<span style=\"color: #45afe6\">Item</span>")
+						.replace("Condition", "<span style=\"color: #d3568d\">Condition</span>")
+						.replace("Hero", "<span style=\"color: #e68c0a\">Hero</span>")
+				+ "</p></body></html>";
+		// JLabel lblAbility = new JLabel(htmlAbility);
+		// lblAbility.setDebugGraphicsOptions(DebugGraphics.LOG_OPTION);
+		// lblAbility.setFont(FONT_TEXT_MAX);
+		// lblAbility.setForeground(card.deck == "Fate" ? COLOR_TEXT_FATE : COLOR_TEXT_VILLAIN);
+		// lblAbility.setBorder(new LineBorder(Color.RED, 2));
+		// lblAbility.setBackground(Color.BLACK);
+		// lblAbility.setPreferredSize(ABILITY_COORDS.getSize());
+		// lblAbility.setSize(ABILITY_COORDS.getSize());
+		// BufferedImage imageLblAbility = new BufferedImage(ABILITY_COORDS.width, ABILITY_COORDS.height,
+		// BufferedImage.TYPE_INT_ARGB);
+		// Graphics2D imageAbG = image.createGraphics();
+		// imageAbG.translate(145, 1292);
+		// lblAbility.printAll(imageAbG);
+		//
+		// imageG.drawImage(imageLblAbility, 0, 0, null);
+
+		HtmlImageGenerator imageGenAbility = new HtmlImageGenerator();
+		imageGenAbility.loadHtml(htmlAbility);
+		BufferedImage biAbility = imageGenAbility.getBufferedImage(); // TYPE: TYPE_INT_ARGB
+		imageResult.drawImage(intArgbColorToIntArgbAlpha(biAbility, Color.GREEN), ABILITY_COORDS.x, ABILITY_COORDS.y,
+				null);
+
 		return image;
 
+	}
+
+	public static BufferedImage intArgbColorToIntArgbAlpha(BufferedImage sourceImage, Color origColor) {
+		BufferedImage targetImage = new BufferedImage(sourceImage.getWidth(), sourceImage.getHeight(),
+				BufferedImage.TYPE_INT_ARGB);
+		WritableRaster targetRaster = targetImage.getRaster();
+		WritableRaster sourceRaster = sourceImage.getRaster();
+
+		for (int row = 0; row < sourceImage.getHeight(); row++) {
+
+			int[] rgbaTarget = new int[4 * sourceImage.getWidth()];
+			int[] rgbaSource = new int[4 * sourceImage.getWidth()];
+
+			// Get the next row of pixels
+			sourceRaster.getPixels(0, row, sourceImage.getWidth(), 1, rgbaSource);
+
+			for (int i = 0, j = 0; i < rgbaSource.length; i += 4, j += 4) {
+				// if (origColor.equals(new Color(rgb[i], rgb[i + 1], rgb[i + 2]))) {
+				if (row < 3 || row > sourceImage.getWidth() - 3 //We make transparent the border (top/bottom)
+						|| i < 12 || i > sourceImage.getWidth() - 12 //We make transparent the border (left/right)
+						|| rgbaSource[i] == 0 && rgbaSource[i + 1] > 0 && rgbaSource[i + 2] == 0) {
+					// System.out.println("!!!!!!!!!!!!!!!! Confirmed transparency");
+					// System.out.println("Orig color: " + origColor);
+					// System.out.println("pìxel color: " + new Color(rgbaSource[i], rgbaSource[i + 1], rgbaSource[i + 2]));
+					// System.out.println("pìxel color2: " + rgbaSource[i] + ", " + rgbaSource[i + 1] + ", " + rgbaSource[i + 2]);
+					// If it's the same make it transparent
+					rgbaTarget[j] = 0;
+					rgbaTarget[j + 1] = 0;
+					rgbaTarget[j + 2] = 0;
+					rgbaTarget[j + 3] = 0;
+				} else {
+					// System.out.println(" Confirmed NO transparency: ");
+					// System.out.println(" Orig color: " + origColor);
+					// System.out.println(" pìxel color: " + new Color(rgbaSource[i], rgbaSource[i + 1], rgbaSource[i + 2]));
+					rgbaTarget[j] = rgbaSource[i];
+					rgbaTarget[j + 1] = rgbaSource[i + 1];
+					rgbaTarget[j + 2] = rgbaSource[i + 2];
+					// Make it opaque
+					// rgba[j + 3] = 255;
+					rgbaTarget[j + 3] = rgbaSource[i + 3];
+				}
+			}
+			// Write the line
+			targetRaster.setPixels(0, row, sourceImage.getWidth(), 1, rgbaTarget);
+		}
+		return targetImage;
 	}
 
 	public static void main(String[] args) throws Exception {
