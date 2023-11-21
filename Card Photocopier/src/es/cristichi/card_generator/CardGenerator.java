@@ -3,6 +3,7 @@ package es.cristichi.card_generator;
 import java.awt.Color;
 import java.awt.Desktop;
 import java.awt.Font;
+import java.awt.FontMetrics;
 import java.awt.Graphics2D;
 import java.awt.Rectangle;
 import java.awt.font.TextAttribute;
@@ -16,15 +17,11 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.Semaphore;
 
-import javax.swing.ImageIcon;
 import javax.swing.JLabel;
-import javax.swing.JPanel;
 import javax.swing.SwingConstants;
-import javax.swing.border.LineBorder;
 
 import org.jopendocument.dom.spreadsheet.Sheet;
 
-import es.cristichi.CristichiVillainousMain;
 import es.cristichi.MainInfoFrame;
 import es.cristichi.card_generator.obj.DeckTemplate;
 import es.cristichi.card_generator.obj.GeneratorReturn;
@@ -55,8 +52,11 @@ public class CardGenerator {
 
 	private static Rectangle NAME_COORDS = new Rectangle(173, 1090, 1094, 137);
 	private static Rectangle ABILITY_COORDS = new Rectangle(140, 1292, 1160, 612);
-	private static Rectangle TYPE_COORDS = new Rectangle(0, 1949, 1440, 72);
-	private static Rectangle COST_COORDS = new Rectangle(109, 117, 156, 156);
+//	private static Rectangle TYPE_COORDS = new Rectangle(0, 1949, 1440, 72);
+//	private static Rectangle TYPE_COORDS = new Rectangle(0, 1883, 1440, 161);
+	private static Rectangle TYPE_COORDS = new Rectangle(0, 1889, 1440, 161); // Callibrated manually
+//	private static Rectangle COST_COORDS = new Rectangle(109, 117, 156, 156);
+	private static Rectangle COST_COORDS = new Rectangle(78, 86, 218, 218);
 	private static Rectangle STRENGTH_COORDS = new Rectangle(61, 1827, 156, 156);
 	private static Rectangle TR_COORDS = new Rectangle(1175, 118, 156, 156);
 	private static Rectangle BR_COORDS = new Rectangle(1223, 1826, 156, 156);
@@ -288,7 +288,7 @@ public class CardGenerator {
 		BufferedImage image = new BufferedImage(CARD_COORDS.width, CARD_COORDS.height, BufferedImage.TYPE_INT_RGB);
 		Graphics2D imageResult = image.createGraphics();
 		panelCard.printAll(imageResult);
-		// Ability TODO: Fix vertical align
+		// Ability 
 		String htmlAbility = "<html>" + "<head><style>" + "html { width: " + ABILITY_COORDS.width + "; height: "
 				+ ABILITY_COORDS.height + "; }" + "body { background-color: green; font: " + FONT_TEXT_MAX.getSize()
 				+ " " + FONT_TEXT_MAX.getFamily() + ", sans-serif; color: "
@@ -321,24 +321,100 @@ public class CardGenerator {
 	*/
 
 	private BufferedImage generateImage(File templatesFolder, File artFolder, CardInfo card) throws IOException {
-		String htmlAbility = "<html>" + "<head><style>" + "html { width: " + ABILITY_COORDS.width + "; height: "
-				+ ABILITY_COORDS.height + "; }" + "body { background-color: green; font: " + FONT_TEXT_MAX.getSize()
-				+ " " + FONT_TEXT_MAX.getFamily() + ", sans-serif; color: "
-				+ (card.deck == "Fate" ? COLOR_TEXT_FATE : COLOR_TEXT_VILLAIN) + "}" + "p {}"
-				+ "</style></head><body><p style='text-align: center;'>"
-				+ card.ability.trim().replace("   ", "\n").replace("\n", "<br>")
+		Color textColor = (card.deck == "Fate" ? COLOR_TEXT_FATE : COLOR_TEXT_VILLAIN);
+		String htmlAbility = card.ability.trim().replace("   ", "\n").replace("\n", "</p><p>")
 						.replace("Effect", "<span style=\"color: #7ac424\">Effect</span>")
 						.replace("Ally", "<span style=\"color: #de0022\">Ally</span>")
 						.replace("Item", "<span style=\"color: #45afe6\">Item</span>")
 						.replace("Condition", "<span style=\"color: #d3568d\">Condition</span>")
-						.replace("Hero", "<span style=\"color: #e68c0a\">Hero</span>")
-				+ "</p></body></html>";
+						.replace("Hero", "<span style=\"color: #e68c0a\">Hero</span>");
+		String htmlType = card.type.trim().replace("Effect", "<span style=\"color: #7ac424\">Effect</span>")
+								.replace("Ally", "<span style=\"color: #de0022\">Ally</span>")
+								.replace("Item", "<span style=\"color: #45afe6\">Item</span>")
+								.replace("Condition", "<span style=\"color: #d3568d\">Condition</span>")
+								.replace("Hero", "<span style=\"color: #e68c0a\">Hero</span>");
 
-		BufferedImage image = new BufferedImage(CARD_COORDS.width, CARD_COORDS.height, BufferedImage.TYPE_INT_RGB);
-		Graphics2D imageResult = image.createGraphics();
+		BufferedImage resImage = new BufferedImage(CARD_COORDS.width, CARD_COORDS.height, BufferedImage.TYPE_INT_RGB);
+		Graphics2D resImageG = resImage.createGraphics();
+		
+		try {
+			BufferedImage art = DeckTemplate.getArtFile(artFolder, card.name);
+			resImageG.drawImage(art, null, 0, 0);
+		} catch (FileNotFoundException e) {
+			e.printStackTrace();
+			warnings.add("Error finding the art for " + card.name);
+		} catch (Exception e) {
+			e.printStackTrace();
+			warnings.add("Error reading the art for " + card.name);
+		}
 
-		BufferedImage deckTempl = DeckTemplate.getTemplateFile(templatesFolder, TemplateType.DECK, card.deck);
-		return image;
+		BufferedImage deck = DeckTemplate.getTemplateFile(templatesFolder, TemplateType.DECK, card.deck);
+		resImageG.drawImage(deck, null, 0, 0);
+		
+		drawCenteredHTMLString(resImageG, htmlType, TYPE_COORDS, FONT_TYPE, textColor);
+		
+		if (!card.cost.equals("")) {
+			BufferedImage costTempl = DeckTemplate.getTemplateFile(templatesFolder, TemplateType.COST, card.deck);
+			resImageG.drawImage(costTempl, null, 0, 0);
+			drawCenteredString(resImageG, card.cost, COST_COORDS, FONT_CORNER_VALUES, textColor);
+		}
+		
+		drawCenteredHTMLParagraph(resImageG, htmlAbility, ABILITY_COORDS, FONT_TEXT_MAX, textColor);
+		
+		return resImage;
+	}
+	/**
+	 * Draw a String centered in the middle of a Rectangle.
+	 *
+	 * @param g The Graphics instance.
+	 * @param text The String to draw.
+	 * @param rect The Rectangle to center the text in.
+	 * 
+	 * @author https://stackoverflow.com/questions/27706197/how-can-i-center-graphics-drawstring-in-java
+	 */
+	public void drawCenteredString(Graphics2D g, String text, Rectangle rect, Font font, Color textColor) {
+	    // Get the FontMetrics
+	    FontMetrics metrics = g.getFontMetrics(font);
+	    // Set the font & color
+	    g.setFont(font);
+	    g.setColor(textColor);
+	    // Determine the X coordinate for the text
+	    int x = rect.x + (rect.width - metrics.stringWidth(text)) / 2;
+	    // Determine the Y coordinate for the text (note we add the ascent, as in java 2d 0 is top of the screen)
+	    // Added small correction with -2
+	    int y = rect.y + ((rect.height - metrics.getHeight()) / 2) + metrics.getAscent() -2;
+	    // Draw the String
+	    g.drawString(text, x, y);
+	}
+	
+	public void drawCenteredHTMLString(Graphics2D g, String htmlText, Rectangle rect, Font font, Color textColor) {
+		JLabel label = new JLabel("<html>"+htmlText);
+		label.setBounds(rect);
+		label.setLocation(rect.getLocation());
+		label.setFont(font);
+		label.setForeground(textColor);
+		label.setHorizontalAlignment(SwingConstants.CENTER);
+		label.setVerticalAlignment(SwingConstants.CENTER);
+		
+		BufferedImage type = new BufferedImage(rect.width, rect.height, BufferedImage.TYPE_INT_ARGB);
+		label.paint(type.getGraphics());
+		g.drawImage(type, null, rect.x, rect.y);
+	}
+	
+	public void drawCenteredHTMLParagraph(Graphics2D g, String htmlText, Rectangle rect, Font font, Color textColor) {
+		
+		JLabel label = new JLabel("<html><style>html { width: " + rect.width + "; }</style><body style='text-align: center'><div><p>"+htmlText);
+		System.out.println(label.getText());
+		label.setBounds(rect);
+		label.setLocation(rect.getLocation());
+		label.setFont(font);
+		label.setForeground(textColor);
+		label.setHorizontalAlignment(SwingConstants.CENTER);
+		label.setVerticalAlignment(SwingConstants.CENTER);
+		
+		BufferedImage type = new BufferedImage(rect.width, rect.height, BufferedImage.TYPE_INT_ARGB);
+		label.paint(type.getGraphics());
+		g.drawImage(type, null, rect.x, rect.y);
 	}
 
 	/**
@@ -396,15 +472,18 @@ public class CardGenerator {
 
 	public static void main(String[] args) throws Exception {
 		CardGenerator cGen = new CardGenerator();
+		cGen.warnings = new ArrayList<>(3);
 
 		CardInfo ci = new CardInfo(null);
 		ci.name = "Riptide Rex";
 		ci.deck = "Villain";
 		ci.extraDeck = "";
 
-		ci.cost = "3";
+		ci.cost = "32";
 		ci.strength = "3";
-		ci.ability = "Riptide Rex may be used to defeat a Hero at any location if he is at The Dreadway's location. Luego hazte un baile gitano y me cuentas mi lcoo xoxo";
+		ci.ability = "When Riptide Rex is played, please take one +1 Strength Token and put it on yourself for being so good at this game. Then, take a -1 Strength Token and put it on an opponent because nobody is left alive after trying to conquer your domain.";
+		ci.ability = "Riptide Rex may be used to   defeat a Hero at an adjacent location if he is at The   Dreadway's location.";
+//		ci.ability = "When    Riptide    Rex do the good.";
 
 		ci.activateAbility = "";
 		ci.activateCost = "";
@@ -424,5 +503,8 @@ public class CardGenerator {
 		File testFile = new File("test " + ci.name + ".jpg");
 		Util.writeJpgImage(bi, testFile, 1);
 		Desktop.getDesktop().open(testFile);
+		
+		System.out.println("Warnings:");
+		System.out.println(cGen.warnings.toString());
 	}
 }
