@@ -35,7 +35,6 @@ import es.cristichi.obj.ExtraDeckInfo;
 import es.cristichi.obj.Util;
 import es.cristichi.obj.config.ConfigValue;
 import es.cristichi.obj.config.Configuration;
-import gui.ava.html.image.generator.HtmlImageGenerator;
 
 public class CardGenerator {
 	private static Font FONT_CARD_NAME = new Font("Esteban", Font.PLAIN, 100);
@@ -136,174 +135,192 @@ public class CardGenerator {
 		return new GeneratorReturn(warnings, usefulCards, extraDecks);
 	}
 
+	/*
+	 * private BufferedImage generateImage(File templatesFolder, File artFolder, CardInfo card) throws IOException {
+	 * JPanel panelCard = new JPanel();
+	 * panelCard.setBackground(Color.GREEN);
+	 * panelCard.setLayout(null);
+	 * panelCard.setSize(CristichiVillainousMain.CARD_SIZE);
+	 * panelCard.setPreferredSize(CristichiVillainousMain.CARD_SIZE);
+	 * panelCard.setMaximumSize(CristichiVillainousMain.CARD_SIZE);
+	 * panelCard.setMinimumSize(CristichiVillainousMain.CARD_SIZE);
+	 * panelCard.setVisible(true);
+	 * JLabel lblArt = new JLabel();
+	 * lblArt.setBounds(ART_COORDS);
+	 * panelCard.add(lblArt);
+	 * try {
+	 * BufferedImage art = DeckTemplate.getArtFile(artFolder, card.name);
+	 * lblArt.setIcon(new ImageIcon(art));
+	 * } catch (FileNotFoundException e) {
+	 * e.printStackTrace();
+	 * warnings.add("Error finding the art for " + card.name);
+	 * } catch (Exception e) {
+	 * e.printStackTrace();
+	 * warnings.add("Error reading the art for " + card.name);
+	 * }
+	 * BufferedImage deckTempl = DeckTemplate.getTemplateFile(templatesFolder, TemplateType.DECK, card.deck);
+	 * JLabel lblDeckTempl = new JLabel(new ImageIcon(deckTempl));
+	 * lblDeckTempl.setBounds(CARD_COORDS);
+	 * panelCard.add(lblDeckTempl);
+	 * // Name
+	 * JLabel lblName = new JLabel("<html><style>" + "html { height: " + NAME_COORDS.height + "; width: "
+	 * + NAME_COORDS.width + ";}" + "body { height: 100%; width: 100%; text-align: center; }"
+	 * + "</style><body>" + card.name.trim().toUpperCase().replace("   ", " ") + "</body></html>");
+	 * lblName.setBounds(NAME_COORDS);
+	 * lblName.setFont(FONT_CARD_NAME);
+	 * lblName.setForeground(card.deck == "Fate" ? COLOR_TEXT_FATE : COLOR_TEXT_VILLAIN);
+	 * lblName.setHorizontalAlignment(SwingConstants.CENTER);
+	 * lblName.setVerticalAlignment(SwingConstants.CENTER);
+	 * lblName.setBorder(new LineBorder(Color.RED, 1));
+	 * panelCard.add(lblName);
+	 * // Type
+	 * JLabel lblType = new JLabel(
+	 * "<html><style>" + "html { height: " + TYPE_COORDS.height + "; width: " + TYPE_COORDS.width + ";}"
+	 * + "body { height: 100%; width: 100%; text-align: center; }" + "</style><body>"
+	 * + card.type.trim().replace("Effect", "<span style=\"color: #7ac424\">Effect</span>")
+	 * .replace("Ally", "<span style=\"color: #de0022\">Ally</span>")
+	 * .replace("Item", "<span style=\"color: #45afe6\">Item</span>")
+	 * .replace("Condition", "<span style=\"color: #d3568d\">Condition</span>")
+	 * .replace("Hero", "<span style=\"color: #e68c0a\">Hero</span>")
+	 * + "</body></html>");
+	 * lblType.setBounds(TYPE_COORDS);
+	 * lblType.setFont(FONT_TYPE);
+	 * lblType.setForeground(card.deck == "Fate" ? COLOR_TEXT_FATE : COLOR_TEXT_VILLAIN);
+	 * lblType.setHorizontalAlignment(SwingConstants.CENTER);
+	 * lblType.setVerticalAlignment(SwingConstants.CENTER);
+	 * lblType.setBorder(new LineBorder(Color.RED, 1));
+	 * panelCard.add(lblType);
+	 * // Cost
+	 * JLabel lblCostIcon = new JLabel();
+	 * JLabel lblCostText = new JLabel("<html><style>" + "html { height: " + COST_COORDS.height + "; width: "
+	 * + COST_COORDS.width + ";}" + "body { height: 100%; width: 100%; text-align: center; }"
+	 * + "</style><body'>" + card.cost + "</body></html>");
+	 * if (!card.cost.equals("")) {
+	 * BufferedImage costTempl = DeckTemplate.getTemplateFile(templatesFolder, TemplateType.COST, card.deck);
+	 * lblCostIcon.setIcon(new ImageIcon(costTempl));
+	 * lblCostIcon.setBounds(CARD_COORDS);
+	 * panelCard.add(lblCostIcon);
+	 * lblCostText.setBounds(COST_COORDS);
+	 * lblCostText.setFont(FONT_CORNER_VALUES);
+	 * lblCostText.setForeground(card.deck == "Fate" ? COLOR_TEXT_FATE : COLOR_TEXT_VILLAIN);
+	 * lblCostText.setHorizontalAlignment(SwingConstants.CENTER);
+	 * lblCostText.setVerticalAlignment(SwingConstants.CENTER);
+	 * panelCard.add(lblCostText);
+	 * }
+	 * // Strength
+	 * JLabel lblStrengthIcon = new JLabel();
+	 * JLabel lblStrengthText = new JLabel("<html><style>" + "html { height: " + STRENGTH_COORDS.height + "; width: "
+	 * + STRENGTH_COORDS.width + ";}" + "body { height: 100%; width: 100%; text-align: center; }"
+	 * + "</style><body>" + card.strength + "</body></html>");
+	 * if (!card.strength.equals("")) {
+	 * BufferedImage strengthTempl = DeckTemplate.getTemplateFile(templatesFolder, TemplateType.STRENGTH,
+	 * card.deck);
+	 * lblStrengthIcon.setIcon(new ImageIcon(strengthTempl));
+	 * lblStrengthIcon.setBounds(CARD_COORDS);
+	 * panelCard.add(lblStrengthIcon);
+	 * lblStrengthText.setBounds(STRENGTH_COORDS);
+	 * lblStrengthText.setFont(FONT_CORNER_VALUES);
+	 * lblStrengthText.setForeground(card.deck == "Fate" ? COLOR_TEXT_FATE : COLOR_TEXT_VILLAIN);
+	 * lblStrengthText.setHorizontalAlignment(SwingConstants.CENTER);
+	 * lblStrengthText.setVerticalAlignment(SwingConstants.CENTER);
+	 * panelCard.add(lblStrengthText);
+	 * }
+	 * // Top Right
+	 * JLabel lblTRIcon = new JLabel();
+	 * JLabel lblTRText = new JLabel("<html><style>" + "html { height: " + TR_COORDS.height + "; width: "
+	 * + TR_COORDS.width + ";}" + "body { height: 100%; width: 100%; text-align: center; }" + "</style><body>"
+	 * + card.topRight + "</body></html>");
+	 * if (!card.topRight.equals("")) {
+	 * BufferedImage topRightTempl = DeckTemplate.getTemplateFile(templatesFolder, TemplateType.TOP_RIGHT,
+	 * card.deck);
+	 * lblTRIcon.setIcon(new ImageIcon(topRightTempl));
+	 * lblTRIcon.setBounds(CARD_COORDS);
+	 * panelCard.add(lblTRIcon);
+	 * lblTRText.setBounds(TR_COORDS);
+	 * lblTRText.setFont(FONT_CORNER_VALUES);
+	 * lblTRText.setForeground(card.deck == "Fate" ? COLOR_TEXT_FATE : COLOR_TEXT_VILLAIN);
+	 * lblTRText.setHorizontalAlignment(SwingConstants.CENTER);
+	 * lblTRText.setVerticalAlignment(SwingConstants.CENTER);
+	 * panelCard.add(lblTRText);
+	 * }
+	 * // Bottom Right
+	 * JLabel lblBRIcon = new JLabel();
+	 * JLabel lblBRText = new JLabel("<html><style>" + "html { height: " + BR_COORDS.height + "; width: "
+	 * + BR_COORDS.width + ";}" + "body { height: 100%; width: 100%; text-align: center; }" + "</style><body>"
+	 * + card.bottomLeft + "</body></html>");
+	 * if (!card.bottomLeft.equals("")) {
+	 * BufferedImage topRightTempl = DeckTemplate.getTemplateFile(templatesFolder, TemplateType.BOTTOM_RIGHT,
+	 * card.deck);
+	 * lblBRIcon.setIcon(new ImageIcon(topRightTempl));
+	 * lblBRIcon.setBounds(CARD_COORDS);
+	 * panelCard.add(lblBRIcon);
+	 * lblBRText.setBounds(BR_COORDS);
+	 * lblBRText.setFont(FONT_CORNER_VALUES);
+	 * lblBRText.setForeground(card.deck == "Fate" ? COLOR_TEXT_FATE : COLOR_TEXT_VILLAIN);
+	 * lblBRText.setHorizontalAlignment(SwingConstants.CENTER);
+	 * lblBRText.setVerticalAlignment(SwingConstants.CENTER);
+	 * panelCard.add(lblBRText);
+	 * }
+	 * // Higher value = printed first (behind)
+	 * // Lower value = printed last (in front)
+	 * int compCount = panelCard.getComponentCount() - 1;
+	 * panelCard.setComponentZOrder(lblArt, compCount--);
+	 * panelCard.setComponentZOrder(lblDeckTempl, compCount--);
+	 * panelCard.setComponentZOrder(lblName, compCount--);
+	 * // panelCard.setComponentZOrder(lblAbility, compCount--);
+	 * panelCard.setComponentZOrder(lblType, compCount--);
+	 * if (!card.cost.equals("")) {
+	 * panelCard.setComponentZOrder(lblCostIcon, compCount--);
+	 * panelCard.setComponentZOrder(lblCostText, compCount--);
+	 * }
+	 * if (!card.strength.equals("")) {
+	 * panelCard.setComponentZOrder(lblStrengthIcon, compCount--);
+	 * panelCard.setComponentZOrder(lblStrengthText, compCount--);
+	 * }
+	 * if (!card.topRight.equals("")) {
+	 * panelCard.setComponentZOrder(lblTRIcon, compCount--);
+	 * panelCard.setComponentZOrder(lblTRText, compCount--);
+	 * }
+	 * if (!card.bottomLeft.equals("")) {
+	 * panelCard.setComponentZOrder(lblBRIcon, compCount--);
+	 * panelCard.setComponentZOrder(lblBRText, compCount--);
+	 * }
+	 * BufferedImage image = new BufferedImage(CARD_COORDS.width, CARD_COORDS.height, BufferedImage.TYPE_INT_RGB);
+	 * Graphics2D imageResult = image.createGraphics();
+	 * panelCard.printAll(imageResult);
+	 * // Ability TODO: Fix vertical align
+	 * String htmlAbility = "<html>" + "<head><style>" + "html { width: " + ABILITY_COORDS.width + "; height: "
+	 * + ABILITY_COORDS.height + "; }" + "body { background-color: green; font: " + FONT_TEXT_MAX.getSize()
+	 * + " " + FONT_TEXT_MAX.getFamily() + ", sans-serif; color: "
+	 * + (card.deck == "Fate" ? COLOR_TEXT_FATE : COLOR_TEXT_VILLAIN) + "}" + "p {}"
+	 * + "</style></head><body><p style='text-align: center;'>"
+	 * + card.ability.trim().replace("   ", "\n").replace("\n", "<br>")
+	 * .replace("Effect", "<span style=\"color: #7ac424\">Effect</span>")
+	 * .replace("Ally", "<span style=\"color: #de0022\">Ally</span>")
+	 * .replace("Item", "<span style=\"color: #45afe6\">Item</span>")
+	 * .replace("Condition", "<span style=\"color: #d3568d\">Condition</span>")
+	 * .replace("Hero", "<span style=\"color: #e68c0a\">Hero</span>")
+	 * + "</p></body></html>";
+	 * // JLabel lblAbility = new JLabel(htmlAbility);
+	 * // lblAbility.setDebugGraphicsOptions(DebugGraphics.LOG_OPTION);
+	 * // lblAbility.setFont(FONT_TEXT_MAX);
+	 * // lblAbility.setForeground(card.deck == "Fate" ? COLOR_TEXT_FATE : COLOR_TEXT_VILLAIN);
+	 * // lblAbility.setBorder(new LineBorder(Color.RED, 2));
+	 * // lblAbility.setBackground(Color.BLACK);
+	 * // lblAbility.setPreferredSize(ABILITY_COORDS.getSize());
+	 * // lblAbility.setSize(ABILITY_COORDS.getSize());
+	 * // BufferedImage imageLblAbility = new BufferedImage(ABILITY_COORDS.width, ABILITY_COORDS.height,
+	 * // BufferedImage.TYPE_INT_ARGB);
+	 * // Graphics2D imageAbG = image.createGraphics();
+	 * // imageAbG.translate(145, 1292);
+	 * // lblAbility.printAll(imageAbG);
+	 * //
+	 * // imageG.drawImage(imageLblAbility, 0, 0, null);
+	 * return image;
+	 * }
+	 */
+
 	private BufferedImage generateImage(File templatesFolder, File artFolder, CardInfo card) throws IOException {
-		JPanel panelCard = new JPanel();
-		panelCard.setBackground(Color.GREEN);
-		panelCard.setLayout(null);
-		panelCard.setSize(CristichiVillainousMain.CARD_SIZE);
-		panelCard.setPreferredSize(CristichiVillainousMain.CARD_SIZE);
-		panelCard.setMaximumSize(CristichiVillainousMain.CARD_SIZE);
-		panelCard.setMinimumSize(CristichiVillainousMain.CARD_SIZE);
-		panelCard.setVisible(true);
-
-		JLabel lblArt = new JLabel();
-		lblArt.setBounds(ART_COORDS);
-		panelCard.add(lblArt);
-		try {
-			BufferedImage art = DeckTemplate.getArtFile(artFolder, card.name);
-			lblArt.setIcon(new ImageIcon(art));
-		} catch (FileNotFoundException e) {
-			e.printStackTrace();
-			warnings.add("Error finding the art for " + card.name);
-		} catch (Exception e) {
-			e.printStackTrace();
-			warnings.add("Error reading the art for " + card.name);
-		}
-
-		BufferedImage deckTempl = DeckTemplate.getTemplateFile(templatesFolder, TemplateType.DECK, card.deck);
-		JLabel lblDeckTempl = new JLabel(new ImageIcon(deckTempl));
-		lblDeckTempl.setBounds(CARD_COORDS);
-		panelCard.add(lblDeckTempl);
-
-		// Name
-		JLabel lblName = new JLabel("<html><style>" + "html { height: " + NAME_COORDS.height + "; width: "
-				+ NAME_COORDS.width + ";}" + "body { height: 100%; width: 100%; text-align: center; }"
-				+ "</style><body>" + card.name.trim().toUpperCase().replace("   ", " ") + "</body></html>");
-		lblName.setBounds(NAME_COORDS);
-		lblName.setFont(FONT_CARD_NAME);
-		lblName.setForeground(card.deck == "Fate" ? COLOR_TEXT_FATE : COLOR_TEXT_VILLAIN);
-		lblName.setHorizontalAlignment(SwingConstants.CENTER);
-		lblName.setVerticalAlignment(SwingConstants.CENTER);
-		lblName.setBorder(new LineBorder(Color.RED, 1));
-		panelCard.add(lblName);
-
-		// Type
-		JLabel lblType = new JLabel(
-				"<html><style>" + "html { height: " + TYPE_COORDS.height + "; width: " + TYPE_COORDS.width + ";}"
-						+ "body { height: 100%; width: 100%; text-align: center; }" + "</style><body>"
-						+ card.type.trim().replace("Effect", "<span style=\"color: #7ac424\">Effect</span>")
-								.replace("Ally", "<span style=\"color: #de0022\">Ally</span>")
-								.replace("Item", "<span style=\"color: #45afe6\">Item</span>")
-								.replace("Condition", "<span style=\"color: #d3568d\">Condition</span>")
-								.replace("Hero", "<span style=\"color: #e68c0a\">Hero</span>")
-						+ "</body></html>");
-		lblType.setBounds(TYPE_COORDS);
-		lblType.setFont(FONT_TYPE);
-		lblType.setForeground(card.deck == "Fate" ? COLOR_TEXT_FATE : COLOR_TEXT_VILLAIN);
-		lblType.setHorizontalAlignment(SwingConstants.CENTER);
-		lblType.setVerticalAlignment(SwingConstants.CENTER);
-		lblType.setBorder(new LineBorder(Color.RED, 1));
-		panelCard.add(lblType);
-
-		// Cost
-		JLabel lblCostIcon = new JLabel();
-		JLabel lblCostText = new JLabel("<html><style>" + "html { height: " + COST_COORDS.height + "; width: "
-				+ COST_COORDS.width + ";}" + "body { height: 100%; width: 100%; text-align: center; }"
-				+ "</style><body'>" + card.cost + "</body></html>");
-		if (!card.cost.equals("")) {
-			BufferedImage costTempl = DeckTemplate.getTemplateFile(templatesFolder, TemplateType.COST, card.deck);
-			lblCostIcon.setIcon(new ImageIcon(costTempl));
-			lblCostIcon.setBounds(CARD_COORDS);
-			panelCard.add(lblCostIcon);
-
-			lblCostText.setBounds(COST_COORDS);
-			lblCostText.setFont(FONT_CORNER_VALUES);
-			lblCostText.setForeground(card.deck == "Fate" ? COLOR_TEXT_FATE : COLOR_TEXT_VILLAIN);
-			lblCostText.setHorizontalAlignment(SwingConstants.CENTER);
-			lblCostText.setVerticalAlignment(SwingConstants.CENTER);
-			panelCard.add(lblCostText);
-		}
-
-		// Strength
-		JLabel lblStrengthIcon = new JLabel();
-		JLabel lblStrengthText = new JLabel("<html><style>" + "html { height: " + STRENGTH_COORDS.height + "; width: "
-				+ STRENGTH_COORDS.width + ";}" + "body { height: 100%; width: 100%; text-align: center; }"
-				+ "</style><body>" + card.strength + "</body></html>");
-		if (!card.strength.equals("")) {
-			BufferedImage strengthTempl = DeckTemplate.getTemplateFile(templatesFolder, TemplateType.STRENGTH,
-					card.deck);
-			lblStrengthIcon.setIcon(new ImageIcon(strengthTempl));
-			lblStrengthIcon.setBounds(CARD_COORDS);
-			panelCard.add(lblStrengthIcon);
-
-			lblStrengthText.setBounds(STRENGTH_COORDS);
-			lblStrengthText.setFont(FONT_CORNER_VALUES);
-			lblStrengthText.setForeground(card.deck == "Fate" ? COLOR_TEXT_FATE : COLOR_TEXT_VILLAIN);
-			lblStrengthText.setHorizontalAlignment(SwingConstants.CENTER);
-			lblStrengthText.setVerticalAlignment(SwingConstants.CENTER);
-			panelCard.add(lblStrengthText);
-		}
-
-		// Top Right
-		JLabel lblTRIcon = new JLabel();
-		JLabel lblTRText = new JLabel("<html><style>" + "html { height: " + TR_COORDS.height + "; width: "
-				+ TR_COORDS.width + ";}" + "body { height: 100%; width: 100%; text-align: center; }" + "</style><body>"
-				+ card.topRight + "</body></html>");
-		if (!card.topRight.equals("")) {
-			BufferedImage topRightTempl = DeckTemplate.getTemplateFile(templatesFolder, TemplateType.TOP_RIGHT,
-					card.deck);
-			lblTRIcon.setIcon(new ImageIcon(topRightTempl));
-			lblTRIcon.setBounds(CARD_COORDS);
-			panelCard.add(lblTRIcon);
-
-			lblTRText.setBounds(TR_COORDS);
-			lblTRText.setFont(FONT_CORNER_VALUES);
-			lblTRText.setForeground(card.deck == "Fate" ? COLOR_TEXT_FATE : COLOR_TEXT_VILLAIN);
-			lblTRText.setHorizontalAlignment(SwingConstants.CENTER);
-			lblTRText.setVerticalAlignment(SwingConstants.CENTER);
-			panelCard.add(lblTRText);
-		}
-
-		// Bottom Right
-		JLabel lblBRIcon = new JLabel();
-		JLabel lblBRText = new JLabel("<html><style>" + "html { height: " + BR_COORDS.height + "; width: "
-				+ BR_COORDS.width + ";}" + "body { height: 100%; width: 100%; text-align: center; }" + "</style><body>"
-				+ card.bottomLeft + "</body></html>");
-		if (!card.bottomLeft.equals("")) {
-			BufferedImage topRightTempl = DeckTemplate.getTemplateFile(templatesFolder, TemplateType.BOTTOM_RIGHT,
-					card.deck);
-			lblBRIcon.setIcon(new ImageIcon(topRightTempl));
-			lblBRIcon.setBounds(CARD_COORDS);
-			panelCard.add(lblBRIcon);
-
-			lblBRText.setBounds(BR_COORDS);
-			lblBRText.setFont(FONT_CORNER_VALUES);
-			lblBRText.setForeground(card.deck == "Fate" ? COLOR_TEXT_FATE : COLOR_TEXT_VILLAIN);
-			lblBRText.setHorizontalAlignment(SwingConstants.CENTER);
-			lblBRText.setVerticalAlignment(SwingConstants.CENTER);
-			panelCard.add(lblBRText);
-		}
-
-		// Higher value = printed first (behind)
-		// Lower value = printed last (in front)
-		int compCount = panelCard.getComponentCount() - 1;
-		panelCard.setComponentZOrder(lblArt, compCount--);
-		panelCard.setComponentZOrder(lblDeckTempl, compCount--);
-		panelCard.setComponentZOrder(lblName, compCount--);
-		// panelCard.setComponentZOrder(lblAbility, compCount--);
-		panelCard.setComponentZOrder(lblType, compCount--);
-		if (!card.cost.equals("")) {
-			panelCard.setComponentZOrder(lblCostIcon, compCount--);
-			panelCard.setComponentZOrder(lblCostText, compCount--);
-		}
-		if (!card.strength.equals("")) {
-			panelCard.setComponentZOrder(lblStrengthIcon, compCount--);
-			panelCard.setComponentZOrder(lblStrengthText, compCount--);
-		}
-		if (!card.topRight.equals("")) {
-			panelCard.setComponentZOrder(lblTRIcon, compCount--);
-			panelCard.setComponentZOrder(lblTRText, compCount--);
-		}
-		if (!card.bottomLeft.equals("")) {
-			panelCard.setComponentZOrder(lblBRIcon, compCount--);
-			panelCard.setComponentZOrder(lblBRText, compCount--);
-		}
-
-		BufferedImage image = new BufferedImage(CARD_COORDS.width, CARD_COORDS.height, BufferedImage.TYPE_INT_RGB);
-		Graphics2D imageResult = image.createGraphics();
-		panelCard.printAll(imageResult);
-
-		// Ability TODO: Fix vertical align
 		String htmlAbility = "<html>" + "<head><style>" + "html { width: " + ABILITY_COORDS.width + "; height: "
 				+ ABILITY_COORDS.height + "; }" + "body { background-color: green; font: " + FONT_TEXT_MAX.getSize()
 				+ " " + FONT_TEXT_MAX.getFamily() + ", sans-serif; color: "
@@ -316,33 +333,22 @@ public class CardGenerator {
 						.replace("Condition", "<span style=\"color: #d3568d\">Condition</span>")
 						.replace("Hero", "<span style=\"color: #e68c0a\">Hero</span>")
 				+ "</p></body></html>";
-		// JLabel lblAbility = new JLabel(htmlAbility);
-		// lblAbility.setDebugGraphicsOptions(DebugGraphics.LOG_OPTION);
-		// lblAbility.setFont(FONT_TEXT_MAX);
-		// lblAbility.setForeground(card.deck == "Fate" ? COLOR_TEXT_FATE : COLOR_TEXT_VILLAIN);
-		// lblAbility.setBorder(new LineBorder(Color.RED, 2));
-		// lblAbility.setBackground(Color.BLACK);
-		// lblAbility.setPreferredSize(ABILITY_COORDS.getSize());
-		// lblAbility.setSize(ABILITY_COORDS.getSize());
-		// BufferedImage imageLblAbility = new BufferedImage(ABILITY_COORDS.width, ABILITY_COORDS.height,
-		// BufferedImage.TYPE_INT_ARGB);
-		// Graphics2D imageAbG = image.createGraphics();
-		// imageAbG.translate(145, 1292);
-		// lblAbility.printAll(imageAbG);
-		//
-		// imageG.drawImage(imageLblAbility, 0, 0, null);
 
-		HtmlImageGenerator imageGenAbility = new HtmlImageGenerator();
-		imageGenAbility.loadHtml(htmlAbility);
-		BufferedImage biAbility = imageGenAbility.getBufferedImage(); // TYPE: TYPE_INT_ARGB
-		imageResult.drawImage(intArgbColorToIntArgbAlpha(biAbility, Color.GREEN), ABILITY_COORDS.x, ABILITY_COORDS.y,
-				null);
+		BufferedImage image = new BufferedImage(CARD_COORDS.width, CARD_COORDS.height, BufferedImage.TYPE_INT_RGB);
+		Graphics2D imageResult = image.createGraphics();
 
+		BufferedImage deckTempl = DeckTemplate.getTemplateFile(templatesFolder, TemplateType.DECK, card.deck);
 		return image;
-
 	}
 
-	public static BufferedImage intArgbColorToIntArgbAlpha(BufferedImage sourceImage, Color origColor) {
+	/**
+	 * Changes all pixels of a specific color in a BufferedImage to alpha.
+	 * 
+	 * @param sourceImage
+	 * @param chromaColor
+	 * @return The resulting image
+	 */
+	public static BufferedImage intArgbColorToIntArgbAlpha(BufferedImage sourceImage, Color chromaColor) {
 		BufferedImage targetImage = new BufferedImage(sourceImage.getWidth(), sourceImage.getHeight(),
 				BufferedImage.TYPE_INT_ARGB);
 		WritableRaster targetRaster = targetImage.getRaster();
@@ -358,8 +364,8 @@ public class CardGenerator {
 
 			for (int i = 0, j = 0; i < rgbaSource.length; i += 4, j += 4) {
 				// if (origColor.equals(new Color(rgb[i], rgb[i + 1], rgb[i + 2]))) {
-				if (row < 3 || row > sourceImage.getWidth() - 3 //We make transparent the border (top/bottom)
-						|| i < 12 || i > sourceImage.getWidth() - 12 //We make transparent the border (left/right)
+				if (row < 3 || row > sourceImage.getWidth() - 3 // We make transparent the border (top/bottom)
+						|| i < 12 || i > sourceImage.getWidth() - 12 // We make transparent the border (left/right)
 						|| rgbaSource[i] == 0 && rgbaSource[i + 1] > 0 && rgbaSource[i + 2] == 0) {
 					// System.out.println("!!!!!!!!!!!!!!!! Confirmed transparency");
 					// System.out.println("Orig color: " + origColor);
@@ -415,7 +421,8 @@ public class CardGenerator {
 
 		BufferedImage bi = cGen.generateImage(new File("-Layout"), new File("-Images"), ci);
 
-		Util.writeJpgImage(bi, new File("test.jpg"), 1);
-		Desktop.getDesktop().open(new File("test.jpg"));
+		File testFile = new File("test " + ci.name + ".jpg");
+		Util.writeJpgImage(bi, testFile, 1);
+		Desktop.getDesktop().open(testFile);
 	}
 }

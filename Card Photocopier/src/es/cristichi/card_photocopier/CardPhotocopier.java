@@ -69,7 +69,7 @@ public class CardPhotocopier {
 	public CardPhotocopier() {
 	}
 
-	public ArrayList<String> generate(Configuration config, MainInfoFrame frame, File openDocumentFile, File imagesFolder, File resultsFolder, OdsStructure odsStructure, Sheet sheet) throws Exception {
+	public ArrayList<String> generate(Configuration config, MainInfoFrame frame, File openDocumentFile, File imagesFolder, File resultsFolder, OdsStructure odsStructure, Sheet sheet, Dimension CARD_SIZE) throws Exception {
 		ArrayList<String> warnings = new ArrayList<>(3);
 		frame.replaceText("Reading card data from " + openDocumentFile.getName() + ".");
 

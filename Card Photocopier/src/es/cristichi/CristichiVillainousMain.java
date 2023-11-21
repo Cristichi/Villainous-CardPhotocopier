@@ -362,7 +362,7 @@ public class CristichiVillainousMain {
 				if (steps.contains("photocopy")) {
 					CardPhotocopier cardPhotocopier = new CardPhotocopier();
 					warnings.addAll(cardPhotocopier.generate(config, frame, openDocumentFile, imagesFolder,
-							resultsFolder, odsStructure, sheet));
+							resultsFolder, odsStructure, sheet, CARD_SIZE));
 				}
 
 				if (warnings.isEmpty()) {
