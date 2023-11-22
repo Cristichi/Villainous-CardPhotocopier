@@ -14,6 +14,7 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Semaphore;
 
@@ -21,6 +22,7 @@ import javax.swing.JLabel;
 import javax.swing.SwingConstants;
 
 import org.jopendocument.dom.spreadsheet.Sheet;
+import org.jopendocument.util.StringUtils;
 
 import es.cristichi.MainInfoFrame;
 import es.cristichi.card_generator.obj.DeckTemplate;
@@ -52,6 +54,7 @@ public class CardGenerator {
 
 	private static Rectangle NAME_COORDS = new Rectangle(173, 1090, 1094, 137);
 	private static Rectangle ABILITY_COORDS = new Rectangle(140, 1292, 1160, 612);
+//	private static Rectangle ABILITY_COORDS = new Rectangle(140, 0, 1160, 2000); // For testing if huge texts are shown properly if they can
 //	private static Rectangle TYPE_COORDS = new Rectangle(0, 1949, 1440, 72);
 //	private static Rectangle TYPE_COORDS = new Rectangle(0, 1883, 1440, 161);
 	private static Rectangle TYPE_COORDS = new Rectangle(0, 1889, 1440, 161); // Callibrated manually
@@ -322,17 +325,8 @@ public class CardGenerator {
 
 	private BufferedImage generateImage(File templatesFolder, File artFolder, CardInfo card) throws IOException {
 		Color textColor = (card.deck == "Fate" ? COLOR_TEXT_FATE : COLOR_TEXT_VILLAIN);
-		String htmlAbility = card.ability.trim()
-						.replace("Effect", "<span style=\"color: #7ac424\">Effect</span>")
-						.replace("Ally", "<span style=\"color: #de0022\">Ally</span>")
-						.replace("Item", "<span style=\"color: #45afe6\">Item</span>")
-						.replace("Condition", "<span style=\"color: #d3568d\">Condition</span>")
-						.replace("Hero", "<span style=\"color: #e68c0a\">Hero</span>");
-		String htmlType = card.type.trim().replace("Effect", "<span style=\"color: #7ac424\">Effect</span>")
-								.replace("Ally", "<span style=\"color: #de0022\">Ally</span>")
-								.replace("Item", "<span style=\"color: #45afe6\">Item</span>")
-								.replace("Condition", "<span style=\"color: #d3568d\">Condition</span>")
-								.replace("Hero", "<span style=\"color: #e68c0a\">Hero</span>");
+		String htmlAbility = applyTags(card.ability.trim());
+		String htmlType = applyTags(card.type.trim());
 
 		BufferedImage resImage = new BufferedImage(CARD_COORDS.width, CARD_COORDS.height, BufferedImage.TYPE_INT_RGB);
 		Graphics2D resImageG = resImage.createGraphics();
@@ -363,6 +357,27 @@ public class CardGenerator {
 		
 		return resImage;
 	}
+	
+	/**
+	 * It applies color to keywords.
+	 * @param text
+	 * @return
+	 */
+	private String applyTags(String text) {
+		return text
+				.replace("Effects", "<span style=\"color: #7ac424\">Effects</span>")
+				.replace("Effect", "<span style=\"color: #7ac424\">Effect</span>")
+				.replace("Allies", "<span style=\"color: #de0022\">Allies</span>")
+				.replace("Ally", "<span style=\"color: #de0022\">Ally</span>")
+				.replace("Items", "<span style=\"color: #45afe6\">Items</span>")
+				.replace("Item", "<span style=\"color: #45afe6\">Item</span>")
+				.replace("Conditions", "<span style=\"color: #d3568d\">Conditions</span>")
+				.replace("Condition", "<span style=\"color: #d3568d\">Condition</span>")
+				.replace("Heroes", "<span style=\"color: #e68c0a\">Heroes</span>")
+				.replace("Hero", "<span style=\"color: #e68c0a\">Hero</span>")
+				;
+	}
+
 	/**
 	 * Draw a String centered in the middle of a Rectangle.
 	 *
@@ -372,7 +387,7 @@ public class CardGenerator {
 	 * 
 	 * @author https://stackoverflow.com/questions/27706197/how-can-i-center-graphics-drawstring-in-java
 	 */
-	public void drawCenteredString(Graphics2D g, String text, Rectangle rect, Font font, Color textColor) {
+	private void drawCenteredString(Graphics2D g, String text, Rectangle rect, Font font, Color textColor) {
 	    // Get the FontMetrics
 	    FontMetrics metrics = g.getFontMetrics(font);
 	    // Set the font & color
@@ -387,7 +402,7 @@ public class CardGenerator {
 	    g.drawString(text, x, y);
 	}
 	
-	public void drawCenteredHTMLString(Graphics2D g, String htmlText, Rectangle rect, Font font, Color textColor) {
+	private void drawCenteredHTMLString(Graphics2D g, String htmlText, Rectangle rect, Font font, Color textColor) {
 		JLabel label = new JLabel("<html>"+htmlText);
 		label.setBounds(rect);
 		label.setLocation(rect.getLocation());
@@ -410,85 +425,94 @@ public class CardGenerator {
 	 * @param textColor
 	 * @param resizeStep
 	 */
-	public void drawCenteredHTMLParagraph(Graphics2D graphics, String htmlText, Rectangle rect, Font font, Color textColor, int resizeStep) {
+	private void drawCenteredHTMLParagraph(Graphics2D graphics, String htmlText, Rectangle rect, Font font, Color textColor, int resizeStep) {
 		htmlText = htmlText.replace("   ", "\n").replace("\n", "<br>").replace("<br>", "</p><p>");
-		JLabel label = new JLabel("<html><style>html{width:" + rect.width + ";}p{ border: 1px solid white;}</style><body style='text-align: center'><div><p>"+htmlText);
 		
-		
-//		int numLines = 1;
-//		char[] textArray = htmlText.toCharArray();
-//		for (int i = 0; i < textArray.length; i++) {
-//			System.out.println(textArray[i]);
-//			if ((i>3 && textArray[i] == textArray[i-1] && textArray[i] == textArray[i-2] && textArray[i] == ' ')
-//					|| (i > 4 && textArray[i] == '>' && textArray[i-1] == 'r' && textArray[i-2] == 'b' && textArray[i-3] == '<')
-//					|| (textArray[i] == Character.LINE_SEPARATOR)) {
-//				numLines++;
-//			}
-//		}
-		
-		//TODO: Calculate lines
-		Font fontFinal = font;
-		FontMetrics fontMetrics = graphics.getFontMetrics(fontFinal);
-		
-		int numLines = 1;
-		char[] textArray = htmlText.toCharArray();
-		int lastLineJump = 0;
+		char[] charsTextNoTags = htmlText.toCharArray();
+		StringBuilder textNoTags = new StringBuilder(htmlText.length());
 		boolean insideTag = false;
-		int tagCharacters = 0;
-		for (int i = 0; i < textArray.length; i++) {
-			//TODO: right now characters in <span> are counted, I'd want them absolutely discarded from all of this. Perhaps just doing another loop...
-			if (textArray[i] == '<'){
+		for (int i = 0; i < charsTextNoTags.length; i++) {
+			if (charsTextNoTags[i] == '<'){
 				insideTag = true;
-				tagCharacters++;
-			}
-			String subString = htmlText.substring(lastLineJump, i);
-			System.out.println("Checking line: \""+subString+"\"");
-			if (subString.endsWith("</p><p>")) {
-				System.out.println("Line jump in "+i+": \""+ textArray[i]+"\"");
-		
-				int stringWidth = fontMetrics.stringWidth(subString.substring(0, subString.length()-7));
-				int addNumLines = stringWidth / ABILITY_COORDS.width;
-				System.out.println("addLine in between "+addNumLines);
-				if (stringWidth % ABILITY_COORDS.width>0){
-					System.out.println("Added +1 because "+stringWidth +"%"+ABILITY_COORDS.width+" = "+(stringWidth % ABILITY_COORDS.width));
-					addNumLines++;
-				}
-				numLines+=addNumLines;
-				lastLineJump = i;
-				System.out.println("Line: \""+subString.substring(0, subString.length()-7)+"\"\n   with width: "+stringWidth+"\n   and num lines:"+ addNumLines);
-			} else if (i == textArray.length-1){
-				System.out.println("Last line in "+i+": \""+ textArray[i]+"\"");
-		
-				int stringWidth = fontMetrics.stringWidth(subString);
-				int addNumLines = stringWidth / ABILITY_COORDS.width;
-				if (stringWidth % ABILITY_COORDS.width>0){
-					addNumLines++;
-				}
-				numLines+=addNumLines;
-				lastLineJump = i;
-				System.out.println("Line: \""+subString+"\"\n   with width: "+stringWidth+"\n   and num lines:"+ addNumLines);
+			} else if (charsTextNoTags[i] == '>'){
+				insideTag = false;
+			} else if (!insideTag) {
+				textNoTags.append(charsTextNoTags[i]);
 			}
 		}
-//		int numLines = stringWidth / ABILITY_COORDS.width;
-//		if (stringWidth % ABILITY_COORDS.width>0){
-//			numLines++;
-//		}
+		String htmlTextNoTags = textNoTags.toString();
+		charsTextNoTags = htmlTextNoTags.toCharArray();
 		
-		System.out.println("Rectangle width: "+ABILITY_COORDS.width);
-		System.out.println("Bounds height: "+ABILITY_COORDS.height +" for each of the "+numLines+" lines");
-		System.out.println("Calculated height: "+(fontMetrics.getHeight()*numLines));
+		Font fontFinal = font;
+		do {
+			System.out.println("Font size: "+fontFinal.getSize());
+			FontMetrics currentFontMetrics = graphics.getFontMetrics(fontFinal);
+			int oneLineHeight = currentFontMetrics.getHeight();
+			// Thank you: https://stackoverflow.com/questions/12129633/how-do-i-render-wrapped-text-on-an-image-in-java/12129735?r=Saves_AllUserSaves#12129735
+			List<String> listLines = StringUtils.wrap(htmlTextNoTags, currentFontMetrics, ABILITY_COORDS.width);
+//			System.out.println(listLines.size());
+//			for (String string : listLines) {
+//				System.out.println(string);
+//			}
+			System.out.println(oneLineHeight * listLines.size() +" ?? "+ABILITY_COORDS.height);
+			if (oneLineHeight * listLines.size() < ABILITY_COORDS.height){
+				break;
+			} else {
+				fontFinal = fontFinal.deriveFont((float) fontFinal.getSize()-resizeStep);
+			}
+		} while (true);
+		System.out.println("Font initial size: "+font.getSize());
+		System.out.println("Font final size: "+fontFinal.getSize());
 		
+		// Left padding to compensate for how <p> works sometimes Madge calculated with GIMP xdd
+		JLabel label = new JLabel("<html><style>html{width:" + rect.width + "}body{text-align:center;padding-left:16px;}</style><body><div><p>"+htmlText);
 		label.setBounds(rect);
 		label.setLocation(rect.getLocation());
-		label.setFont(font);
 		label.setForeground(textColor);
 		label.setHorizontalAlignment(SwingConstants.CENTER);
 		label.setVerticalAlignment(SwingConstants.CENTER);
-		
+		label.setFont(fontFinal);
 		BufferedImage type = new BufferedImage(rect.width, rect.height, BufferedImage.TYPE_INT_ARGB);
 		label.paint(type.getGraphics());
 		graphics.drawImage(type, null, rect.x, rect.y);
 	}
+
+	/**
+	 * 
+	 * @param text
+	 * @param graphics
+	 * @param font
+	 * @param width
+	 * @return
+	 * 
+	 * @author https://stackoverflow.com/questions/17005336/count-number-of-lines-in-jtextarea-given-set-width/17005768 (Tweaked for this use case by Cristichi)
+	 */
+	private int countLines(String text, Graphics2D graphics, Font font, int width) {
+        FontMetrics fontMetrics = graphics.getFontMetrics(font);
+        String[] tokens = text.split(" ");
+        String currentLine = "";
+        boolean beginningOfLine = true;
+        int numLines = 1;
+
+        for (int i = 0; i < tokens.length; i++) {
+            if (beginningOfLine) {
+                beginningOfLine = false;
+                currentLine = currentLine + tokens[i];
+            } else {
+                currentLine = currentLine + " " + tokens[i];
+            }
+
+            if (fontMetrics.stringWidth(currentLine) >= width) {
+            	System.out.println("Line: \""+currentLine+"\": "+fontMetrics.stringWidth(currentLine));
+                currentLine = "";
+                beginningOfLine = true;
+                numLines++;
+            }
+        }
+
+        System.out.println("countLines from SO: There are " + numLines + " lines.");
+        return numLines;
+}
 
 	/**
 	 * Changes all pixels of a specific color in a BufferedImage to alpha.
@@ -497,7 +521,7 @@ public class CardGenerator {
 	 * @param chromaColor
 	 * @return The resulting image
 	 */
-	public static BufferedImage intArgbColorToIntArgbAlpha(BufferedImage sourceImage, Color chromaColor) {
+	private static BufferedImage intArgbColorToIntArgbAlpha(BufferedImage sourceImage, Color chromaColor) {
 		BufferedImage targetImage = new BufferedImage(sourceImage.getWidth(), sourceImage.getHeight(),
 				BufferedImage.TYPE_INT_ARGB);
 		WritableRaster targetRaster = targetImage.getRaster();
@@ -554,8 +578,9 @@ public class CardGenerator {
 
 		ci.cost = "32";
 		ci.strength = "3";
-//		ci.ability = "When Riptide Rex is played, please take one +1 Strength Token and put it on yourself for being so good at this game. Then, take a -1 Strength Token and put it on an opponent because nobody is left alive after trying to conquer your domain.";
-		ci.ability = "Riptide Rex may be used to defeat a Hero at an adjacent location if he is at The Dreadway's location.";
+		ci.ability = "When Riptide Rex is played, please take one +1 Strength Token and put it on yourself for being so good at this game. Then, take a -1 Strength Token and put it on an opponent because nobody is left alive after trying to conquer your domain.";
+//		ci.ability = "Riptide Rex may be used to defeat a Hero at an adjacent location if he is at The Dreadway's location.";
+//		ci.ability = "All Heroes and Allies and Items and Heroes and Conditions and Effects and Heroes again are banned to horny jail.";
 //		ci.ability = "When Riptide Rex do the good.";
 //		ci.ability = "You won   gg";
 
