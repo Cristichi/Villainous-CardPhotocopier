@@ -61,8 +61,8 @@ public class CardGenerator {
 //	private static Rectangle COST_COORDS = new Rectangle(109, 117, 156, 156);
 	private static Rectangle COST_COORDS = new Rectangle(78, 86, 218, 218);
 	private static Rectangle STRENGTH_COORDS = new Rectangle(61, 1827, 156, 156);
-	private static Rectangle TR_COORDS = new Rectangle(1175, 118, 156, 156);
-	private static Rectangle BR_COORDS = new Rectangle(1223, 1826, 156, 156);
+	private static Rectangle TOP_RIGHT_COORDS = new Rectangle(1175, 118, 156, 156);
+	private static Rectangle BOTTOM_RIGHT_COORDS = new Rectangle(1223, 1826, 156, 156);
 
 	private static Rectangle ART_COORDS = new Rectangle(0, 0, 1440, 970);
 
@@ -328,9 +328,11 @@ public class CardGenerator {
 		String htmlAbility = applyTags(card.ability.trim());
 		String htmlType = applyTags(card.type.trim());
 
+		// Base
 		BufferedImage resImage = new BufferedImage(CARD_COORDS.width, CARD_COORDS.height, BufferedImage.TYPE_INT_RGB);
 		Graphics2D resImageG = resImage.createGraphics();
 		
+		// Art
 		try {
 			BufferedImage art = DeckTemplate.getArtFile(artFolder, card.name);
 			resImageG.drawImage(art, null, 0, 0);
@@ -342,17 +344,48 @@ public class CardGenerator {
 			warnings.add("Error reading the art for " + card.name);
 		}
 
+		// Deck
 		BufferedImage deck = DeckTemplate.getTemplateFile(templatesFolder, TemplateType.DECK, card.deck);
 		resImageG.drawImage(deck, null, 0, 0);
 		
+		// Name
+		drawCenteredHTMLString(resImageG, card.name.toUpperCase(), NAME_COORDS, FONT_CARD_NAME, textColor);
+		
+		// Type
 		drawCenteredHTMLString(resImageG, htmlType, TYPE_COORDS, FONT_TYPE, textColor);
 		
+		// Cost
 		if (!card.cost.equals("")) {
 			BufferedImage costTempl = DeckTemplate.getTemplateFile(templatesFolder, TemplateType.COST, card.deck);
 			resImageG.drawImage(costTempl, null, 0, 0);
 			drawCenteredString(resImageG, card.cost, COST_COORDS, FONT_CORNER_VALUES, textColor);
 		}
 		
+		// Strength
+		if (!card.strength.equals("")) {
+			BufferedImage strengthTempl = DeckTemplate.getTemplateFile(templatesFolder, TemplateType.STRENGTH,
+					card.deck);
+			resImageG.drawImage(strengthTempl, null, 0, 0);
+			drawCenteredString(resImageG, card.strength, STRENGTH_COORDS, FONT_CORNER_VALUES, textColor);
+		}
+		
+		// Top Right
+		if (!card.strength.equals("")) {
+			BufferedImage topRightTempl = DeckTemplate.getTemplateFile(templatesFolder, TemplateType.TOP_RIGHT,
+					card.deck);
+			resImageG.drawImage(topRightTempl, null, 0, 0);
+			drawCenteredString(resImageG, card.topRight, TOP_RIGHT_COORDS, FONT_CORNER_VALUES, textColor);
+		}
+		
+		// Bottom Right
+		if (!card.strength.equals("")) {
+			BufferedImage botRightTempl = DeckTemplate.getTemplateFile(templatesFolder, TemplateType.BOTTOM_RIGHT,
+					card.deck);
+			resImageG.drawImage(botRightTempl, null, 0, 0);
+			drawCenteredString(resImageG, card.topRight, BOTTOM_RIGHT_COORDS, FONT_CORNER_VALUES, textColor);
+		}
+		
+		// Ability
 		drawCenteredHTMLParagraph(resImageG, htmlAbility, ABILITY_COORDS, FONT_TEXT_MAX, textColor, 1);
 		
 		return resImage;
@@ -477,96 +510,6 @@ public class CardGenerator {
 		graphics.drawImage(type, null, rect.x, rect.y);
 	}
 
-	/**
-	 * 
-	 * @param text
-	 * @param graphics
-	 * @param font
-	 * @param width
-	 * @return
-	 * 
-	 * @author https://stackoverflow.com/questions/17005336/count-number-of-lines-in-jtextarea-given-set-width/17005768 (Tweaked for this use case by Cristichi)
-	 */
-	private int countLines(String text, Graphics2D graphics, Font font, int width) {
-        FontMetrics fontMetrics = graphics.getFontMetrics(font);
-        String[] tokens = text.split(" ");
-        String currentLine = "";
-        boolean beginningOfLine = true;
-        int numLines = 1;
-
-        for (int i = 0; i < tokens.length; i++) {
-            if (beginningOfLine) {
-                beginningOfLine = false;
-                currentLine = currentLine + tokens[i];
-            } else {
-                currentLine = currentLine + " " + tokens[i];
-            }
-
-            if (fontMetrics.stringWidth(currentLine) >= width) {
-            	System.out.println("Line: \""+currentLine+"\": "+fontMetrics.stringWidth(currentLine));
-                currentLine = "";
-                beginningOfLine = true;
-                numLines++;
-            }
-        }
-
-        System.out.println("countLines from SO: There are " + numLines + " lines.");
-        return numLines;
-}
-
-	/**
-	 * Changes all pixels of a specific color in a BufferedImage to alpha.
-	 * 
-	 * @param sourceImage
-	 * @param chromaColor
-	 * @return The resulting image
-	 */
-	private static BufferedImage intArgbColorToIntArgbAlpha(BufferedImage sourceImage, Color chromaColor) {
-		BufferedImage targetImage = new BufferedImage(sourceImage.getWidth(), sourceImage.getHeight(),
-				BufferedImage.TYPE_INT_ARGB);
-		WritableRaster targetRaster = targetImage.getRaster();
-		WritableRaster sourceRaster = sourceImage.getRaster();
-
-		for (int row = 0; row < sourceImage.getHeight(); row++) {
-
-			int[] rgbaTarget = new int[4 * sourceImage.getWidth()];
-			int[] rgbaSource = new int[4 * sourceImage.getWidth()];
-
-			// Get the next row of pixels
-			sourceRaster.getPixels(0, row, sourceImage.getWidth(), 1, rgbaSource);
-
-			for (int i = 0, j = 0; i < rgbaSource.length; i += 4, j += 4) {
-				// if (origColor.equals(new Color(rgb[i], rgb[i + 1], rgb[i + 2]))) {
-				if (row < 3 || row > sourceImage.getWidth() - 3 // We make transparent the border (top/bottom)
-						|| i < 12 || i > sourceImage.getWidth() - 12 // We make transparent the border (left/right)
-						|| rgbaSource[i] == 0 && rgbaSource[i + 1] > 0 && rgbaSource[i + 2] == 0) {
-					// System.out.println("!!!!!!!!!!!!!!!! Confirmed transparency");
-					// System.out.println("Orig color: " + origColor);
-					// System.out.println("pìxel color: " + new Color(rgbaSource[i], rgbaSource[i + 1], rgbaSource[i + 2]));
-					// System.out.println("pìxel color2: " + rgbaSource[i] + ", " + rgbaSource[i + 1] + ", " + rgbaSource[i + 2]);
-					// If it's the same make it transparent
-					rgbaTarget[j] = 0;
-					rgbaTarget[j + 1] = 0;
-					rgbaTarget[j + 2] = 0;
-					rgbaTarget[j + 3] = 0;
-				} else {
-					// System.out.println(" Confirmed NO transparency: ");
-					// System.out.println(" Orig color: " + origColor);
-					// System.out.println(" pìxel color: " + new Color(rgbaSource[i], rgbaSource[i + 1], rgbaSource[i + 2]));
-					rgbaTarget[j] = rgbaSource[i];
-					rgbaTarget[j + 1] = rgbaSource[i + 1];
-					rgbaTarget[j + 2] = rgbaSource[i + 2];
-					// Make it opaque
-					// rgba[j + 3] = 255;
-					rgbaTarget[j + 3] = rgbaSource[i + 3];
-				}
-			}
-			// Write the line
-			targetRaster.setPixels(0, row, sourceImage.getWidth(), 1, rgbaTarget);
-		}
-		return targetImage;
-	}
-
 	public static void main(String[] args) throws Exception {
 		CardGenerator cGen = new CardGenerator();
 		cGen.warnings = new ArrayList<>(3);
@@ -576,19 +519,19 @@ public class CardGenerator {
 		ci.deck = "Villain";
 		ci.extraDeck = "";
 
-		ci.cost = "32";
-		ci.strength = "3";
+		ci.cost = "?";
+		ci.strength = "32";
 		ci.ability = "When Riptide Rex is played, please take one +1 Strength Token and put it on yourself for being so good at this game. Then, take a -1 Strength Token and put it on an opponent because nobody is left alive after trying to conquer your domain.";
 //		ci.ability = "Riptide Rex may be used to defeat a Hero at an adjacent location if he is at The Dreadway's location.";
-//		ci.ability = "All Heroes and Allies and Items and Heroes and Conditions and Effects and Heroes again are banned to horny jail.";
+		ci.ability = "All Heroes and Allies and Items and Heroes and Conditions and Effects and Heroes again are banned to horny jail. Then all Heroes and Allies and Allies again and Heroes again, except that Hero, he knows what he did, and all Items get out of Jail for free. Then jail them again. Then cut out their tongues, except the Items they don't have tongues. And don't forget about THAT Hero you understand? Are you taking notes?";
 //		ci.ability = "When Riptide Rex do the good.";
 //		ci.ability = "You won   gg";
 
 		ci.activateAbility = "";
 		ci.activateCost = "";
 
-		ci.topRight = "?";
-		ci.bottomLeft = "?";
+		ci.topRight = "2";
+		ci.bottomLeft = "7";
 		ci.action = "";
 		ci.credits = "Riot Games";
 
@@ -599,7 +542,15 @@ public class CardGenerator {
 
 		BufferedImage bi = cGen.generateImage(new File("-Layout"), new File("-Images"), ci);
 
-		File testFile = new File("test " + ci.name + ".jpg");
+		File testFile = new File("-Exports/test " + ci.name + " long.jpg");
+		Util.writeJpgImage(bi, testFile, 1);
+		Desktop.getDesktop().open(testFile);
+
+		ci.ability = "When Riptide Rex do the good.";
+		
+		bi = cGen.generateImage(new File("-Layout"), new File("-Images"), ci);
+
+		testFile = new File("-Exports/test " + ci.name + " short.jpg");
 		Util.writeJpgImage(bi, testFile, 1);
 		Desktop.getDesktop().open(testFile);
 		
