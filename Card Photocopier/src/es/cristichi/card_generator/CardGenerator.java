@@ -322,7 +322,7 @@ public class CardGenerator {
 
 	private BufferedImage generateImage(File templatesFolder, File artFolder, CardInfo card) throws IOException {
 		Color textColor = (card.deck == "Fate" ? COLOR_TEXT_FATE : COLOR_TEXT_VILLAIN);
-		String htmlAbility = card.ability.trim().replace("   ", "\n").replace("\n", "</p><p>")
+		String htmlAbility = card.ability.trim()
 						.replace("Effect", "<span style=\"color: #7ac424\">Effect</span>")
 						.replace("Ally", "<span style=\"color: #de0022\">Ally</span>")
 						.replace("Item", "<span style=\"color: #45afe6\">Item</span>")
@@ -359,7 +359,7 @@ public class CardGenerator {
 			drawCenteredString(resImageG, card.cost, COST_COORDS, FONT_CORNER_VALUES, textColor);
 		}
 		
-		drawCenteredHTMLParagraph(resImageG, htmlAbility, ABILITY_COORDS, FONT_TEXT_MAX, textColor);
+		drawCenteredHTMLParagraph(resImageG, htmlAbility, ABILITY_COORDS, FONT_TEXT_MAX, textColor, 1);
 		
 		return resImage;
 	}
@@ -401,10 +401,83 @@ public class CardGenerator {
 		g.drawImage(type, null, rect.x, rect.y);
 	}
 	
-	public void drawCenteredHTMLParagraph(Graphics2D g, String htmlText, Rectangle rect, Font font, Color textColor) {
+	/**
+	 * Used to print a paragraph of text as several "p" in an html. It supports coloring and other styles.
+	 * @param graphics The graphics in which to draw this paragraph.
+	 * @param htmlText The HTML text. "html", "style" and "body" tags will be included, as well as an initial "p", so please include just regular text. "/n", "   " and "br" will be interpreted as new line markers.
+	 * @param rect
+	 * @param font
+	 * @param textColor
+	 * @param resizeStep
+	 */
+	public void drawCenteredHTMLParagraph(Graphics2D graphics, String htmlText, Rectangle rect, Font font, Color textColor, int resizeStep) {
+		htmlText = htmlText.replace("   ", "\n").replace("\n", "<br>").replace("<br>", "</p><p>");
+		JLabel label = new JLabel("<html><style>html{width:" + rect.width + ";}p{ border: 1px solid white;}</style><body style='text-align: center'><div><p>"+htmlText);
 		
-		JLabel label = new JLabel("<html><style>html { width: " + rect.width + "; }</style><body style='text-align: center'><div><p>"+htmlText);
-		System.out.println(label.getText());
+		
+//		int numLines = 1;
+//		char[] textArray = htmlText.toCharArray();
+//		for (int i = 0; i < textArray.length; i++) {
+//			System.out.println(textArray[i]);
+//			if ((i>3 && textArray[i] == textArray[i-1] && textArray[i] == textArray[i-2] && textArray[i] == ' ')
+//					|| (i > 4 && textArray[i] == '>' && textArray[i-1] == 'r' && textArray[i-2] == 'b' && textArray[i-3] == '<')
+//					|| (textArray[i] == Character.LINE_SEPARATOR)) {
+//				numLines++;
+//			}
+//		}
+		
+		//TODO: Calculate lines
+		Font fontFinal = font;
+		FontMetrics fontMetrics = graphics.getFontMetrics(fontFinal);
+		
+		int numLines = 1;
+		char[] textArray = htmlText.toCharArray();
+		int lastLineJump = 0;
+		boolean insideTag = false;
+		int tagCharacters = 0;
+		for (int i = 0; i < textArray.length; i++) {
+			//TODO: right now characters in <span> are counted, I'd want them absolutely discarded from all of this. Perhaps just doing another loop...
+			if (textArray[i] == '<'){
+				insideTag = true;
+				tagCharacters++;
+			}
+			String subString = htmlText.substring(lastLineJump, i);
+			System.out.println("Checking line: \""+subString+"\"");
+			if (subString.endsWith("</p><p>")) {
+				System.out.println("Line jump in "+i+": \""+ textArray[i]+"\"");
+		
+				int stringWidth = fontMetrics.stringWidth(subString.substring(0, subString.length()-7));
+				int addNumLines = stringWidth / ABILITY_COORDS.width;
+				System.out.println("addLine in between "+addNumLines);
+				if (stringWidth % ABILITY_COORDS.width>0){
+					System.out.println("Added +1 because "+stringWidth +"%"+ABILITY_COORDS.width+" = "+(stringWidth % ABILITY_COORDS.width));
+					addNumLines++;
+				}
+				numLines+=addNumLines;
+				lastLineJump = i;
+				System.out.println("Line: \""+subString.substring(0, subString.length()-7)+"\"\n   with width: "+stringWidth+"\n   and num lines:"+ addNumLines);
+			} else if (i == textArray.length-1){
+				System.out.println("Last line in "+i+": \""+ textArray[i]+"\"");
+		
+				int stringWidth = fontMetrics.stringWidth(subString);
+				int addNumLines = stringWidth / ABILITY_COORDS.width;
+				if (stringWidth % ABILITY_COORDS.width>0){
+					addNumLines++;
+				}
+				numLines+=addNumLines;
+				lastLineJump = i;
+				System.out.println("Line: \""+subString+"\"\n   with width: "+stringWidth+"\n   and num lines:"+ addNumLines);
+			}
+		}
+//		int numLines = stringWidth / ABILITY_COORDS.width;
+//		if (stringWidth % ABILITY_COORDS.width>0){
+//			numLines++;
+//		}
+		
+		System.out.println("Rectangle width: "+ABILITY_COORDS.width);
+		System.out.println("Bounds height: "+ABILITY_COORDS.height +" for each of the "+numLines+" lines");
+		System.out.println("Calculated height: "+(fontMetrics.getHeight()*numLines));
+		
 		label.setBounds(rect);
 		label.setLocation(rect.getLocation());
 		label.setFont(font);
@@ -414,7 +487,7 @@ public class CardGenerator {
 		
 		BufferedImage type = new BufferedImage(rect.width, rect.height, BufferedImage.TYPE_INT_ARGB);
 		label.paint(type.getGraphics());
-		g.drawImage(type, null, rect.x, rect.y);
+		graphics.drawImage(type, null, rect.x, rect.y);
 	}
 
 	/**
@@ -481,9 +554,10 @@ public class CardGenerator {
 
 		ci.cost = "32";
 		ci.strength = "3";
-		ci.ability = "When Riptide Rex is played, please take one +1 Strength Token and put it on yourself for being so good at this game. Then, take a -1 Strength Token and put it on an opponent because nobody is left alive after trying to conquer your domain.";
-		ci.ability = "Riptide Rex may be used to   defeat a Hero at an adjacent location if he is at The   Dreadway's location.";
-//		ci.ability = "When    Riptide    Rex do the good.";
+//		ci.ability = "When Riptide Rex is played, please take one +1 Strength Token and put it on yourself for being so good at this game. Then, take a -1 Strength Token and put it on an opponent because nobody is left alive after trying to conquer your domain.";
+		ci.ability = "Riptide Rex may be used to defeat a Hero at an adjacent location if he is at The Dreadway's location.";
+//		ci.ability = "When Riptide Rex do the good.";
+//		ci.ability = "You won   gg";
 
 		ci.activateAbility = "";
 		ci.activateCost = "";
