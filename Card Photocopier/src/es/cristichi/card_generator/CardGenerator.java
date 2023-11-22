@@ -8,7 +8,6 @@ import java.awt.Graphics2D;
 import java.awt.Rectangle;
 import java.awt.font.TextAttribute;
 import java.awt.image.BufferedImage;
-import java.awt.image.WritableRaster;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -335,7 +334,7 @@ public class CardGenerator {
 		// Art
 		try {
 			BufferedImage art = DeckTemplate.getArtFile(artFolder, card.name);
-			resImageG.drawImage(art, null, 0, 0);
+			resImageG.drawImage(art, null, ART_COORDS.x, ART_COORDS.y);
 		} catch (FileNotFoundException e) {
 			e.printStackTrace();
 			warnings.add("Error finding the art for " + card.name);
@@ -370,7 +369,7 @@ public class CardGenerator {
 		}
 		
 		// Top Right
-		if (!card.strength.equals("")) {
+		if (!card.topRight.equals("")) {
 			BufferedImage topRightTempl = DeckTemplate.getTemplateFile(templatesFolder, TemplateType.TOP_RIGHT,
 					card.deck);
 			resImageG.drawImage(topRightTempl, null, 0, 0);
@@ -378,7 +377,7 @@ public class CardGenerator {
 		}
 		
 		// Bottom Right
-		if (!card.strength.equals("")) {
+		if (!card.bottomRight.equals("")) {
 			BufferedImage botRightTempl = DeckTemplate.getTemplateFile(templatesFolder, TemplateType.BOTTOM_RIGHT,
 					card.deck);
 			resImageG.drawImage(botRightTempl, null, 0, 0);
@@ -478,7 +477,7 @@ public class CardGenerator {
 		
 		Font fontFinal = font;
 		do {
-			System.out.println("Font size: "+fontFinal.getSize());
+//			System.out.println("Font size: "+fontFinal.getSize());
 			FontMetrics currentFontMetrics = graphics.getFontMetrics(fontFinal);
 			int oneLineHeight = currentFontMetrics.getHeight();
 			// Thank you: https://stackoverflow.com/questions/12129633/how-do-i-render-wrapped-text-on-an-image-in-java/12129735?r=Saves_AllUserSaves#12129735
@@ -487,15 +486,15 @@ public class CardGenerator {
 //			for (String string : listLines) {
 //				System.out.println(string);
 //			}
-			System.out.println(oneLineHeight * listLines.size() +" ?? "+ABILITY_COORDS.height);
+//			System.out.println(oneLineHeight * listLines.size() +" ?? "+ABILITY_COORDS.height);
 			if (oneLineHeight * listLines.size() < ABILITY_COORDS.height){
 				break;
 			} else {
 				fontFinal = fontFinal.deriveFont((float) fontFinal.getSize()-resizeStep);
 			}
 		} while (true);
-		System.out.println("Font initial size: "+font.getSize());
-		System.out.println("Font final size: "+fontFinal.getSize());
+//		System.out.println("Font initial size: "+font.getSize());
+//		System.out.println("Font final size: "+fontFinal.getSize());
 		
 		// Left padding to compensate for how <p> works sometimes Madge calculated with GIMP xdd
 		JLabel label = new JLabel("<html><style>html{width:" + rect.width + "}body{text-align:center;padding-left:16px;}</style><body><div><p>"+htmlText);
@@ -531,7 +530,7 @@ public class CardGenerator {
 		ci.activateCost = "";
 
 		ci.topRight = "2";
-		ci.bottomLeft = "7";
+		ci.bottomRight = "7";
 		ci.action = "";
 		ci.credits = "Riot Games";
 

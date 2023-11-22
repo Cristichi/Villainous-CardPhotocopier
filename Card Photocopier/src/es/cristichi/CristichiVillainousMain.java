@@ -331,7 +331,7 @@ public class CristichiVillainousMain {
 								ci.activateCost = cellActCost.getTextValue();
 
 								ci.topRight = cellTopRight.getTextValue();
-								ci.bottomLeft = cellBotRight.getTextValue();
+								ci.bottomRight = cellBotRight.getTextValue();
 								ci.action = cellAction.getTextValue();
 								ci.credits = cellCredits.getTextValue();
 
