@@ -68,6 +68,7 @@ public class CardGenerator {
 	static {
 		Map<TextAttribute, Object> fontTextAtts = new HashMap<>();
 		fontTextAtts.put(TextAttribute.FAMILY, "Cabin");
+		//TODO: Is the weight happening? Who knows! Check it, and compare with FailureFactory's and Original's
 		fontTextAtts.put(TextAttribute.WEIGHT, TextAttribute.WEIGHT_MEDIUM);
 		fontTextAtts.put(TextAttribute.SIZE, 85);
 		FONT_TEXT_MAX = new Font(fontTextAtts);
@@ -172,7 +173,7 @@ public class CardGenerator {
 		if (!card.cost.equals("")) {
 			BufferedImage costTempl = DeckTemplate.getTemplateFile(templatesFolder, TemplateType.COST, card.deck);
 			resImageG.drawImage(costTempl, null, 0, 0);
-			drawCenteredString(resImageG, card.cost, COST_COORDS, FONT_CORNER_VALUES, textColor);
+			drawCenteredString(resImageG, card.cost, COST_COORDS, FONT_CORNER_VALUES, COLOR_TEXT_VILLAIN);
 		}
 		
 		// Strength
@@ -180,7 +181,7 @@ public class CardGenerator {
 			BufferedImage strengthTempl = DeckTemplate.getTemplateFile(templatesFolder, TemplateType.STRENGTH,
 					card.deck);
 			resImageG.drawImage(strengthTempl, null, 0, 0);
-			drawCenteredString(resImageG, card.strength, STRENGTH_COORDS, FONT_CORNER_VALUES, textColor);
+			drawCenteredString(resImageG, card.strength, STRENGTH_COORDS, FONT_CORNER_VALUES, COLOR_TEXT_VILLAIN);
 		}
 		
 		// Top Right
@@ -188,7 +189,7 @@ public class CardGenerator {
 			BufferedImage topRightTempl = DeckTemplate.getTemplateFile(templatesFolder, TemplateType.TOP_RIGHT,
 					card.deck);
 			resImageG.drawImage(topRightTempl, null, 0, 0);
-			drawCenteredString(resImageG, card.topRight, TOP_RIGHT_COORDS, FONT_CORNER_VALUES, textColor);
+			drawCenteredString(resImageG, card.topRight, TOP_RIGHT_COORDS, FONT_CORNER_VALUES, COLOR_TEXT_VILLAIN);
 		}
 		
 		// Bottom Right
@@ -196,7 +197,7 @@ public class CardGenerator {
 			BufferedImage botRightTempl = DeckTemplate.getTemplateFile(templatesFolder, TemplateType.BOTTOM_RIGHT,
 					card.deck);
 			resImageG.drawImage(botRightTempl, null, 0, 0);
-			drawCenteredString(resImageG, card.topRight, BOTTOM_RIGHT_COORDS, FONT_CORNER_VALUES, textColor);
+			drawCenteredString(resImageG, card.topRight, BOTTOM_RIGHT_COORDS, FONT_CORNER_VALUES, COLOR_TEXT_VILLAIN);
 		}
 		
 		// Ability
@@ -210,6 +211,7 @@ public class CardGenerator {
 	 * @param text
 	 * @return
 	 */
+	//TODO: This configurable, also perhaps add the things for PirVil?
 	private String applyTags(String text) {
 		return text
 				.replace("Effects", "<span style=\"color: #7ac424\">Effects</span>")
@@ -273,7 +275,8 @@ public class CardGenerator {
 	 * @param resizeStep
 	 */
 	private void drawCenteredHTMLParagraph(Graphics2D graphics, String htmlText, Rectangle rect, Font font, Color textColor, int resizeStep) {
-		htmlText = htmlText.replace("   ", "\n").replace("\n", "<br>").replace("<br>", "</p><p>");
+		htmlText = htmlText.replace("   ", "\n").replace("\n", "<br>").replace("<br>", "</p><p>")
+				.replace("</p><p>", " "); //Adding this for testing on already existing parts
 		
 		char[] charsTextNoTags = htmlText.toCharArray();
 		StringBuilder textNoTags = new StringBuilder(htmlText.length());
@@ -324,6 +327,9 @@ public class CardGenerator {
 		graphics.drawImage(type, null, rect.x, rect.y);
 	}
 
+	/**
+	 * Testing purposes
+	 */
 	public static void main(String[] args) throws Exception {
 		CardGenerator cGen = new CardGenerator();
 		cGen.warnings = new ArrayList<>(3);
