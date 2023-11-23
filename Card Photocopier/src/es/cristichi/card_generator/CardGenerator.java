@@ -224,8 +224,8 @@ public class CardGenerator {
 				.replace("Condition", "<span style=\"color: #d3568d\">Condition</span>")
 				.replace("Heroes", "<span style=\"color: #e68c0a\">Heroes</span>")
 				.replace("Hero", "<span style=\"color: #e68c0a\">Hero</span>")
-				.replace("Vessels", "<span style=\"color: #e68c0a\">Vessels</span>")
-				.replace("Vessel", "<span style=\"color: #e68c0a\">Vessel</span>")
+				.replace("Vessels", "<span style=\"color: #40d67b\">Vessels</span>")
+				.replace("Vessel", "<span style=\"color: #40d67b\">Vessel</span>")
 				.replace("Duel", "<span style=\"color: #FFF\">Duel</span>")
 				.replace("Cristichi", "<span style=\"color: #e68c0a\">Cristichi</span>")
 				;
