@@ -115,61 +115,56 @@ public class CristichiVillainousMain {
 
 			config.readFromFile();
 
-			steps = config.getString(ConfigValue.CONFIG_STEPS, ConfigValue.CONFIG_STEPS.getDefaultValue());
+			steps = config.getString(ConfigValue.STEPS, ConfigValue.STEPS.getDefaultValue());
 
-			if (!config.contains(ConfigValue.CONFIG_EMPTY_ROWS_TO_END)) {
-				config.setValue(ConfigValue.CONFIG_EMPTY_ROWS_TO_END,
-						ConfigValue.CONFIG_EMPTY_ROWS_TO_END.getDefaultValue());
+			if (!config.contains(ConfigValue.EMPTY_ROWS_TO_STOP_ODS_READING)) {
+				config.setValue(ConfigValue.EMPTY_ROWS_TO_STOP_ODS_READING,
+						ConfigValue.EMPTY_ROWS_TO_STOP_ODS_READING.getDefaultValue());
 			}
 
-			if (!config.contains(ConfigValue.CONFIG_TYPE_ORDER)) {
-				config.setValue(ConfigValue.CONFIG_TYPE_ORDER, ConfigValue.CONFIG_TYPE_ORDER.getDefaultValue());
+			if (!config.contains(ConfigValue.TYPE_ORDER)) {
+				config.setValue(ConfigValue.TYPE_ORDER, ConfigValue.TYPE_ORDER.getDefaultValue());
 			}
 
-			if (!config.contains(ConfigValue.CONFIG_TYPE_IN_JSON)) {
-				config.setValue(ConfigValue.CONFIG_TYPE_IN_JSON, ConfigValue.CONFIG_TYPE_IN_JSON.getDefaultValue());
+			if (!config.contains(ConfigValue.ADD_TYPE_IN_JSON_NAME)) {
+				config.setValue(ConfigValue.ADD_TYPE_IN_JSON_NAME, ConfigValue.ADD_TYPE_IN_JSON_NAME.getDefaultValue());
 			}
 
-			if (!config.contains(ConfigValue.CONFIG_JSON_NUM_COPIES)) {
-				config.setValue(ConfigValue.CONFIG_JSON_NUM_COPIES,
-						ConfigValue.CONFIG_JSON_NUM_COPIES.getDefaultValue());
+			if (!config.contains(ConfigValue.ADD_NUM_COPIES_IN_JSON_DESC)) {
+				config.setValue(ConfigValue.ADD_NUM_COPIES_IN_JSON_DESC,
+						ConfigValue.ADD_NUM_COPIES_IN_JSON_DESC.getDefaultValue());
 			}
 
-			if (!config.contains(ConfigValue.CONFIG_COPY_JSON)) {
-				config.setValue(ConfigValue.CONFIG_COPY_JSON, ConfigValue.CONFIG_COPY_JSON.getDefaultValue());
+			if (!config.contains(ConfigValue.AUTOCOPY_JSON)) {
+				config.setValue(ConfigValue.AUTOCOPY_JSON, ConfigValue.AUTOCOPY_JSON.getDefaultValue());
 			}
 
-			if (!config.contains(ConfigValue.CONFIG_RESULTS_QUALITY)) {
-				config.setValue(ConfigValue.CONFIG_RESULTS_QUALITY,
-						ConfigValue.CONFIG_RESULTS_QUALITY.getDefaultValue());
-			}
-
-			if (!config.contains(ConfigValue.CONFIG_GENERATOR_VERSION)) {
-				config.setValue(ConfigValue.CONFIG_GENERATOR_VERSION,
-						ConfigValue.CONFIG_GENERATOR_VERSION.getDefaultValue());
+			if (!config.contains(ConfigValue.GENERATOR_VERSION)) {
+				config.setValue(ConfigValue.GENERATOR_VERSION,
+						ConfigValue.GENERATOR_VERSION.getDefaultValue());
 				configError = new ConfigValueNotFound(
 						"You need to specify the version of the Card Generator that you are using in order to determine the layout of the .ods file.");
 			}
 
-			if (config.contains(ConfigValue.CONFIG_RESULTS_QUALITY)) {
-				float quality = config.getFloat(ConfigValue.CONFIG_RESULTS_QUALITY, .9f);
+			if (config.contains(ConfigValue.IMAGE_QUALITY)) {
+				float quality = config.getFloat(ConfigValue.IMAGE_QUALITY, .9f);
 				if (quality < 0 || quality > 1) {
 					configError = new IllegalConfigValue(
 							"The quality of the images must be between 0 (poorest quality) to 1 (best quality). Value was \""
-									+ config.getString(ConfigValue.CONFIG_RESULTS_QUALITY, "???") + "\".");
+									+ config.getString(ConfigValue.IMAGE_QUALITY, "???") + "\".");
 				}
 			} else {
-				config.setValue(ConfigValue.CONFIG_RESULTS_QUALITY,
-						ConfigValue.CONFIG_RESULTS_QUALITY.getDefaultValue());
+				config.setValue(ConfigValue.IMAGE_QUALITY,
+						ConfigValue.IMAGE_QUALITY.getDefaultValue());
 			}
 
 			config.saveToFile();
 
-			File imagesFolder = new File(config.getString(ConfigValue.CONFIG_CARD_IMAGES));
-			File resultsFolder = new File(config.getString(ConfigValue.CONFIG_RESULTS));
+			File imagesFolder = new File(config.getString(ConfigValue.CARD_IMAGES));
+			File resultsFolder = new File(config.getString(ConfigValue.RESULTS_FOLDER));
 
 			File openDocumentFile = null;
-			String configDoc = config.getString(ConfigValue.CONFIG_DOC);
+			String configDoc = config.getString(ConfigValue.ODS_DOC);
 			if (configDoc.startsWith(CristichiVillainousMain.DOC_FIND_PATTERN_INIT)) {
 				frame.replaceText("Finding most recent .ods document from set pattern: " + configDoc);
 				// Example of pattern:
@@ -219,7 +214,7 @@ public class CristichiVillainousMain {
 				}
 
 			} else {
-				openDocumentFile = new File(config.getString(ConfigValue.CONFIG_DOC));
+				openDocumentFile = new File(config.getString(ConfigValue.ODS_DOC));
 			}
 
 			if (!imagesFolder.exists() && steps.contains("generate")) {
@@ -240,20 +235,20 @@ public class CristichiVillainousMain {
 						+ openDocumentFile.getAbsolutePath() + ") was not found. Please edit the config file.");
 			}
 
-			OdsStructure odsStructure = new OdsStructure(config.getDouble(ConfigValue.CONFIG_GENERATOR_VERSION));
+			OdsStructure odsStructure = new OdsStructure(config.getDouble(ConfigValue.GENERATOR_VERSION));
 			SpreadSheet sheetDoc = SpreadSheet.createFromFile(openDocumentFile);
 			Sheet sheet = sheetDoc.getFirstSheet();
 
 			if (configError != null) {
 				throw configError;
 			} else {
-				ArrayList<CardInfo> usefulCards = new ArrayList<>(config.getInt(ConfigValue.CONFIG_VILLAIN_QUANTITY)
-						+ config.getInt(ConfigValue.CONFIG_FATE_QUANTITY));
+				ArrayList<CardInfo> usefulCards = new ArrayList<>(config.getInt(ConfigValue.VILLAIN_DECK_QUANTITY)
+						+ config.getInt(ConfigValue.FATE_DECK_QUANTITY));
 
 				HashMap<String, ExtraDeckInfo> extraDecks = new HashMap<>(6);
 
 				int consecutiveEmptyLines = 0;
-				int doneLimit = config.getInt(ConfigValue.CONFIG_EMPTY_ROWS_TO_END, 20);
+				int doneLimit = config.getInt(ConfigValue.EMPTY_ROWS_TO_STOP_ODS_READING, 20);
 
 				// We are going to look into each row in the .ods and check if it's a card that
 				// exists withing the images folder and draw it into it's corresponding deck.

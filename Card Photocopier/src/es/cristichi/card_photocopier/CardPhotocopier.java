@@ -100,7 +100,7 @@ public class CardPhotocopier {
 		}
 
 		ArrayList<CardInfo> usefulCards = new ArrayList<>(
-				config.getInt(ConfigValue.CONFIG_VILLAIN_QUANTITY) + config.getInt(ConfigValue.CONFIG_FATE_QUANTITY));
+				config.getInt(ConfigValue.VILLAIN_DECK_QUANTITY) + config.getInt(ConfigValue.FATE_DECK_QUANTITY));
 
 		HashMap<String, ExtraDeckInfo> extraDecks = new HashMap<>(6);
 
@@ -109,7 +109,7 @@ public class CardPhotocopier {
 		int xF = 0, yF = 0;
 
 		int consecutiveEmptyLines = 0;
-		int doneLimit = config.getInt(ConfigValue.CONFIG_EMPTY_ROWS_TO_END, 20);
+		int doneLimit = config.getInt(ConfigValue.EMPTY_ROWS_TO_STOP_ODS_READING, 20);
 
 		// We are going to look into each row in the .ods and check if it's a card that
 		// exists withing the images folder and draw it into it's corresponding deck.
@@ -215,13 +215,13 @@ public class CardPhotocopier {
 
 		frame.replaceText("Checking deck sizes.");
 
-		int villainExpectedSize = config.getInt(ConfigValue.CONFIG_VILLAIN_QUANTITY);
-		int fateExpectedSize = config.getInt(ConfigValue.CONFIG_FATE_QUANTITY);
+		int villainExpectedSize = config.getInt(ConfigValue.VILLAIN_DECK_QUANTITY);
+		int fateExpectedSize = config.getInt(ConfigValue.FATE_DECK_QUANTITY);
 
 		if (copiesToV == 0 && copiesToV != villainExpectedSize && copiesToF == 0 && copiesToF != fateExpectedSize) {
 			throw new IllegalArgumentException("Both your Villain and Fate decks have 0 cards! Check it please."
-					+ (doneLimit < Integer.parseInt(ConfigValue.CONFIG_EMPTY_ROWS_TO_END.getDefaultValue())
-							? " You might have to increase the " + ConfigValue.CONFIG_EMPTY_ROWS_TO_END.getKey()
+					+ (doneLimit < Integer.parseInt(ConfigValue.EMPTY_ROWS_TO_STOP_ODS_READING.getDefaultValue())
+							? " You might have to increase the " + ConfigValue.EMPTY_ROWS_TO_STOP_ODS_READING.getKey()
 									+ " (its current value is " + doneLimit + ")"
 							: ""));
 		} else if (copiesToV == 0 && copiesToV != villainExpectedSize) {
@@ -255,7 +255,7 @@ public class CardPhotocopier {
 		frame.replaceText("Reordering cards");
 
 		// We are going to read the order the user wants and sort the cards by that order.
-		String order = config.getString(ConfigValue.CONFIG_TYPE_ORDER, "ignore type");
+		String order = config.getString(ConfigValue.TYPE_ORDER, "ignore type");
 		String[] orderSplit = order.split(",");
 		for (int i = 0; i < orderSplit.length; i++) {
 			orderSplit[i] = orderSplit[i].trim();
@@ -265,19 +265,19 @@ public class CardPhotocopier {
 		// This whole hocus pocus is for the descriptions feature to later use
 		// with the TTS Description Loader https://steamcommunity.com/sharedfiles/filedetails/?id=2899195933
 		Semaphore semDesc = new Semaphore(0);
-		if (config.getBoolean(ConfigValue.CONFIG_GENERATE_JSON, false)) {
+		if (config.getBoolean(ConfigValue.GENERATE_JSON, false)) {
 			new Thread(new Runnable() {
 
 				@Override
 				public void run() {
-					boolean includeType = config.getBoolean(ConfigValue.CONFIG_TYPE_IN_JSON, false);
+					boolean includeType = config.getBoolean(ConfigValue.ADD_TYPE_IN_JSON_NAME, false);
 
 					JSONObject jsonV = new JSONObject();
-					jsonV.put("name", config.getString(ConfigValue.CONFIG_VILLAIN_NAME, "Villain Deck"));
+					jsonV.put("name", config.getString(ConfigValue.VILLAIN_DECK_NAME, "Villain Deck"));
 					JSONArray cardsV = new JSONArray();
 
 					JSONObject jsonF = new JSONObject();
-					jsonF.put("name", config.getString(ConfigValue.CONFIG_FATE_NAME, "Fate Deck"));
+					jsonF.put("name", config.getString(ConfigValue.FATE_DECK_NAME, "Fate Deck"));
 					JSONArray cardsF = new JSONArray();
 
 					for (String extraDeckName : extraDecks.keySet()) {
@@ -313,7 +313,7 @@ public class CardPhotocopier {
 						String desc = ci.desc.replace("   ", "\n").replace("$THIS_NAME", name)
 								.replace("$this_name", name).replace("$THIS_CARD", name).replace("$this_card", name)
 								.trim();
-						String jsonNumCopies = config.getString(ConfigValue.CONFIG_JSON_NUM_COPIES, "").toLowerCase();
+						String jsonNumCopies = config.getString(ConfigValue.ADD_NUM_COPIES_IN_JSON_DESC, "").toLowerCase();
 						if (jsonNumCopies.equals("true") || jsonNumCopies.equals("villain") && ci.deck.equals("0")
 								|| jsonNumCopies.equals("fate") && ci.deck.equals("1")) {
 							boolean sing = ci.copies == 1;
@@ -368,7 +368,7 @@ public class CardPhotocopier {
 					try (PrintWriter out = new PrintWriter(jsonTFile)) {
 						out.println(jsonT.toString());
 
-						if (config.getBoolean(ConfigValue.CONFIG_COPY_JSON, false)) {
+						if (config.getBoolean(ConfigValue.AUTOCOPY_JSON, false)) {
 							Clipboard clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
 							clipboard.setContents(new StringSelection(jsonT.toString()), null);
 						}
@@ -440,10 +440,10 @@ public class CardPhotocopier {
 		}
 
 		// We save the image data into .jpgs files.
-		File fileVillainDeck = new File(resultsFolder, config.getString(ConfigValue.CONFIG_VILLAIN_NAME) + ".jpg");
-		File fileFateDeck = new File(resultsFolder, config.getString(ConfigValue.CONFIG_FATE_NAME) + ".jpg");
+		File fileVillainDeck = new File(resultsFolder, config.getString(ConfigValue.VILLAIN_DECK_NAME) + ".jpg");
+		File fileFateDeck = new File(resultsFolder, config.getString(ConfigValue.FATE_DECK_NAME) + ".jpg");
 
-		float quality = config.getFloat(ConfigValue.CONFIG_RESULTS_QUALITY, 0.9f);
+		float quality = config.getFloat(ConfigValue.IMAGE_QUALITY, 0.9f);
 
 		frame.replaceText("Writing the images for TTS decks.");
 
