@@ -259,7 +259,7 @@ public class CardPhotocopier {
 			label.setText("Reading .ods document pattern.");
 			// Example of pattern:
 			// cardsInfoOds: >C:/Users/(Windows User)/Villainous/Villain/^Villain( \(\d+\))?.ods$
-			// This takes files like "Villain.ods"m "Villain (1).ods", "Villain (516).ods", etc
+			// This takes files like "Villain.ods", "Villain (1).ods", "Villain (516).ods", etc
 
 			configDoc = configDoc.substring(DOC_USE_PATTERN.length());
 
