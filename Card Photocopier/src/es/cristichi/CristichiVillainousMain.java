@@ -50,17 +50,16 @@ public class CristichiVillainousMain {
 	public static void main(String[] args) {
 
 		try {
-		     GraphicsEnvironment ge = 
-		         GraphicsEnvironment.getLocalGraphicsEnvironment();
-		     ge.registerFont(Font.createFont(Font.TRUETYPE_FONT, new File("lib/Esteban.ttf")));
-		     ge.registerFont(Font.createFont(Font.TRUETYPE_FONT, new File("lib/Cabin.ttf")));
-		} catch (IOException|FontFormatException e) {
-		     //Handle exception
+			GraphicsEnvironment ge = GraphicsEnvironment.getLocalGraphicsEnvironment();
+			ge.registerFont(Font.createFont(Font.TRUETYPE_FONT, new File("lib/Esteban.ttf")));
+			ge.registerFont(Font.createFont(Font.TRUETYPE_FONT, new File("lib/Cabin.ttf")));
+		} catch (IOException | FontFormatException e) {
+			// Handle exception
 			e.printStackTrace();
 		}
-		
+
 		CristichiVillainousMain cvm = new CristichiVillainousMain();
-		
+
 		try {
 			cvm.start();
 		} catch (Exception e) {
@@ -140,8 +139,7 @@ public class CristichiVillainousMain {
 			}
 
 			if (!config.contains(ConfigValue.GENERATOR_VERSION)) {
-				config.setValue(ConfigValue.GENERATOR_VERSION,
-						ConfigValue.GENERATOR_VERSION.getDefaultValue());
+				config.setValue(ConfigValue.GENERATOR_VERSION, ConfigValue.GENERATOR_VERSION.getDefaultValue());
 				configError = new ConfigValueNotFound(
 						"You need to specify the version of the Card Generator that you are using in order to determine the layout of the .ods file.");
 			}
@@ -154,8 +152,7 @@ public class CristichiVillainousMain {
 									+ config.getString(ConfigValue.IMAGE_QUALITY, "???") + "\".");
 				}
 			} else {
-				config.setValue(ConfigValue.IMAGE_QUALITY,
-						ConfigValue.IMAGE_QUALITY.getDefaultValue());
+				config.setValue(ConfigValue.IMAGE_QUALITY, ConfigValue.IMAGE_QUALITY.getDefaultValue());
 			}
 
 			config.saveToFile();
@@ -249,6 +246,7 @@ public class CristichiVillainousMain {
 
 				int consecutiveEmptyLines = 0;
 				int doneLimit = config.getInt(ConfigValue.EMPTY_ROWS_TO_STOP_ODS_READING, 20);
+				int copiesToV = 0, copiesToF = 0;
 
 				// We are going to look into each row in the .ods and check if it's a card that
 				// exists withing the images folder and draw it into it's corresponding deck.
@@ -310,11 +308,23 @@ public class CristichiVillainousMain {
 								ci.name = cardName;
 								frame.replaceText("Saving " + ci.name + "'s image data and card information.");
 
+								ci.copies = Integer.parseInt(cellCopiesCount.getTextValue());
 								ci.deck = cellDeck.getTextValue();
-								if ((cellDeck.getTextValue().equals("0"))) {
+//								if ((cellDeck.getTextValue().equals("0"))) {
+//									ci.deck = "Villain";
+//								} else if (cellDeck.getTextValue().equals("1")) {
+//									ci.deck = "Fate";
+//								}
+								if ((cellDeck.getTextValue().equals("Villain")
+										|| cellDeck.getTextValue().equals("0"))) {
 									ci.deck = "Villain";
-								} else if (cellDeck.getTextValue().equals("1")) {
+									copiesToV += ci.copies;
+									usefulCards.add(ci);
+								} else if (cellDeck.getTextValue().equals("Fate")
+										|| cellDeck.getTextValue().equals("1")) {
 									ci.deck = "Fate";
+									copiesToF += ci.copies;
+									usefulCards.add(ci);
 								}
 								ci.extraDeck = cellExtraDeck.getTextValue();
 
@@ -331,14 +341,13 @@ public class CristichiVillainousMain {
 								ci.credits = cellCredits.getTextValue();
 
 								ci.type = cellType.getTextValue();
-								ci.copies = Integer.parseInt(cellCopiesCount.getTextValue());
 								ci.desc = cellDescription.getTextValue();
 								ci.row = row;
 
 								if (ci.copies > 0)
 									usefulCards.add(ci);
-								
-								System.out.println(ci);
+
+//								System.out.println(ci);
 							}
 						}
 					} catch (IllegalArgumentException e) {
@@ -348,16 +357,36 @@ public class CristichiVillainousMain {
 					}
 				}
 
+				frame.replaceText("Checking deck sizes.");
+
+				int villainExpectedSize = config.getInt(ConfigValue.VILLAIN_DECK_QUANTITY);
+				int fateExpectedSize = config.getInt(ConfigValue.FATE_DECK_QUANTITY);
+
+				if (copiesToV == 0 && copiesToV != villainExpectedSize && copiesToF == 0
+						&& copiesToF != fateExpectedSize) {
+					throw new IllegalArgumentException(
+							"Both your Villain and Fate decks have 0 cards! Check it please." + (doneLimit < Integer
+									.parseInt(ConfigValue.EMPTY_ROWS_TO_STOP_ODS_READING.getDefaultValue())
+											? " You might have to increase the "
+													+ ConfigValue.EMPTY_ROWS_TO_STOP_ODS_READING.getKey()
+													+ " (its current value is " + doneLimit + ")"
+											: ""));
+				} else if (copiesToV == 0 && copiesToV != villainExpectedSize) {
+					throw new IllegalArgumentException("Your Villain deck has 0 cards! Check it please.");
+				} else if (copiesToF == 0 && copiesToF != fateExpectedSize) {
+					throw new IllegalArgumentException("Your Fate deck has 0 cards! Check it please.");
+				}
+
 				if (steps.contains("generate")) {
 					CardGenerator cardGenerator = new CardGenerator();
-					GeneratorReturn ret = cardGenerator.generate(config, frame, openDocumentFile, imagesFolder, resultsFolder, odsStructure,
-							sheet, usefulCards, extraDecks);
+					GeneratorReturn ret = cardGenerator.generate(config, frame, openDocumentFile, imagesFolder,
+							resultsFolder, odsStructure, sheet, usefulCards, extraDecks);
 					warnings.addAll(ret.warnings);
 				}
 				if (steps.contains("photocopy")) {
 					CardPhotocopier cardPhotocopier = new CardPhotocopier();
 					warnings.addAll(cardPhotocopier.generate(config, frame, openDocumentFile, imagesFolder,
-							resultsFolder, odsStructure, sheet, CARD_SIZE));
+							resultsFolder, usefulCards, extraDecks, copiesToV, copiesToF, sheet, CARD_SIZE));
 				}
 
 				if (warnings.isEmpty()) {

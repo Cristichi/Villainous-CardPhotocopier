@@ -16,16 +16,12 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.concurrent.Semaphore;
 
-import org.jopendocument.dom.spreadsheet.Cell;
 import org.jopendocument.dom.spreadsheet.Sheet;
-import org.jopendocument.dom.spreadsheet.SpreadSheet;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 
 import es.cristichi.MainInfoFrame;
 import es.cristichi.card_photocopier.obj.Range;
-import es.cristichi.card_photocopier.obj.ODS.Column;
-import es.cristichi.card_photocopier.obj.ODS.OdsStructure;
 import es.cristichi.exceptions.ConfigurationException;
 import es.cristichi.obj.CardComparator;
 import es.cristichi.obj.CardInfo;
@@ -69,7 +65,10 @@ public class CardPhotocopier {
 	public CardPhotocopier() {
 	}
 
-	public ArrayList<String> generate(Configuration config, MainInfoFrame frame, File openDocumentFile, File imagesFolder, File resultsFolder, OdsStructure odsStructure, Sheet sheet, Dimension CARD_SIZE) throws Exception {
+	public ArrayList<String> generate(Configuration config, MainInfoFrame frame, File openDocumentFile,
+			File imagesFolder, File resultsFolder, ArrayList<CardInfo> usefulCards,
+			HashMap<String, ExtraDeckInfo> extraDecks, int copiesToV, int copiesToF, Sheet sheet, Dimension CARD_SIZE)
+			throws Exception {
 		ArrayList<String> warnings = new ArrayList<>(3);
 		frame.replaceText("Reading card data from " + openDocumentFile.getName() + ".");
 
@@ -99,131 +98,13 @@ public class CardPhotocopier {
 			}
 		}
 
-		ArrayList<CardInfo> usefulCards = new ArrayList<>(
-				config.getInt(ConfigValue.VILLAIN_DECK_QUANTITY) + config.getInt(ConfigValue.FATE_DECK_QUANTITY));
-
-		HashMap<String, ExtraDeckInfo> extraDecks = new HashMap<>(6);
-
-		int copiesToV = 0, copiesToF = 0;
-		int xV = 0, yV = 0;
-		int xF = 0, yF = 0;
-
-		int consecutiveEmptyLines = 0;
-		int doneLimit = config.getInt(ConfigValue.EMPTY_ROWS_TO_STOP_ODS_READING, 20);
-
-		// We are going to look into each row in the .ods and check if it's a card that
-		// exists withing the images folder and draw it into it's corresponding deck.
-		for (int row = 1; consecutiveEmptyLines <= doneLimit; row++) {
-			Cell<SpreadSheet> cellCopiesCount = sheet.getCellAt(odsStructure.get(Column.COPIES_COUNT) + row);
-
-			if (cellCopiesCount.getTextValue().trim().equalsIgnoreCase("#stop")) {
-				break;
-			}
-			try {
-				// We get all the data. The unused ones commented in case I want to do something with it one day.
-
-				Cell<SpreadSheet> cellName = sheet.getCellAt(odsStructure.get(Column.NAME) + row);
-				// Cell<SpreadSheet> cellCost = sheet.getCellAt(odsStructure.get(Column.COST) + row);
-				// Cell<SpreadSheet> cellStrengh = sheet.getCellAt(odsStructure.get(Column.STRENGTH) + row);
-				// Cell<SpreadSheet> cellEffect = sheet.getCellAt(odsStructure.get(Column.EFFECT) + row);
-				Cell<SpreadSheet> cellType = sheet.getCellAt(odsStructure.get(Column.TYPE) + row);
-				// Cell<SpreadSheet> cellActEffect = sheet.getCellAt(odsStructure.get(Column.ACTIVATE_EFFECT) + row);
-				// Cell<SpreadSheet> cellActCost = sheet.getCellAt(odsStructure.get(Column.ACTIVATE_COST) + row);
-				// Cell<SpreadSheet> cellTopRight = sheet.getCellAt(odsStructure.get(Column.TOP_RIGHT) + row);
-				// Cell<SpreadSheet> cellBotRight = sheet.getCellAt(odsStructure.get(Column.BOTTOM_RIGHT) + row);
-				Cell<SpreadSheet> cellDeck = sheet.getCellAt(odsStructure.get(Column.DECK) + row);
-				// Cell<SpreadSheet> cellAction = sheet.getCellAt(odsStructure.get(Column.ACTION_SYMBOL) + row);
-				// Cell<SpreadSheet> cellAutoLayout = sheet.getCellAt(odsStructure.get(Column.AUTO_LAYOUT) + row);
-				Cell<SpreadSheet> cellDescription = sheet.getCellAt(odsStructure.get(Column.DESCRIPTION) + row);
-				Cell<SpreadSheet> cellExtraDeck = sheet.getCellAt(odsStructure.get(Column.EXTRA_DECK) + row);
-				// Cell<SpreadSheet> cellCredits = sheet.getCellAt(odsStructure.get(Column.CREDITS) + row);
-
-				// If we find too many empty lines we are going to call it a day, because it
-				// might mean we are at the end but there are tons of empty lines.
-				// Well, not neccesarily empty lines, but if there is nothing in column B then
-				// those are not cards anyway.
-				if (cellName.isEmpty()) {
-					consecutiveEmptyLines++;
-				} else {
-					consecutiveEmptyLines = 0;
-					String cardName = cellName.getTextValue().replaceAll("[\\\\/:*?\"<>|]", "");
-					if (cardsInfo.containsKey(cardName)) {
-						// So this card in the ODS document is also in the exports folder. Great!
-						if (cellCopiesCount.isEmpty() || cellType.isEmpty() || cellDeck.isEmpty()) {
-							// If we are missing important data and it's not because everything is empty, we
-							// are going to warn the user so they can check if the .ods document is properly
-							// filled.
-							warnings.add("Detected error in a possible card \"" + cardName + "\"."
-									+ (cellCopiesCount.getTextValue().trim().isEmpty()
-											? " Number of copies (Column " + odsStructure.get(Column.COPIES_COUNT)
-													+ ") is not filled."
-											: "")
-									+ (cellType.getTextValue().trim().isEmpty()
-											? " Type (Column " + odsStructure.get(Column.TYPE) + ") is not filled."
-											: "")
-									+ (cellDeck.getTextValue().trim().isEmpty()
-											? " Deck (Column " + odsStructure.get(Column.DECK) + ") is not filled."
-											: ""));
-							System.err.println("Error reading: " + row + " (Card " + cardName + " not proper)");
-						} else {
-							// We add the information found about this card
-							CardInfo ci = cardsInfo.get(cardName);
-							ci.name = cardName;
-							ci.type = cellType.getTextValue();
-							ci.copies = Integer.parseInt(cellCopiesCount.getTextValue());
-							ci.desc = cellDescription.getTextValue();
-							ci.row = row;
-							frame.replaceText("Saving " + ci.name + "'s image data and card information.");
-
-							// We first check if the Extra Deck column is filled.
-							if (!cellExtraDeck.getTextValue().trim().equals("")) {
-								ci.deck = cellExtraDeck.getTextValue().trim();
-								if (extraDecks.containsKey(ci.deck)) {
-									extraDecks.get(ci.deck).addCount(ci.copies);
-								} else {
-									extraDecks.put(ci.deck, new ExtraDeckInfo());
-								}
-								usefulCards.add(ci);
-							}
-							// If it's not filled, we use the regular Deck column
-							if (ci.deck == null) {
-								if ((cellDeck.getTextValue().equals("Villain")
-										|| cellDeck.getTextValue().equals("0"))) {
-									ci.deck = "0";
-									copiesToV += ci.copies;
-									usefulCards.add(ci);
-								} else if (cellDeck.getTextValue().equals("Fate")
-										|| cellDeck.getTextValue().equals("1")) {
-									ci.deck = "1";
-									copiesToF += ci.copies;
-									usefulCards.add(ci);
-								}
-							}
-						}
-
-						cardsInfo.remove(cardName);
-					}
-				}
-			} catch (IllegalArgumentException e) {
-				// This means that some columns are combined, so we know it's not a card anyway.
-				// System.err.println(e.getLocalizedMessage());
-				// System.err.println("Line: " + A.getTextValue());
-			}
-		}
-
-		cardsInfo.clear();
-
 		frame.replaceText("Checking deck sizes.");
 
 		int villainExpectedSize = config.getInt(ConfigValue.VILLAIN_DECK_QUANTITY);
 		int fateExpectedSize = config.getInt(ConfigValue.FATE_DECK_QUANTITY);
 
 		if (copiesToV == 0 && copiesToV != villainExpectedSize && copiesToF == 0 && copiesToF != fateExpectedSize) {
-			throw new IllegalArgumentException("Both your Villain and Fate decks have 0 cards! Check it please."
-					+ (doneLimit < Integer.parseInt(ConfigValue.EMPTY_ROWS_TO_STOP_ODS_READING.getDefaultValue())
-							? " You might have to increase the " + ConfigValue.EMPTY_ROWS_TO_STOP_ODS_READING.getKey()
-									+ " (its current value is " + doneLimit + ")"
-							: ""));
+			throw new IllegalArgumentException("Both your Villain and Fate decks have 0 cards! Check it please.");
 		} else if (copiesToV == 0 && copiesToV != villainExpectedSize) {
 			throw new IllegalArgumentException("Your Villain deck has 0 cards! Check it please.");
 		} else if (copiesToF == 0 && copiesToF != fateExpectedSize) {
@@ -313,7 +194,8 @@ public class CardPhotocopier {
 						String desc = ci.desc.replace("   ", "\n").replace("$THIS_NAME", name)
 								.replace("$this_name", name).replace("$THIS_CARD", name).replace("$this_card", name)
 								.trim();
-						String jsonNumCopies = config.getString(ConfigValue.ADD_NUM_COPIES_IN_JSON_DESC, "").toLowerCase();
+						String jsonNumCopies = config.getString(ConfigValue.ADD_NUM_COPIES_IN_JSON_DESC, "")
+								.toLowerCase();
 						if (jsonNumCopies.equals("true") || jsonNumCopies.equals("villain") && ci.deck.equals("0")
 								|| jsonNumCopies.equals("fate") && ci.deck.equals("1")) {
 							boolean sing = ci.copies == 1;
@@ -391,6 +273,8 @@ public class CardPhotocopier {
 
 		// It's time to print the images of every card!
 		// But not to a file. First we draw only in the RAM.
+		int xV = 0, yV = 0;
+		int xF = 0, yF = 0;
 		for (CardInfo ci : usefulCards) {
 			frame.replaceText("Photocopying " + ci.name + ".");
 

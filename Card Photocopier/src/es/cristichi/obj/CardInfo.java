@@ -15,6 +15,20 @@ public class CardInfo {
 
 	public CardInfo(BufferedImage imageData) {
 		this.imageData = imageData;
+		name = "";
+		type = "";
+		desc = "";
+		deck = "";
+		extraDeck = "";
+		cost = "";
+		strength = "";
+		ability = "";
+		activateAbility = "";
+		activateCost = "";
+		topRight = "";
+		bottomRight = "";
+		action = "";
+		credits = "";
 	}
 
 	@Override
