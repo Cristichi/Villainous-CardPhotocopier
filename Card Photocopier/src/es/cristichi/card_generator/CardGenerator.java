@@ -13,6 +13,7 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Semaphore;
@@ -29,7 +30,6 @@ import es.cristichi.card_generator.obj.GeneratorReturn;
 import es.cristichi.card_generator.obj.TemplateType;
 import es.cristichi.card_photocopier.obj.ODS.OdsStructure;
 import es.cristichi.obj.CardInfo;
-import es.cristichi.obj.ExtraDeckInfo;
 import es.cristichi.obj.Util;
 import es.cristichi.obj.config.ConfigValue;
 import es.cristichi.obj.config.Configuration;
@@ -83,8 +83,7 @@ public class CardGenerator {
 	private ArrayList<String> warnings;
 
 	public GeneratorReturn generate(Configuration config, MainInfoFrame frame, File openDocumentFile, File imagesFolder,
-			File resultsFolder, OdsStructure odsStructure, Sheet sheet, ArrayList<CardInfo> usefulCards,
-			HashMap<String, ExtraDeckInfo> extraDecks) throws Exception {
+			File resultsFolder, OdsStructure odsStructure, Sheet sheet, ArrayList<CardInfo> usefulCards) throws Exception {
 		warnings = new ArrayList<>(3);
 
 		if (!config.contains(ConfigValue.CONFIG_TEMPLATES)) {
@@ -120,6 +119,7 @@ public class CardGenerator {
 					try {
 						BufferedImage bi = CardGenerator.this.generateImage(templatesFolder, artFolder, card);
 						Util.writeJpgImage(bi, new File(imagesFolder, card.name + ".jpg"), 1);
+						card.imageData = bi;
 						frame.replaceText("Generated "
 								+ (usefulCards.size() + sem.availablePermits() + "/" + usefulCards.size()));
 					} catch (IOException e) {
@@ -130,12 +130,12 @@ public class CardGenerator {
 
 					sem.release();
 				}
-			}).start();
+			}, "Generate "+card.name).start();
 		}
 
 		sem.acquire();
 
-		return new GeneratorReturn(warnings, usefulCards, extraDecks);
+		return new GeneratorReturn(warnings, usefulCards);
 	}
 
 	private BufferedImage generateImage(File templatesFolder, File artFolder, CardInfo card) throws IOException {
@@ -155,6 +155,7 @@ public class CardGenerator {
 			e.printStackTrace();
 			warnings.add("Error finding the art for " + card.name);
 		} catch (Exception e) {
+			System.err.println("Error reading the art for " + card.name);
 			e.printStackTrace();
 			warnings.add("Error reading the art for " + card.name);
 		}
@@ -301,8 +302,7 @@ public class CardGenerator {
 	 */
 	private void drawCenteredHTMLParagraph(Graphics2D graphics, String htmlText, Rectangle rect, Font font,
 			Color textColor, int resizeStep) {
-		htmlText = htmlText.replace("   ", "\n").replace("\n", "<br>").replace("<br>", "</p><p>").replace("</p><p>",
-				" "); // Adding this for testing on already existing parts
+		htmlText = htmlText.replace("   ", "\n").replace("<br>", "\n");
 
 		char[] charsTextNoTags = htmlText.toCharArray();
 		StringBuilder textNoTags = new StringBuilder(htmlText.length());
@@ -320,13 +320,23 @@ public class CardGenerator {
 		charsTextNoTags = htmlTextNoTags.toCharArray();
 
 		Font fontFinal = font;
+		String[] htmlLines = htmlTextNoTags.split("\n");
 		do {
-			System.out.println("Font size: "+fontFinal.getSize());
+			// System.out.println("Font size: "+fontFinal.getSize());
 			FontMetrics currentFontMetrics = graphics.getFontMetrics(fontFinal);
 			int oneLineHeight = currentFontMetrics.getHeight();
 			// Thank you: https://stackoverflow.com/questions/12129633/how-do-i-render-wrapped-text-on-an-image-in-java/12129735?r=Saves_AllUserSaves#12129735
-			List<String> listLines = StringUtils.wrap(htmlTextNoTags, currentFontMetrics, ABILITY_COORDS.width);
-			System.out.println(oneLineHeight * listLines.size() +" ?? "+ABILITY_COORDS.height);
+			List<String> listLines = new LinkedList<>();
+			for (int i = 0; i < htmlLines.length; i++) {
+				List<String> wrap = StringUtils.wrap(htmlLines[i], currentFontMetrics, ABILITY_COORDS.width);
+				if (wrap.isEmpty()) {
+					wrap.add("");
+				}
+				listLines.addAll(wrap);
+			}
+//			System.out.println(htmlTextNoTags.replace("\n", "\\n"));
+//			System.out.println(listLines.size());
+//			System.out.println(oneLineHeight * listLines.size() +" ?? "+ABILITY_COORDS.height);
 			if (oneLineHeight * listLines.size() < ABILITY_COORDS.height || fontFinal.getSize() < 10) {
 				break;
 			} else {
@@ -338,7 +348,7 @@ public class CardGenerator {
 
 		// Left padding to compensate for how <p> works sometimes Madge calculated with GIMP xdd
 		JLabel label = new JLabel("<html><style>html{width:" + rect.width
-				+ "}body{text-align:center;padding-left:16px;}</style><body><div><p>" + htmlText);
+				+ "}body{text-align:center;padding-left:16px;}</style><body><div><p>" + htmlText.replace("\n", "</p><p>"));
 		label.setBounds(rect);
 		label.setLocation(rect.getLocation());
 		label.setForeground(textColor);
@@ -359,36 +369,37 @@ public class CardGenerator {
 
 		CardInfo ci = new CardInfo(null);
 		ci.name = "Riptide Rex";
-		ci.deck = "duel";
-		ci.extraDeck = "";
+		ci.deck = "Villain";
+		ci.extraDeck = "Plunder";
 
-//		 ci.cost = "?";
+		// ci.cost = "?";
 		ci.strength = "32";
-		ci.ability = "When Riptide Rex is played, please take one +1 Strength Token and put it on yourself for being so good at this game. Then, take a -1 Strength Token and put it on an opponent because nobody is left alive after trying to conquer your domain.";
+//		ci.ability = "When Riptide Rex is played, please take one +1 Strength Token and put it on yourself for being so good at this game. Then, take a -1 Strength Token and put it on an opponent because nobody is left alive after trying to conquer your domain.";
 		// ci.ability = "Riptide Rex may be used to defeat a Hero at an adjacent location if he is at The Dreadway's location.";
-		ci.ability = "All Heroes and Allies and Items and Heroes and Conditions and Effects and Heroes again are banned to horny jail. Then all Heroes and Allies and Allies again and Heroes again, except that Hero, he knows what he did, and all Items get out of Jail for free. Then jail them again. Then cut out their tongues, except the Items they don't have tongues. And don't forget about THAT Hero you understand? Are you taking notes? If you are not taking notes I challenge you to a Duel you filthy card reader. And you cannot use your Vessel if you lose, and Cristichi will be happy.";
-//		ci.ability = "All Heroes and Allies and Items and Heroes and Conditions and Effects and Heroes again are banned to horny jail. Then all Heroes and Allies and Allies again and Heroes again, except that Hero, he knows what he did, and all Items get out of Jail for free. Then jail them again. Then cut out their tongues, except the Items they don't have tongues. And don't forget about THAT Hero you understand? Are you taking notes? If you are not taking notes I challenge you to a Duel you filthy card reader. And you cannot use your Vessel if you lose, and Cristichi will be happy."
-//				+ "\nLorem ipsum dolor sit amet, consectetur adipiscing elit. Vestibulum et faucibus orci, ultrices rhoncus ipsum. Morbi porttitor lobortis eleifend. Quisque accumsan semper lorem, id tempus nisl venenatis nec. Nulla eget metus a nulla hendrerit suscipit et a ligula. Nam consectetur sed turpis euismod eleifend. In scelerisque tortor vitae tortor vehicula, et rutrum leo bibendum. Donec fringilla ligula ante, eget ornare quam tristique a. Nulla vehicula nunc ac lorem mattis dapibus. Quisque a lectus aliquet, euismod justo ut, consectetur urna. Phasellus sit amet dui ipsum. Integer lobortis eget augue a blandit. Donec fringilla, erat sed bibendum suscipit, mi augue vehicula odio, ut ultrices risus velit sed velit. Phasellus vehicula nisi eu erat pretium imperdiet."
-//				+ "\nLorem ipsum dolor sit amet, consectetur adipiscing elit. Vestibulum et faucibus orci, ultrices rhoncus ipsum. Morbi porttitor lobortis eleifend. Quisque accumsan semper lorem, id tempus nisl venenatis nec. Nulla eget metus a nulla hendrerit suscipit et a ligula. Nam consectetur sed turpis euismod eleifend. In scelerisque tortor vitae tortor vehicula, et rutrum leo bibendum. Donec fringilla ligula ante, eget ornare quam tristique a. Nulla vehicula nunc ac lorem mattis dapibus. Quisque a lectus aliquet, euismod justo ut, consectetur urna. Phasellus sit amet dui ipsum. Integer lobortis eget augue a blandit. Donec fringilla, erat sed bibendum suscipit, mi augue vehicula odio, ut ultrices risus velit sed velit. Phasellus vehicula nisi eu erat pretium imperdiet."
-//				+ "\nLorem ipsum dolor sit amet, consectetur adipiscing elit. Vestibulum et faucibus orci, ultrices rhoncus ipsum. Morbi porttitor lobortis eleifend. Quisque accumsan semper lorem, id tempus nisl venenatis nec. Nulla eget metus a nulla hendrerit suscipit et a ligula. Nam consectetur sed turpis euismod eleifend. In scelerisque tortor vitae tortor vehicula, et rutrum leo bibendum. Donec fringilla ligula ante, eget ornare quam tristique a. Nulla vehicula nunc ac lorem mattis dapibus. Quisque a lectus aliquet, euismod justo ut, consectetur urna. Phasellus sit amet dui ipsum. Integer lobortis eget augue a blandit. Donec fringilla, erat sed bibendum suscipit, mi augue vehicula odio, ut ultrices risus velit sed velit. Phasellus vehicula nisi eu erat pretium imperdiet."
-//				+ "\nLorem ipsum dolor sit amet, consectetur adipiscing elit. Vestibulum et faucibus orci, ultrices rhoncus ipsum. Morbi porttitor lobortis eleifend. Quisque accumsan semper lorem, id tempus nisl venenatis nec. Nulla eget metus a nulla hendrerit suscipit et a ligula. Nam consectetur sed turpis euismod eleifend. In scelerisque tortor vitae tortor vehicula, et rutrum leo bibendum. Donec fringilla ligula ante, eget ornare quam tristique a. Nulla vehicula nunc ac lorem mattis dapibus. Quisque a lectus aliquet, euismod justo ut, consectetur urna. Phasellus sit amet dui ipsum. Integer lobortis eget augue a blandit. Donec fringilla, erat sed bibendum suscipit, mi augue vehicula odio, ut ultrices risus velit sed velit. Phasellus vehicula nisi eu erat pretium imperdiet."
-//				+ "\nLorem ipsum dolor sit amet, consectetur adipiscing elit. Vestibulum et faucibus orci, ultrices rhoncus ipsum. Morbi porttitor lobortis eleifend. Quisque accumsan semper lorem, id tempus nisl venenatis nec. Nulla eget metus a nulla hendrerit suscipit et a ligula. Nam consectetur sed turpis euismod eleifend. In scelerisque tortor vitae tortor vehicula, et rutrum leo bibendum. Donec fringilla ligula ante, eget ornare quam tristique a. Nulla vehicula nunc ac lorem mattis dapibus. Quisque a lectus aliquet, euismod justo ut, consectetur urna. Phasellus sit amet dui ipsum. Integer lobortis eget augue a blandit. Donec fringilla, erat sed bibendum suscipit, mi augue vehicula odio, ut ultrices risus velit sed velit. Phasellus vehicula nisi eu erat pretium imperdiet."
-//				+ "\nLorem ipsum dolor sit amet, consectetur adipiscing elit. Vestibulum et faucibus orci, ultrices rhoncus ipsum. Morbi porttitor lobortis eleifend. Quisque accumsan semper lorem, id tempus nisl venenatis nec. Nulla eget metus a nulla hendrerit suscipit et a ligula. Nam consectetur sed turpis euismod eleifend. In scelerisque tortor vitae tortor vehicula, et rutrum leo bibendum. Donec fringilla ligula ante, eget ornare quam tristique a. Nulla vehicula nunc ac lorem mattis dapibus. Quisque a lectus aliquet, euismod justo ut, consectetur urna. Phasellus sit amet dui ipsum. Integer lobortis eget augue a blandit. Donec fringilla, erat sed bibendum suscipit, mi augue vehicula odio, ut ultrices risus velit sed velit. Phasellus vehicula nisi eu erat pretium imperdiet."
-//				+ "\nLorem ipsum dolor sit amet, consectetur adipiscing elit. Vestibulum et faucibus orci, ultrices rhoncus ipsum. Morbi porttitor lobortis eleifend. Quisque accumsan semper lorem, id tempus nisl venenatis nec. Nulla eget metus a nulla hendrerit suscipit et a ligula. Nam consectetur sed turpis euismod eleifend. In scelerisque tortor vitae tortor vehicula, et rutrum leo bibendum. Donec fringilla ligula ante, eget ornare quam tristique a. Nulla vehicula nunc ac lorem mattis dapibus. Quisque a lectus aliquet, euismod justo ut, consectetur urna. Phasellus sit amet dui ipsum. Integer lobortis eget augue a blandit. Donec fringilla, erat sed bibendum suscipit, mi augue vehicula odio, ut ultrices risus velit sed velit. Phasellus vehicula nisi eu erat pretium imperdiet."
-//				+ "\nLorem ipsum dolor sit amet, consectetur adipiscing elit. Vestibulum et faucibus orci, ultrices rhoncus ipsum. Morbi porttitor lobortis eleifend. Quisque accumsan semper lorem, id tempus nisl venenatis nec. Nulla eget metus a nulla hendrerit suscipit et a ligula. Nam consectetur sed turpis euismod eleifend. In scelerisque tortor vitae tortor vehicula, et rutrum leo bibendum. Donec fringilla ligula ante, eget ornare quam tristique a. Nulla vehicula nunc ac lorem mattis dapibus. Quisque a lectus aliquet, euismod justo ut, consectetur urna. Phasellus sit amet dui ipsum. Integer lobortis eget augue a blandit. Donec fringilla, erat sed bibendum suscipit, mi augue vehicula odio, ut ultrices risus velit sed velit. Phasellus vehicula nisi eu erat pretium imperdiet."
-//				+ "\nLorem ipsum dolor sit amet, consectetur adipiscing elit. Vestibulum et faucibus orci, ultrices rhoncus ipsum. Morbi porttitor lobortis eleifend. Quisque accumsan semper lorem, id tempus nisl venenatis nec. Nulla eget metus a nulla hendrerit suscipit et a ligula. Nam consectetur sed turpis euismod eleifend. In scelerisque tortor vitae tortor vehicula, et rutrum leo bibendum. Donec fringilla ligula ante, eget ornare quam tristique a. Nulla vehicula nunc ac lorem mattis dapibus. Quisque a lectus aliquet, euismod justo ut, consectetur urna. Phasellus sit amet dui ipsum. Integer lobortis eget augue a blandit. Donec fringilla, erat sed bibendum suscipit, mi augue vehicula odio, ut ultrices risus velit sed velit. Phasellus vehicula nisi eu erat pretium imperdiet."
-//				+ "\nLorem ipsum dolor sit amet, consectetur adipiscing elit. Vestibulum et faucibus orci, ultrices rhoncus ipsum. Morbi porttitor lobortis eleifend. Quisque accumsan semper lorem, id tempus nisl venenatis nec. Nulla eget metus a nulla hendrerit suscipit et a ligula. Nam consectetur sed turpis euismod eleifend. In scelerisque tortor vitae tortor vehicula, et rutrum leo bibendum. Donec fringilla ligula ante, eget ornare quam tristique a. Nulla vehicula nunc ac lorem mattis dapibus. Quisque a lectus aliquet, euismod justo ut, consectetur urna. Phasellus sit amet dui ipsum. Integer lobortis eget augue a blandit. Donec fringilla, erat sed bibendum suscipit, mi augue vehicula odio, ut ultrices risus velit sed velit. Phasellus vehicula nisi eu erat pretium imperdiet."
-//				+ "\nLorem ipsum dolor sit amet, consectetur adipiscing elit. Vestibulum et faucibus orci, ultrices rhoncus ipsum. Morbi porttitor lobortis eleifend. Quisque accumsan semper lorem, id tempus nisl venenatis nec. Nulla eget metus a nulla hendrerit suscipit et a ligula. Nam consectetur sed turpis euismod eleifend. In scelerisque tortor vitae tortor vehicula, et rutrum leo bibendum. Donec fringilla ligula ante, eget ornare quam tristique a. Nulla vehicula nunc ac lorem mattis dapibus. Quisque a lectus aliquet, euismod justo ut, consectetur urna. Phasellus sit amet dui ipsum. Integer lobortis eget augue a blandit. Donec fringilla, erat sed bibendum suscipit, mi augue vehicula odio, ut ultrices risus velit sed velit. Phasellus vehicula nisi eu erat pretium imperdiet."
-//				+ "\nLorem ipsum dolor sit amet, consectetur adipiscing elit. Vestibulum et faucibus orci, ultrices rhoncus ipsum. Morbi porttitor lobortis eleifend. Quisque accumsan semper lorem, id tempus nisl venenatis nec. Nulla eget metus a nulla hendrerit suscipit et a ligula. Nam consectetur sed turpis euismod eleifend. In scelerisque tortor vitae tortor vehicula, et rutrum leo bibendum. Donec fringilla ligula ante, eget ornare quam tristique a. Nulla vehicula nunc ac lorem mattis dapibus. Quisque a lectus aliquet, euismod justo ut, consectetur urna. Phasellus sit amet dui ipsum. Integer lobortis eget augue a blandit. Donec fringilla, erat sed bibendum suscipit, mi augue vehicula odio, ut ultrices risus velit sed velit. Phasellus vehicula nisi eu erat pretium imperdiet."
-//				+ "\nLorem ipsum dolor sit amet, consectetur adipiscing elit. Vestibulum et faucibus orci, ultrices rhoncus ipsum. Morbi porttitor lobortis eleifend. Quisque accumsan semper lorem, id tempus nisl venenatis nec. Nulla eget metus a nulla hendrerit suscipit et a ligula. Nam consectetur sed turpis euismod eleifend. In scelerisque tortor vitae tortor vehicula, et rutrum leo bibendum. Donec fringilla ligula ante, eget ornare quam tristique a. Nulla vehicula nunc ac lorem mattis dapibus. Quisque a lectus aliquet, euismod justo ut, consectetur urna. Phasellus sit amet dui ipsum. Integer lobortis eget augue a blandit. Donec fringilla, erat sed bibendum suscipit, mi augue vehicula odio, ut ultrices risus velit sed velit. Phasellus vehicula nisi eu erat pretium imperdiet."
-//				+ "\nLorem ipsum dolor sit amet, consectetur adipiscing elit. Vestibulum et faucibus orci, ultrices rhoncus ipsum. Morbi porttitor lobortis eleifend. Quisque accumsan semper lorem, id tempus nisl venenatis nec. Nulla eget metus a nulla hendrerit suscipit et a ligula. Nam consectetur sed turpis euismod eleifend. In scelerisque tortor vitae tortor vehicula, et rutrum leo bibendum. Donec fringilla ligula ante, eget ornare quam tristique a. Nulla vehicula nunc ac lorem mattis dapibus. Quisque a lectus aliquet, euismod justo ut, consectetur urna. Phasellus sit amet dui ipsum. Integer lobortis eget augue a blandit. Donec fringilla, erat sed bibendum suscipit, mi augue vehicula odio, ut ultrices risus velit sed velit. Phasellus vehicula nisi eu erat pretium imperdiet."
-//				+ "\nLorem ipsum dolor sit amet, consectetur adipiscing elit. Vestibulum et faucibus orci, ultrices rhoncus ipsum. Morbi porttitor lobortis eleifend. Quisque accumsan semper lorem, id tempus nisl venenatis nec. Nulla eget metus a nulla hendrerit suscipit et a ligula. Nam consectetur sed turpis euismod eleifend. In scelerisque tortor vitae tortor vehicula, et rutrum leo bibendum. Donec fringilla ligula ante, eget ornare quam tristique a. Nulla vehicula nunc ac lorem mattis dapibus. Quisque a lectus aliquet, euismod justo ut, consectetur urna. Phasellus sit amet dui ipsum. Integer lobortis eget augue a blandit. Donec fringilla, erat sed bibendum suscipit, mi augue vehicula odio, ut ultrices risus velit sed velit. Phasellus vehicula nisi eu erat pretium imperdiet."
-//				+ "\nLorem ipsum dolor sit amet, consectetur adipiscing elit. Vestibulum et faucibus orci, ultrices rhoncus ipsum. Morbi porttitor lobortis eleifend. Quisque accumsan semper lorem, id tempus nisl venenatis nec. Nulla eget metus a nulla hendrerit suscipit et a ligula. Nam consectetur sed turpis euismod eleifend. In scelerisque tortor vitae tortor vehicula, et rutrum leo bibendum. Donec fringilla ligula ante, eget ornare quam tristique a. Nulla vehicula nunc ac lorem mattis dapibus. Quisque a lectus aliquet, euismod justo ut, consectetur urna. Phasellus sit amet dui ipsum. Integer lobortis eget augue a blandit. Donec fringilla, erat sed bibendum suscipit, mi augue vehicula odio, ut ultrices risus velit sed velit. Phasellus vehicula nisi eu erat pretium imperdiet."
-//				+ "\nLorem ipsum dolor sit amet, consectetur adipiscing elit. Vestibulum et faucibus orci, ultrices rhoncus ipsum. Morbi porttitor lobortis eleifend. Quisque accumsan semper lorem, id tempus nisl venenatis nec. Nulla eget metus a nulla hendrerit suscipit et a ligula. Nam consectetur sed turpis euismod eleifend. In scelerisque tortor vitae tortor vehicula, et rutrum leo bibendum. Donec fringilla ligula ante, eget ornare quam tristique a. Nulla vehicula nunc ac lorem mattis dapibus. Quisque a lectus aliquet, euismod justo ut, consectetur urna. Phasellus sit amet dui ipsum. Integer lobortis eget augue a blandit. Donec fringilla, erat sed bibendum suscipit, mi augue vehicula odio, ut ultrices risus velit sed velit. Phasellus vehicula nisi eu erat pretium imperdiet."
-//				+ "\nLorem ipsum dolor sit amet, consectetur adipiscing elit. Vestibulum et faucibus orci, ultrices rhoncus ipsum. Morbi porttitor lobortis eleifend. Quisque accumsan semper lorem, id tempus nisl venenatis nec. Nulla eget metus a nulla hendrerit suscipit et a ligula. Nam consectetur sed turpis euismod eleifend. In scelerisque tortor vitae tortor vehicula, et rutrum leo bibendum. Donec fringilla ligula ante, eget ornare quam tristique a. Nulla vehicula nunc ac lorem mattis dapibus. Quisque a lectus aliquet, euismod justo ut, consectetur urna. Phasellus sit amet dui ipsum. Integer lobortis eget augue a blandit. Donec fringilla, erat sed bibendum suscipit, mi augue vehicula odio, ut ultrices risus velit sed velit. Phasellus vehicula nisi eu erat pretium imperdiet."
-//				+ "\nAnd this last phrase is so you know that this is the end of the text, ending in 3... 2... 1... boom done see you.";
+//		ci.ability = "All Heroes and Allies and Items and Heroes and Conditions and Effects and Heroes again are banned to horny jail. Then all Heroes and Allies and Allies again and Heroes again, except that Hero, he knows what he did, and all Items get out of Jail for free. Then jail them again. Then cut out their tongues, except the Items they don't have tongues. And don't forget about THAT Hero you understand? Are you taking notes? If you are not taking notes I challenge you to a Duel you filthy card reader. And you cannot use your Vessel if you lose, and Cristichi will be happy.";
+		// ci.ability = "All Heroes and Allies and Items and Heroes and Conditions and Effects and Heroes again are banned to horny jail. Then all Heroes and Allies and Allies again and Heroes again, except that Hero, he knows what he did, and all Items get out of Jail for free. Then jail them again. Then cut out their tongues, except the Items they don't have tongues. And don't forget about THAT Hero you understand? Are you taking notes? If you are not taking notes I challenge you to a Duel you filthy card reader. And you cannot use your Vessel if you lose, and Cristichi will be happy."
+		// + "\nLorem ipsum dolor sit amet, consectetur adipiscing elit. Vestibulum et faucibus orci, ultrices rhoncus ipsum. Morbi porttitor lobortis eleifend. Quisque accumsan semper lorem, id tempus nisl venenatis nec. Nulla eget metus a nulla hendrerit suscipit et a ligula. Nam consectetur sed turpis euismod eleifend. In scelerisque tortor vitae tortor vehicula, et rutrum leo bibendum. Donec fringilla ligula ante, eget ornare quam tristique a. Nulla vehicula nunc ac lorem mattis dapibus. Quisque a lectus aliquet, euismod justo ut, consectetur urna. Phasellus sit amet dui ipsum. Integer lobortis eget augue a blandit. Donec fringilla, erat sed bibendum suscipit, mi augue vehicula odio, ut ultrices risus velit sed velit. Phasellus vehicula nisi eu erat pretium imperdiet."
+		// + "\nLorem ipsum dolor sit amet, consectetur adipiscing elit. Vestibulum et faucibus orci, ultrices rhoncus ipsum. Morbi porttitor lobortis eleifend. Quisque accumsan semper lorem, id tempus nisl venenatis nec. Nulla eget metus a nulla hendrerit suscipit et a ligula. Nam consectetur sed turpis euismod eleifend. In scelerisque tortor vitae tortor vehicula, et rutrum leo bibendum. Donec fringilla ligula ante, eget ornare quam tristique a. Nulla vehicula nunc ac lorem mattis dapibus. Quisque a lectus aliquet, euismod justo ut, consectetur urna. Phasellus sit amet dui ipsum. Integer lobortis eget augue a blandit. Donec fringilla, erat sed bibendum suscipit, mi augue vehicula odio, ut ultrices risus velit sed velit. Phasellus vehicula nisi eu erat pretium imperdiet."
+		// + "\nLorem ipsum dolor sit amet, consectetur adipiscing elit. Vestibulum et faucibus orci, ultrices rhoncus ipsum. Morbi porttitor lobortis eleifend. Quisque accumsan semper lorem, id tempus nisl venenatis nec. Nulla eget metus a nulla hendrerit suscipit et a ligula. Nam consectetur sed turpis euismod eleifend. In scelerisque tortor vitae tortor vehicula, et rutrum leo bibendum. Donec fringilla ligula ante, eget ornare quam tristique a. Nulla vehicula nunc ac lorem mattis dapibus. Quisque a lectus aliquet, euismod justo ut, consectetur urna. Phasellus sit amet dui ipsum. Integer lobortis eget augue a blandit. Donec fringilla, erat sed bibendum suscipit, mi augue vehicula odio, ut ultrices risus velit sed velit. Phasellus vehicula nisi eu erat pretium imperdiet."
+		// + "\nLorem ipsum dolor sit amet, consectetur adipiscing elit. Vestibulum et faucibus orci, ultrices rhoncus ipsum. Morbi porttitor lobortis eleifend. Quisque accumsan semper lorem, id tempus nisl venenatis nec. Nulla eget metus a nulla hendrerit suscipit et a ligula. Nam consectetur sed turpis euismod eleifend. In scelerisque tortor vitae tortor vehicula, et rutrum leo bibendum. Donec fringilla ligula ante, eget ornare quam tristique a. Nulla vehicula nunc ac lorem mattis dapibus. Quisque a lectus aliquet, euismod justo ut, consectetur urna. Phasellus sit amet dui ipsum. Integer lobortis eget augue a blandit. Donec fringilla, erat sed bibendum suscipit, mi augue vehicula odio, ut ultrices risus velit sed velit. Phasellus vehicula nisi eu erat pretium imperdiet."
+		// + "\nLorem ipsum dolor sit amet, consectetur adipiscing elit. Vestibulum et faucibus orci, ultrices rhoncus ipsum. Morbi porttitor lobortis eleifend. Quisque accumsan semper lorem, id tempus nisl venenatis nec. Nulla eget metus a nulla hendrerit suscipit et a ligula. Nam consectetur sed turpis euismod eleifend. In scelerisque tortor vitae tortor vehicula, et rutrum leo bibendum. Donec fringilla ligula ante, eget ornare quam tristique a. Nulla vehicula nunc ac lorem mattis dapibus. Quisque a lectus aliquet, euismod justo ut, consectetur urna. Phasellus sit amet dui ipsum. Integer lobortis eget augue a blandit. Donec fringilla, erat sed bibendum suscipit, mi augue vehicula odio, ut ultrices risus velit sed velit. Phasellus vehicula nisi eu erat pretium imperdiet."
+		// + "\nLorem ipsum dolor sit amet, consectetur adipiscing elit. Vestibulum et faucibus orci, ultrices rhoncus ipsum. Morbi porttitor lobortis eleifend. Quisque accumsan semper lorem, id tempus nisl venenatis nec. Nulla eget metus a nulla hendrerit suscipit et a ligula. Nam consectetur sed turpis euismod eleifend. In scelerisque tortor vitae tortor vehicula, et rutrum leo bibendum. Donec fringilla ligula ante, eget ornare quam tristique a. Nulla vehicula nunc ac lorem mattis dapibus. Quisque a lectus aliquet, euismod justo ut, consectetur urna. Phasellus sit amet dui ipsum. Integer lobortis eget augue a blandit. Donec fringilla, erat sed bibendum suscipit, mi augue vehicula odio, ut ultrices risus velit sed velit. Phasellus vehicula nisi eu erat pretium imperdiet."
+		// + "\nLorem ipsum dolor sit amet, consectetur adipiscing elit. Vestibulum et faucibus orci, ultrices rhoncus ipsum. Morbi porttitor lobortis eleifend. Quisque accumsan semper lorem, id tempus nisl venenatis nec. Nulla eget metus a nulla hendrerit suscipit et a ligula. Nam consectetur sed turpis euismod eleifend. In scelerisque tortor vitae tortor vehicula, et rutrum leo bibendum. Donec fringilla ligula ante, eget ornare quam tristique a. Nulla vehicula nunc ac lorem mattis dapibus. Quisque a lectus aliquet, euismod justo ut, consectetur urna. Phasellus sit amet dui ipsum. Integer lobortis eget augue a blandit. Donec fringilla, erat sed bibendum suscipit, mi augue vehicula odio, ut ultrices risus velit sed velit. Phasellus vehicula nisi eu erat pretium imperdiet."
+		// + "\nLorem ipsum dolor sit amet, consectetur adipiscing elit. Vestibulum et faucibus orci, ultrices rhoncus ipsum. Morbi porttitor lobortis eleifend. Quisque accumsan semper lorem, id tempus nisl venenatis nec. Nulla eget metus a nulla hendrerit suscipit et a ligula. Nam consectetur sed turpis euismod eleifend. In scelerisque tortor vitae tortor vehicula, et rutrum leo bibendum. Donec fringilla ligula ante, eget ornare quam tristique a. Nulla vehicula nunc ac lorem mattis dapibus. Quisque a lectus aliquet, euismod justo ut, consectetur urna. Phasellus sit amet dui ipsum. Integer lobortis eget augue a blandit. Donec fringilla, erat sed bibendum suscipit, mi augue vehicula odio, ut ultrices risus velit sed velit. Phasellus vehicula nisi eu erat pretium imperdiet."
+		// + "\nLorem ipsum dolor sit amet, consectetur adipiscing elit. Vestibulum et faucibus orci, ultrices rhoncus ipsum. Morbi porttitor lobortis eleifend. Quisque accumsan semper lorem, id tempus nisl venenatis nec. Nulla eget metus a nulla hendrerit suscipit et a ligula. Nam consectetur sed turpis euismod eleifend. In scelerisque tortor vitae tortor vehicula, et rutrum leo bibendum. Donec fringilla ligula ante, eget ornare quam tristique a. Nulla vehicula nunc ac lorem mattis dapibus. Quisque a lectus aliquet, euismod justo ut, consectetur urna. Phasellus sit amet dui ipsum. Integer lobortis eget augue a blandit. Donec fringilla, erat sed bibendum suscipit, mi augue vehicula odio, ut ultrices risus velit sed velit. Phasellus vehicula nisi eu erat pretium imperdiet."
+		// + "\nLorem ipsum dolor sit amet, consectetur adipiscing elit. Vestibulum et faucibus orci, ultrices rhoncus ipsum. Morbi porttitor lobortis eleifend. Quisque accumsan semper lorem, id tempus nisl venenatis nec. Nulla eget metus a nulla hendrerit suscipit et a ligula. Nam consectetur sed turpis euismod eleifend. In scelerisque tortor vitae tortor vehicula, et rutrum leo bibendum. Donec fringilla ligula ante, eget ornare quam tristique a. Nulla vehicula nunc ac lorem mattis dapibus. Quisque a lectus aliquet, euismod justo ut, consectetur urna. Phasellus sit amet dui ipsum. Integer lobortis eget augue a blandit. Donec fringilla, erat sed bibendum suscipit, mi augue vehicula odio, ut ultrices risus velit sed velit. Phasellus vehicula nisi eu erat pretium imperdiet."
+		// + "\nLorem ipsum dolor sit amet, consectetur adipiscing elit. Vestibulum et faucibus orci, ultrices rhoncus ipsum. Morbi porttitor lobortis eleifend. Quisque accumsan semper lorem, id tempus nisl venenatis nec. Nulla eget metus a nulla hendrerit suscipit et a ligula. Nam consectetur sed turpis euismod eleifend. In scelerisque tortor vitae tortor vehicula, et rutrum leo bibendum. Donec fringilla ligula ante, eget ornare quam tristique a. Nulla vehicula nunc ac lorem mattis dapibus. Quisque a lectus aliquet, euismod justo ut, consectetur urna. Phasellus sit amet dui ipsum. Integer lobortis eget augue a blandit. Donec fringilla, erat sed bibendum suscipit, mi augue vehicula odio, ut ultrices risus velit sed velit. Phasellus vehicula nisi eu erat pretium imperdiet."
+		// + "\nLorem ipsum dolor sit amet, consectetur adipiscing elit. Vestibulum et faucibus orci, ultrices rhoncus ipsum. Morbi porttitor lobortis eleifend. Quisque accumsan semper lorem, id tempus nisl venenatis nec. Nulla eget metus a nulla hendrerit suscipit et a ligula. Nam consectetur sed turpis euismod eleifend. In scelerisque tortor vitae tortor vehicula, et rutrum leo bibendum. Donec fringilla ligula ante, eget ornare quam tristique a. Nulla vehicula nunc ac lorem mattis dapibus. Quisque a lectus aliquet, euismod justo ut, consectetur urna. Phasellus sit amet dui ipsum. Integer lobortis eget augue a blandit. Donec fringilla, erat sed bibendum suscipit, mi augue vehicula odio, ut ultrices risus velit sed velit. Phasellus vehicula nisi eu erat pretium imperdiet."
+		// + "\nLorem ipsum dolor sit amet, consectetur adipiscing elit. Vestibulum et faucibus orci, ultrices rhoncus ipsum. Morbi porttitor lobortis eleifend. Quisque accumsan semper lorem, id tempus nisl venenatis nec. Nulla eget metus a nulla hendrerit suscipit et a ligula. Nam consectetur sed turpis euismod eleifend. In scelerisque tortor vitae tortor vehicula, et rutrum leo bibendum. Donec fringilla ligula ante, eget ornare quam tristique a. Nulla vehicula nunc ac lorem mattis dapibus. Quisque a lectus aliquet, euismod justo ut, consectetur urna. Phasellus sit amet dui ipsum. Integer lobortis eget augue a blandit. Donec fringilla, erat sed bibendum suscipit, mi augue vehicula odio, ut ultrices risus velit sed velit. Phasellus vehicula nisi eu erat pretium imperdiet."
+		// + "\nLorem ipsum dolor sit amet, consectetur adipiscing elit. Vestibulum et faucibus orci, ultrices rhoncus ipsum. Morbi porttitor lobortis eleifend. Quisque accumsan semper lorem, id tempus nisl venenatis nec. Nulla eget metus a nulla hendrerit suscipit et a ligula. Nam consectetur sed turpis euismod eleifend. In scelerisque tortor vitae tortor vehicula, et rutrum leo bibendum. Donec fringilla ligula ante, eget ornare quam tristique a. Nulla vehicula nunc ac lorem mattis dapibus. Quisque a lectus aliquet, euismod justo ut, consectetur urna. Phasellus sit amet dui ipsum. Integer lobortis eget augue a blandit. Donec fringilla, erat sed bibendum suscipit, mi augue vehicula odio, ut ultrices risus velit sed velit. Phasellus vehicula nisi eu erat pretium imperdiet."
+		// + "\nLorem ipsum dolor sit amet, consectetur adipiscing elit. Vestibulum et faucibus orci, ultrices rhoncus ipsum. Morbi porttitor lobortis eleifend. Quisque accumsan semper lorem, id tempus nisl venenatis nec. Nulla eget metus a nulla hendrerit suscipit et a ligula. Nam consectetur sed turpis euismod eleifend. In scelerisque tortor vitae tortor vehicula, et rutrum leo bibendum. Donec fringilla ligula ante, eget ornare quam tristique a. Nulla vehicula nunc ac lorem mattis dapibus. Quisque a lectus aliquet, euismod justo ut, consectetur urna. Phasellus sit amet dui ipsum. Integer lobortis eget augue a blandit. Donec fringilla, erat sed bibendum suscipit, mi augue vehicula odio, ut ultrices risus velit sed velit. Phasellus vehicula nisi eu erat pretium imperdiet."
+		// + "\nLorem ipsum dolor sit amet, consectetur adipiscing elit. Vestibulum et faucibus orci, ultrices rhoncus ipsum. Morbi porttitor lobortis eleifend. Quisque accumsan semper lorem, id tempus nisl venenatis nec. Nulla eget metus a nulla hendrerit suscipit et a ligula. Nam consectetur sed turpis euismod eleifend. In scelerisque tortor vitae tortor vehicula, et rutrum leo bibendum. Donec fringilla ligula ante, eget ornare quam tristique a. Nulla vehicula nunc ac lorem mattis dapibus. Quisque a lectus aliquet, euismod justo ut, consectetur urna. Phasellus sit amet dui ipsum. Integer lobortis eget augue a blandit. Donec fringilla, erat sed bibendum suscipit, mi augue vehicula odio, ut ultrices risus velit sed velit. Phasellus vehicula nisi eu erat pretium imperdiet."
+		// + "\nLorem ipsum dolor sit amet, consectetur adipiscing elit. Vestibulum et faucibus orci, ultrices rhoncus ipsum. Morbi porttitor lobortis eleifend. Quisque accumsan semper lorem, id tempus nisl venenatis nec. Nulla eget metus a nulla hendrerit suscipit et a ligula. Nam consectetur sed turpis euismod eleifend. In scelerisque tortor vitae tortor vehicula, et rutrum leo bibendum. Donec fringilla ligula ante, eget ornare quam tristique a. Nulla vehicula nunc ac lorem mattis dapibus. Quisque a lectus aliquet, euismod justo ut, consectetur urna. Phasellus sit amet dui ipsum. Integer lobortis eget augue a blandit. Donec fringilla, erat sed bibendum suscipit, mi augue vehicula odio, ut ultrices risus velit sed velit. Phasellus vehicula nisi eu erat pretium imperdiet."
+		// + "\nLorem ipsum dolor sit amet, consectetur adipiscing elit. Vestibulum et faucibus orci, ultrices rhoncus ipsum. Morbi porttitor lobortis eleifend. Quisque accumsan semper lorem, id tempus nisl venenatis nec. Nulla eget metus a nulla hendrerit suscipit et a ligula. Nam consectetur sed turpis euismod eleifend. In scelerisque tortor vitae tortor vehicula, et rutrum leo bibendum. Donec fringilla ligula ante, eget ornare quam tristique a. Nulla vehicula nunc ac lorem mattis dapibus. Quisque a lectus aliquet, euismod justo ut, consectetur urna. Phasellus sit amet dui ipsum. Integer lobortis eget augue a blandit. Donec fringilla, erat sed bibendum suscipit, mi augue vehicula odio, ut ultrices risus velit sed velit. Phasellus vehicula nisi eu erat pretium imperdiet."
+		// + "\nAnd this last phrase is so you know that this is the end of the text, ending in 3... 2... 1... boom done see you.";
 		// ci.ability = "When Riptide Rex do the good.";
-		// ci.ability = "You won gg";
+//		 ci.ability = "You won gg";
+		ci.ability = "Attach to an Ally.      This Ally gets +2 Strength.   You may play Jagged Cutlass   without paying its Cost if   you performed a Plunder   action this turn.";
 
 		ci.activateAbility = "";
 		ci.activateCost = "";
@@ -409,13 +420,14 @@ public class CardGenerator {
 		Util.writeJpgImage(bi, testFile, 1);
 		Desktop.getDesktop().open(testFile);
 
-		ci.ability = "When Riptide Rex do the good.";
-
-		bi = cGen.generateImage(new File("-Layout"), new File("-Images"), ci);
-
-		testFile = new File("-Exports/test " + ci.name + " short.jpg");
-		Util.writeJpgImage(bi, testFile, 1);
-		Desktop.getDesktop().open(testFile);
+//		ci.ability = "When <b>Riptide Rex<b><br>do the good.";
+//		ci.ability = "<img src=\"https://http.cat/200\" alt=\"Girl in a jacket\" width=\"500\" height=\"600\">";
+//
+//		bi = cGen.generateImage(new File("-Layout"), new File("-Images"), ci);
+//
+//		testFile = new File("-Exports/test " + ci.name + " short.jpg");
+//		Util.writeJpgImage(bi, testFile, 1);
+//		Desktop.getDesktop().open(testFile);
 
 		System.out.println("Warnings:");
 		System.out.println(cGen.warnings.toString());

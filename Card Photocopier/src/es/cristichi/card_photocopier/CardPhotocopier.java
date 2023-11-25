@@ -8,7 +8,6 @@ import java.awt.datatransfer.StringSelection;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.FileNotFoundException;
-import java.io.FilenameFilter;
 import java.io.IOException;
 import java.io.PrintStream;
 import java.io.PrintWriter;
@@ -65,38 +64,10 @@ public class CardPhotocopier {
 	public CardPhotocopier() {
 	}
 
-	public ArrayList<String> generate(Configuration config, MainInfoFrame frame, File openDocumentFile,
-			File imagesFolder, File resultsFolder, ArrayList<CardInfo> usefulCards,
-			HashMap<String, ExtraDeckInfo> extraDecks, int copiesToV, int copiesToF, Sheet sheet, Dimension CARD_SIZE)
-			throws Exception {
+	public ArrayList<String> generate(Configuration config, MainInfoFrame frame, File resultsFolder,
+			ArrayList<CardInfo> usefulCards, HashMap<String, ExtraDeckInfo> extraDecks, int copiesToV, int copiesToF,
+			Sheet sheet, Dimension CARD_SIZE) throws Exception {
 		ArrayList<String> warnings = new ArrayList<>(3);
-		frame.replaceText("Reading card data from " + openDocumentFile.getName() + ".");
-
-		// First we read every .png, .jpg and .jpeg file.
-		HashMap<String, CardInfo> cardsInfo = new HashMap<>(60);
-
-		for (File cardFile : imagesFolder.listFiles(new FilenameFilter() {
-
-			@Override
-			public boolean accept(File dir, String name) {
-				name = name.toLowerCase();
-				return name.endsWith(".png") || name.endsWith(".jpg") || name.endsWith(".jpeg");
-			}
-		})) {
-
-			String name = cardFile.getName().substring(0,
-					cardFile.getName().length() - (cardFile.getName().endsWith(".jpeg") ? 5 : 4));
-			if (!name.isEmpty()) {
-				frame.replaceText("Loading " + name + "'s image data from the images folder.");
-				CardInfo info = new CardInfo(Util.load(cardFile));
-				if (info.imageData == null) {
-					System.err.println("Image " + cardFile + " could not be loaded.");
-					warnings.add("Image \"" + cardFile.getName() + "\" could not be loaded.");
-				} else {
-					cardsInfo.put(name, info);
-				}
-			}
-		}
 
 		frame.replaceText("Checking deck sizes.");
 
@@ -196,14 +167,14 @@ public class CardPhotocopier {
 								.trim();
 						String jsonNumCopies = config.getString(ConfigValue.ADD_NUM_COPIES_IN_JSON_DESC, "")
 								.toLowerCase();
-						if (jsonNumCopies.equals("true") || jsonNumCopies.equals("villain") && ci.deck.equals("0")
-								|| jsonNumCopies.equals("fate") && ci.deck.equals("1")) {
+						if (jsonNumCopies.equals("true") || jsonNumCopies.equals("villain") && ci.deck.equals("Villain")
+								|| jsonNumCopies.equals("fate") && ci.deck.equals("Fate")) {
 							boolean sing = ci.copies == 1;
 							desc = desc
 									.concat("\n* There " + (sing ? "is" : "are") + " " + ci.copies + " "
 											+ (sing ? "copy" : "copies") + " of " + name + " in your "
-											+ (ci.deck.equals("0") ? "deck"
-													: (ci.deck.equals("1") ? "Fate deck" : ci.deck + " deck"))
+											+ (ci.deck.equals("Villain") ? "deck"
+													: (ci.deck.equals("Fate") ? "Fate deck" : ci.extraDeck + " deck"))
 											+ ".")
 									.trim();
 						}
@@ -213,15 +184,15 @@ public class CardPhotocopier {
 							JSONObject jsonCard = new JSONObject();
 							jsonCard.put("name", name);
 							jsonCard.put("desc", desc);
-							if (ci.deck.equals("0")) {
+							if (ci.deck.equals("Villain")) {
 								cardsV.add(jsonCard);
 								countV++;
-							} else if (ci.deck.equals("1")) {
+							} else if (ci.deck.equals("Fate")) {
 								cardsF.add(jsonCard);
 								countF++;
 							} else if (extraDecks.containsKey(ci.deck)) {
-								extraDecks.get(ci.deck).getJsonArrayCards().add(jsonCard);
-								System.out.println(extraDecks.get(ci.deck).getJsonArrayCards().toString());
+								extraDecks.get(ci.extraDeck).getJsonArrayCards().add(jsonCard);
+//								System.out.println(extraDecks.get(ci.extraDeck).getJsonArrayCards().toString());
 							}
 						}
 					}
@@ -279,29 +250,32 @@ public class CardPhotocopier {
 			frame.replaceText("Photocopying " + ci.name + ".");
 
 			for (int i = 0; i < ci.copies; i++) {
-				if (ci.deck.equals("0")) {
-					gV.drawImage(ci.imageData, xV, yV, null);
-					xV += CARD_SIZE.width;
-					if (xV >= resultImageV.getWidth()) {
-						xV = 0;
-						yV += CARD_SIZE.height;
-					}
-				} else if (ci.deck.equals("1")) {
-					gF.drawImage(ci.imageData, xF, yF, null);
-					xF += CARD_SIZE.width;
-					if (xF >= resultImageF.getWidth()) {
-						xF = 0;
-						yF += CARD_SIZE.height;
-					}
-				} else if (extraDecks.containsKey(ci.deck)) {
-					ExtraDeckInfo eDeck = extraDecks.get(ci.deck);
+				if (!ci.extraDeck.equals("") && extraDecks.containsKey(ci.extraDeck)) {
+					ExtraDeckInfo eDeck = extraDecks.get(ci.extraDeck);
 					eDeck.getGraphics().drawImage(ci.imageData, eDeck.getX(), eDeck.getY(), null);
 					eDeck.addX(CARD_SIZE.width);
 					if (eDeck.getX() >= eDeck.getImage().getWidth()) {
 						eDeck.setX(0);
 						eDeck.addY(CARD_SIZE.height);
 					}
-					extraDecks.put(ci.deck, eDeck);
+					extraDecks.put(ci.extraDeck, eDeck);
+				} else if (ci.deck.equals("Villain")) {
+					gV.drawImage(ci.imageData, xV, yV, null);
+					xV += CARD_SIZE.width;
+					if (xV >= resultImageV.getWidth()) {
+						xV = 0;
+						yV += CARD_SIZE.height;
+					}
+				} else if (ci.deck.equals("Fate")) {
+					gF.drawImage(ci.imageData, xF, yF, null);
+					xF += CARD_SIZE.width;
+					if (xF >= resultImageF.getWidth()) {
+						xF = 0;
+						yF += CARD_SIZE.height;
+					}
+				} else {
+					System.err.println("Card "+ci+" could not be drawn.");
+					System.err.println(ci.toString());
 				}
 			}
 		}

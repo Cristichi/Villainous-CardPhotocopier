@@ -7,8 +7,6 @@ import java.awt.image.BufferedImage;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 
-import es.cristichi.card_generator.obj.DeckTemplate;
-
 public class ExtraDeckInfo {
 
 	private int count;

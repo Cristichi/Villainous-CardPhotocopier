@@ -44,7 +44,7 @@ public class CristichiVillainousMain {
 	private static String ERROR_LOG_FILE = "CardPhotocopier error.log";
 
 	public static String DOC_FIND_PATTERN_INIT = "$";
-	// TODO: Making this configurable
+	// TODO: Making this configurable?
 	public static Dimension CARD_SIZE = new Dimension(1440, 2044);
 
 	public static void main(String[] args) {
@@ -309,24 +309,32 @@ public class CristichiVillainousMain {
 								frame.replaceText("Saving " + ci.name + "'s image data and card information.");
 
 								ci.copies = Integer.parseInt(cellCopiesCount.getTextValue());
-								ci.deck = cellDeck.getTextValue();
-//								if ((cellDeck.getTextValue().equals("0"))) {
-//									ci.deck = "Villain";
-//								} else if (cellDeck.getTextValue().equals("1")) {
-//									ci.deck = "Fate";
-//								}
-								if ((cellDeck.getTextValue().equals("Villain")
-										|| cellDeck.getTextValue().equals("0"))) {
-									ci.deck = "Villain";
-									copiesToV += ci.copies;
-									usefulCards.add(ci);
-								} else if (cellDeck.getTextValue().equals("Fate")
-										|| cellDeck.getTextValue().equals("1")) {
-									ci.deck = "Fate";
-									copiesToF += ci.copies;
-									usefulCards.add(ci);
+
+								ci.extraDeck = cellExtraDeck.getTextValue().trim();
+								// We first check if the Extra Deck column is filled.
+								if (!ci.extraDeck.equals("")) {
+									if (extraDecks.containsKey(ci.extraDeck)) {
+										extraDecks.get(ci.extraDeck).addCount(ci.copies);
+									} else {
+										extraDecks.put(ci.extraDeck, new ExtraDeckInfo());
+									}
 								}
-								ci.extraDeck = cellExtraDeck.getTextValue();
+
+								// If it's not filled, we use the regular Deck column
+								ci.deck = cellDeck.getTextValue();
+								// if (ci.deck == "") {
+								if ((ci.deck.equals("Villain") || ci.deck.equals("0"))) {
+									ci.deck = "Villain";
+									if (ci.extraDeck == "") {
+										copiesToV += ci.copies;
+									}
+								} else if (ci.deck.equals("Fate") || ci.deck.equals("1")) {
+									ci.deck = "Fate";
+									if (ci.extraDeck == "") {
+										copiesToF += ci.copies;
+									}
+								}
+								// }
 
 								ci.cost = cellCost.getTextValue();
 								ci.strength = cellStrengh.getTextValue();
@@ -347,7 +355,7 @@ public class CristichiVillainousMain {
 								if (ci.copies > 0)
 									usefulCards.add(ci);
 
-//								System.out.println(ci);
+//								System.out.println(ci.toString());
 							}
 						}
 					} catch (IllegalArgumentException e) {
@@ -357,42 +365,24 @@ public class CristichiVillainousMain {
 					}
 				}
 
-				frame.replaceText("Checking deck sizes.");
-
-				int villainExpectedSize = config.getInt(ConfigValue.VILLAIN_DECK_QUANTITY);
-				int fateExpectedSize = config.getInt(ConfigValue.FATE_DECK_QUANTITY);
-
-				if (copiesToV == 0 && copiesToV != villainExpectedSize && copiesToF == 0
-						&& copiesToF != fateExpectedSize) {
-					throw new IllegalArgumentException(
-							"Both your Villain and Fate decks have 0 cards! Check it please." + (doneLimit < Integer
-									.parseInt(ConfigValue.EMPTY_ROWS_TO_STOP_ODS_READING.getDefaultValue())
-											? " You might have to increase the "
-													+ ConfigValue.EMPTY_ROWS_TO_STOP_ODS_READING.getKey()
-													+ " (its current value is " + doneLimit + ")"
-											: ""));
-				} else if (copiesToV == 0 && copiesToV != villainExpectedSize) {
-					throw new IllegalArgumentException("Your Villain deck has 0 cards! Check it please.");
-				} else if (copiesToF == 0 && copiesToF != fateExpectedSize) {
-					throw new IllegalArgumentException("Your Fate deck has 0 cards! Check it please.");
-				}
-
 				if (steps.contains("generate")) {
 					CardGenerator cardGenerator = new CardGenerator();
 					GeneratorReturn ret = cardGenerator.generate(config, frame, openDocumentFile, imagesFolder,
-							resultsFolder, odsStructure, sheet, usefulCards, extraDecks);
+							resultsFolder, odsStructure, sheet, usefulCards);
+					usefulCards = ret.usefulCards;
 					warnings.addAll(ret.warnings);
 				}
 				if (steps.contains("photocopy")) {
 					CardPhotocopier cardPhotocopier = new CardPhotocopier();
-					warnings.addAll(cardPhotocopier.generate(config, frame, openDocumentFile, imagesFolder,
-							resultsFolder, usefulCards, extraDecks, copiesToV, copiesToF, sheet, CARD_SIZE));
+					warnings.addAll(cardPhotocopier.generate(config, frame, resultsFolder, usefulCards, extraDecks,
+							copiesToV, copiesToF, sheet, CARD_SIZE));
 				}
 
 				if (warnings.isEmpty()) {
 					frame.dispose();
 				} else {
 					frame.replaceText("Process completed without errors but with some warnings:", warnings);
+					System.out.println(warnings.toString());
 				}
 			}
 		}
