@@ -63,7 +63,7 @@ import es.cristichi.cardphotocopier.obj.config.Configuration;
  * @author Cristichi
  */
 public class CardPhotocopier {
-	private static String VERSION = "v2.8 BETA";
+	private static String VERSION = "v0.29";
 	private static String NAME = "Villainous Card Photocopier " + VERSION;
 
 	private static String CONFIG_TXT = "config.yml";
@@ -74,7 +74,8 @@ public class CardPhotocopier {
 	private static String DOC_USE_PATTERN = "$";
 
 	// TODO: Making this configurable
-	private static Dimension CARD_SIZE = new Dimension(620, 880);
+//	private static Dimension CARD_SIZE = new Dimension(620, 880); //DisVil
+	private static Dimension CARD_SIZE = new Dimension(1240, 1760); //PirVil
 	private static HashMap<Range, Dimension> DECK_SIZES;
 	static {
 		DECK_SIZES = new HashMap<>(18);
@@ -140,6 +141,7 @@ public class CardPhotocopier {
 						+ "Please screenshot the error now and save it if you need further assistance from Cristichi#5193.</div></html>");
 			}
 		}
+		
 		// After we are done, no matter if there was an error or not, we are going to
 		// show any item in "warnings" so the user can fix whatever weird thing we found
 		// (cards missing information, too many copies or not enough, etc)

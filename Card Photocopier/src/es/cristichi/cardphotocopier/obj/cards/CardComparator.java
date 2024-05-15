@@ -10,7 +10,7 @@ public class CardComparator implements Comparator<CardInfo> {
 
 	public CardComparator(String... order) {
 		this.order = Arrays.asList(order);
-//		System.out.println("Order chosen for the cards: "+this.order.toString());
+		System.out.println("Order chosen for the cards: "+this.order.toString());
 	}
 
 	@Override
