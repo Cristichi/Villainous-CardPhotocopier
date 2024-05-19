@@ -41,10 +41,12 @@ import javax.swing.border.EmptyBorder;
 import org.jopendocument.dom.spreadsheet.Cell;
 import org.jopendocument.dom.spreadsheet.Sheet;
 import org.jopendocument.dom.spreadsheet.SpreadSheet;
+import org.jopendocument.util.FileUtils;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 
 import es.cristichi.cardphotocopier.excep.ConfigValueNotFound;
+import es.cristichi.cardphotocopier.excep.ConfigValueNotParsed;
 import es.cristichi.cardphotocopier.excep.ConfigurationException;
 import es.cristichi.cardphotocopier.excep.IllegalConfigValue;
 import es.cristichi.cardphotocopier.obj.Range;
@@ -63,7 +65,7 @@ import es.cristichi.cardphotocopier.obj.config.Configuration;
  * @author Cristichi
  */
 public class CardPhotocopier {
-	private static String VERSION = "v0.29";
+	private static String VERSION = "v0.3";
 	private static String NAME = "Villainous Card Photocopier " + VERSION;
 
 	private static String CONFIG_TXT = "config.yml";
@@ -72,6 +74,10 @@ public class CardPhotocopier {
 	private static String ERROR_DESC_LOG = "CardPhotocopier descriptions error.log";
 
 	private static String DOC_USE_PATTERN = "$";
+	
+	private static String[] FFGEN_INPUT_FOLDERS = {"-Exports", "-Images", "-Layout", "-TextFiles"};
+	private static String[] FFGEN_INPUT_FOLDERS_RETURN = {"-Exports"};
+	private static String FFGEN_EXE = "Pirate Villainous Card Generator.exe";
 
 	// TODO: Making this configurable
 //	private static Dimension CARD_SIZE = new Dimension(620, 880); //DisVil
@@ -106,6 +112,7 @@ public class CardPhotocopier {
 
 	public static void main(String[] args) {
 		warnings = new ArrayList<>(10);
+		
 		try {
 			// We first create a new window so we can tell the user how things are going.
 			window = new JFrame(NAME);
@@ -120,15 +127,53 @@ public class CardPhotocopier {
 			window.setLocationRelativeTo(null);
 			window.setAlwaysOnTop(true);
 			window.setVisible(true);
-			generate();
+			
+			Configuration config = readConfig();
+			
+			if (config.getBoolean(ConfigValue.FFGENERATOR, Boolean.getBoolean(ConfigValue.FFGENERATOR.getDefaultValue()))) {
+				File ffGenFolders = new File(config.getString(ConfigValue.FFGENERATOR_LOCATION));
+				File ffInputFolders = new File(config.getString(ConfigValue.FFGENERATOR_FOLDERS));
+				
+				if (!ffGenFolders.exists()) {
+					throw new IllegalConfigValue("The folder of the Generator \""+ffGenFolders.getAbsolutePath()+"\" was not found.");
+				}
+				if (!ffInputFolders.exists()) {
+					throw new IllegalConfigValue("The folder with the folders with the assets \""+ffInputFolders.getAbsolutePath()+"\" was not found.");
+				}
+				
+				copyInputFoldersToGenerator(config, ffGenFolders, ffInputFolders);
+				useFFGen(config, ffGenFolders);
+				copyGeneratedFoldersToInput(config, ffGenFolders, ffInputFolders);
+			}
+			
+			generateDeckImgs(config);
+			
 			label.setText("Done. Close this window to finish.");
+					
+			// After we are done, no matter if there was an error or not, we are going to
+			// show any item in "warnings" so the user can fix whatever weird thing we found
+			// (cards missing information, too many copies or not enough, etc)
+			if (warnings.size() > 0) {
+				window.remove(label);
+				window.setLayout(new GridLayout(warnings.size() + 1, 1));
+				JLabel warningTitle = new JLabel("Process completed without errors but with some notes:");
+				warningTitle.setBorder(new EmptyBorder(2, 5, 2, 5));
+				window.add(warningTitle);
+				int index = 0;
+				for (String warning : warnings) {
+					JLabel lbl = new JLabel("<html>" + (++index) + ": " + warning + "</html>");
+					lbl.setBorder(new EmptyBorder(1, 5, 1, 5));
+					window.add(lbl);
+				}
+				window.setLocationRelativeTo(null);
+			}
 		} catch (Exception e) {
 			// If anything happens that makes the proccess unable to continue (things are
 			// missing, wrong values in the .ods file, etc) then we just stop and tell
 			// the user what happened. We also print in the console and a file just in case.
 			System.err.println("Ended badly with error. Sadge.");
 			e.printStackTrace();
-			label.setText("<html>" + e.getLocalizedMessage() + "</html>");
+			label.setText("<html><h1>¡Oh no! We could not finish:</h1>" + e.getLocalizedMessage() + "</html>");
 			window.setLocationRelativeTo(null);
 			try {
 				PrintStream ps = new PrintStream(ERROR_LOG);
@@ -141,31 +186,14 @@ public class CardPhotocopier {
 						+ "Please screenshot the error now and save it if you need further assistance from Cristichi#5193.</div></html>");
 			}
 		}
-		
-		// After we are done, no matter if there was an error or not, we are going to
-		// show any item in "warnings" so the user can fix whatever weird thing we found
-		// (cards missing information, too many copies or not enough, etc)
-		if (warnings.size() > 0) {
-			window.remove(label);
-			window.setLayout(new GridLayout(warnings.size() + 1, 1));
-			JLabel warningTitle = new JLabel("Process completed without errors but with some notes:");
-			warningTitle.setBorder(new EmptyBorder(2, 5, 2, 5));
-			window.add(warningTitle);
-			int index = 0;
-			for (String warning : warnings) {
-				JLabel lbl = new JLabel("<html>" + (++index) + ": " + warning + "</html>");
-				lbl.setBorder(new EmptyBorder(1, 5, 1, 5));
-				window.add(lbl);
-			}
-			window.setLocationRelativeTo(null);
-		}
 	}
-
-	public static void generate() throws Exception {
+	
+	private static Configuration readConfig()
+			throws IOException, FileNotFoundException, ConfigValueNotParsed, Exception {
 		label.setText("Reading config file.");
 
 		Configuration config = new Configuration(CONFIG_TXT,
-				NAME + " configuration.\n For help, contact Cristichi#5193 on Discord.");
+				NAME + " configuration.\n For help, please contact Cristichi on Discord.");
 		if (!config.exists()) {
 			for (ConfigValue cValue : ConfigValue.values()) {
 				config.setValueAndInfo(cValue, cValue.getDefaultValue());
@@ -244,6 +272,23 @@ public class CardPhotocopier {
 			} else {
 				config.setValue(ConfigValue.IMAGE_QUALITY, ConfigValue.IMAGE_QUALITY.getDefaultValue());
 			}
+			
+//			FF Generator Settings
+			
+			if (!config.contains(ConfigValue.FFGENERATOR)) {
+				config.setValue(ConfigValue.FFGENERATOR,
+						ConfigValue.FFGENERATOR.getDefaultValue());
+			}
+			
+			if (!config.contains(ConfigValue.FFGENERATOR_LOCATION)) {
+				config.setValue(ConfigValue.FFGENERATOR_LOCATION,
+						ConfigValue.FFGENERATOR_LOCATION.getDefaultValue());
+			}
+			
+			if (!config.contains(ConfigValue.FFGENERATOR_FOLDERS)) {
+				config.setValue(ConfigValue.FFGENERATOR_FOLDERS,
+						ConfigValue.FFGENERATOR_FOLDERS.getDefaultValue());
+			}
 
 			config.saveToFile();
 
@@ -251,7 +296,52 @@ public class CardPhotocopier {
 				throw configError;
 			}
 		}
+		return config;
+	}
 
+	public static void copyInputFoldersToGenerator(Configuration config, File ffGenFolders, File ffInputFolders) throws Exception {
+		for (String inFolderName : FFGEN_INPUT_FOLDERS) {
+			/**
+			 * Folder currently in the gen
+			 */
+			File ffInputFolder = new File(ffInputFolders, inFolderName);
+			File ffGenFolder = new File(ffGenFolders, inFolderName);
+			if (!ffInputFolder.exists()) {
+				throw new IllegalConfigValue("The folder inFolderCurrent \""+ffInputFolder.getAbsolutePath()+"\" was not found.");
+			}
+			if (ffGenFolder.exists()) {
+				label.setText("Deleting \""+ffGenFolder.getAbsolutePath()+"\".");
+				deleteFolder(ffGenFolder);
+			}
+			label.setText("Copying input folder \""+ffInputFolder.getName()+"\" to \""+ffGenFolder.getName()+"\".");
+			ffGenFolder.mkdirs();
+			FileUtils.copyDirectory(ffInputFolder, ffGenFolder);
+		}
+	}
+	
+	public static void copyGeneratedFoldersToInput(Configuration config, File ffGenFolders, File ffInputFolders) throws Exception {
+		for (String inFolderName : FFGEN_INPUT_FOLDERS_RETURN) {
+			/**
+			 * Folder currently in the gen
+			 */
+			File ffInputFolder = new File(ffInputFolders, inFolderName);
+			File ffGenFolder = new File(ffGenFolders, inFolderName);
+			label.setText("Copying generated folder \""+ffGenFolder.getName()+"\" to \""+ffInputFolder.getName()+"\".");
+			FileUtils.copyDirectory(ffGenFolder, ffInputFolder);
+		}
+	}
+	
+	private static void useFFGen(Configuration config, File ffGenFolders) throws Exception{
+		label.setText("Please generate the images. Close FF's generator once you are done to continue.");
+    	System.out.println("Debug: "+"cmd /c " + ffGenFolders.getAbsolutePath()+"\\"+FFGEN_EXE);
+        ProcessBuilder pb = new ProcessBuilder("cmd", "/c ", ffGenFolders.getAbsolutePath()+"\\"+FFGEN_EXE);
+        Process p = pb.start(); // Start the process.
+        System.out.println("Waiting for cards to generate.");
+        p.waitFor(); // Wait for the process to finish.
+        System.out.println("Cards generated successfully! Or not?");
+	}
+	
+	public static void generateDeckImgs(Configuration config) throws Exception {
 		File imagesFolder = new File(config.getString(ConfigValue.CARD_IMAGES));
 		File resultsFolder = new File(config.getString(ConfigValue.RESULTS_FOLDER));
 
@@ -463,12 +553,18 @@ public class CardPhotocopier {
 						}
 
 						cardsInfo.remove(cardName);
+					} else {
+						System.out.println("No es carta: "+cardName);
 					}
 				}
 			} catch (IllegalArgumentException e) {
-				// This means that some columns are combined, so we know it's not a card anyway.
-				// System.err.println(e.getLocalizedMessage());
-				// System.err.println("Line: " + A.getTextValue());
+//				try {
+//					// This means that some columns are combined, so we know it's not a card anyway.
+//					 System.err.println(e.getLocalizedMessage());
+//					 System.err.println("Card: " + sheet.getCellAt(odsStructure.get(Column.NAME) + row).getTextValue());
+//					 System.err.println("Line: " + sheet.getCellAt("A"+row).getTextValue());
+//				}catch (Exception etest) {
+//				}
 			}
 		}
 
@@ -480,11 +576,12 @@ public class CardPhotocopier {
 		int fateExpectedSize = config.getInt(ConfigValue.FATE_DECK_QUANTITY);
 
 		if (copiesToV == 0 && copiesToV != villainExpectedSize && copiesToF == 0 && copiesToF != fateExpectedSize) {
-			throw new IllegalArgumentException("Both your Villain and Fate decks have 0 cards! Check it please."
+			throw new IllegalArgumentException("Both your Villain and Fate decks have 0 cards! Check it please. "
 					+ (doneLimit < Integer.parseInt(ConfigValue.EMPTY_ROWS_TO_STOP_ODS_READING.getDefaultValue())
-							? " You might have to increase the " + ConfigValue.EMPTY_ROWS_TO_STOP_ODS_READING.getKey()
+							? "You might have to increase the " + ConfigValue.EMPTY_ROWS_TO_STOP_ODS_READING.getKey()
 									+ " (its current value is " + doneLimit + ")"
-							: ""));
+							: "ODS being used: "+documentFile.getAbsolutePath() +
+							"<br> Card image folder: "+imagesFolder.getAbsolutePath()));
 		} else if (copiesToV == 0 && copiesToV != villainExpectedSize) {
 			throw new IllegalArgumentException("Your Villain deck has 0 cards! Check it please.");
 		} else if (copiesToF == 0 && copiesToF != fateExpectedSize) {
@@ -810,5 +907,19 @@ public class CardPhotocopier {
 		// dimensions, but it didn't work. So It just throws an error now. Sorry!
 		throw new ConfigurationException("The number of copies (" + quantity
 				+ ") is not supported. Ask Cristichi to add support to it, pronto!");
+	}
+	
+	private static void deleteFolder(File folder) {
+	    File[] files = folder.listFiles();
+	    if(files!=null) { //some JVMs return null for empty dirs
+	        for(File f: files) {
+	            if(f.isDirectory()) {
+	                deleteFolder(f);
+	            } else {
+	                f.delete();
+	            }
+	        }
+	    }
+	    folder.delete();
 	}
 }
